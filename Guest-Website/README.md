@@ -18,12 +18,7 @@ Public website for wedding guests built with Vue.js and Tailwind CSS.
 npm install
 ```
 
-2. Copy `.env.example` to `.env` and configure your environment variables:
-```bash
-cp .env.example .env
-```
-
-3. Start development server:
+2. Start development server:
 ```bash
 npm run dev
 ```
@@ -43,9 +38,8 @@ src/
 
 ## Features
 
-- Guest login
+- Guest authentication
 - RSVP submission
-- Dietary preferences
 - Plus-one management
 - Event details
 - Gift registry
@@ -62,8 +56,8 @@ src/
 
 Required environment variables:
 
-- `VITE_SUPABASE_URL` - Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `APP_DATABASE_URL` - Supabase project URL
+- `APP_DATABASE_ANON_KEY` - Supabase anonymous key
 
 ## Performance Optimization
 

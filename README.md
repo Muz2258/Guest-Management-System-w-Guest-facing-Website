@@ -18,14 +18,9 @@ Code/
 npm install
 ```
 
-3. Copy the `.env.example` files in each project directory to `.env` and fill in your environment variables
-
-4. Start the development servers:
+3. Start the development servers:
 
 ```bash
-# Start backend server
-npm run dev:backend
-
 # Start admin interface
 npm run dev:admin
 
@@ -56,7 +51,6 @@ npm run dev:guest
 
 Each project has its own README with specific instructions:
 
-- [Backend README](./Backend/README.md)
 - [Admin App README](./Admin-app/README.md)
 - [Guest Website README](./Guest-Website/README.md)
 

@@ -18,12 +18,7 @@ Admin interface for the wedding guest management system built with Vue.js and El
 npm install
 ```
 
-2. Copy `.env.example` to `.env` and configure your environment variables:
-```bash
-cp .env.example .env
-```
-
-3. Start development server:
+2. Start development server:
 ```bash
 npm run dev
 ```
@@ -60,5 +55,5 @@ src/
 
 Required environment variables:
 
-- `VITE_SUPABASE_URL` - Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `APP_DATABASE_URL` - Supabase project URL
+- `APP_DATABASE_ANON_KEY` - Supabase anonymous key
