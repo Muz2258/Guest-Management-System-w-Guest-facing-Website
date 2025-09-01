@@ -1,0 +1,17 @@
+{
+  "name": "wedding-guest-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "Admin-app",
+    "Guest-Website"
+  ],
+  "scripts": {
+    "dev:admin": "cd Admin-app && npm run dev",
+    "dev:guest": "cd Guest-Website && npm run dev",
+    "build:admin": "cd Admin-app && npm run build",
+    "build:guest": "cd Guest-Website && npm run build",
+    "analyze:admin": "cd Admin-app && npm run analyze",
+    "analyze:guest": "cd Guest-Website && npm run analyze"
+  }
+}
