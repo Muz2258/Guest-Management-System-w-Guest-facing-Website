@@ -49,7 +49,7 @@
       <el-form-item label="Invitation Type" prop="invitation_type">
         <el-select v-model="form.invitation_type" placeholder="Select invitation type">
           <el-option label="RSVP" value="rsvp_guest" />
-          <el-option label="Info Only" value="information-only" />
+          <el-option label="Info Only" value="information_only" />
         </el-select>
       </el-form-item>
 
@@ -75,7 +75,7 @@
 <script setup lang="ts">
 import { ref, reactive, defineEmits, defineProps, computed } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import type { Guest, InvitationMethod, InvitationType } from '@/types/guest'
+import type { Guest } from '@/types/guest'
 
 const props = defineProps<{
   modelValue: boolean
@@ -84,7 +84,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'submit', value: Omit<Guest, 'guest_id' | 'auth_token'>): void
+  (e: 'submit', value: Omit<Guest, 'guest_id' | 'auth_token' | 'created_by'>): void
 }>()
 
 const dialogVisible = computed({
@@ -96,15 +96,14 @@ const isEdit = computed(() => !!props.initialData?.guest_id)
 const loading = ref(false)
 const formRef = ref<FormInstance>()
 
-const form = reactive<Omit<Guest, 'guest_id' | 'auth_token'>>({
+const form = reactive<Omit<Guest, 'guest_id' | 'auth_token' | 'created_by'>>({
     guest_type: props.initialData?.guest_type ?? 'single',
     name: props.initialData?.name ?? '',
     phone: props.initialData?.phone ?? '',
-    guest_category: props.initialData?.guest_category ?? 'friends',
+    guest_category: props.initialData?.guest_category ?? 'friend',
     plus_one_eligibility: props.initialData?.plus_one_eligibility ?? 'not_eligible',
     invitation_type: props.initialData?.invitation_type ?? 'rsvp_guest',
     invitation_method: props.initialData?.invitation_method ?? 'digital',
-    created_by: '',
 })
 
 const rules: FormRules = {
@@ -130,9 +129,9 @@ const handleSubmit = async () => {
   await formRef.value.validate((valid, fields) => {
     if (valid) {
       loading.value = true
-      emit('submit', { ...form })
-      handleClose()
-      loading.value = false
+        emit('submit', { ...form })
+    } else {
+      console.warn('Form validation failed:', fields)
     }
   })
 }

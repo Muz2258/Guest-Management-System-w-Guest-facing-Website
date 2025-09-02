@@ -1,6 +1,6 @@
 export type GuestType = 'single' | 'couple'
-export type GuestCategory = 'family' | 'friends' | 'asoebi' | 'bestman' | 'chiefbridesmaid'
-export type InvitationType = 'rsvp_guest' | 'information-only'
+export type GuestCategory = 'family' | 'friend' | 'asoebi' | 'bestman' | 'chiefbridesmaid'
+export type InvitationType = 'rsvp_guest' | 'information_only'
 export type InvitationMethod = 'digital' | 'physical_qr'
 export type AttendanceStatus = 'attending' | 'not_attending' | 'pending'
 export type PlusOneEligibility = 'eligible' | 'not_eligible'

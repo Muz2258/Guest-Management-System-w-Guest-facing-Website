@@ -11,9 +11,22 @@
           </span>
         </p>
       </div>
-      <el-button type="primary" @click="showGuestForm = true">
+      <el-button 
+        v-if="authStore.featureAccess.canCreateGuests"
+        type="primary" 
+        @click="showGuestForm = true"
+      >
         {{ guestStore.hasGuests ? 'Add New Guest' : 'Add First Guest' }}
       </el-button>
+      <el-tooltip
+        v-else
+        content="You don't have permission to add guests"
+        placement="top"
+      >
+        <el-button type="primary" disabled>
+          {{ guestStore.hasGuests ? 'Add New Guest' : 'Add First Guest' }}
+        </el-button>
+      </el-tooltip>
     </div>
 
     <!-- Empty State -->
@@ -97,21 +110,65 @@
         <el-table-column label="Actions" width="250" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
+              <el-tooltip
+                v-if="!authStore.hasFeatureAccess('edit_rsvp_responses')"
+                content="You don't have permission to send invites"
+                placement="top"
+              >
+                <el-button 
+                  link
+                  type="primary"
+                  disabled
+                >
+                  Send Invite
+                </el-button>
+              </el-tooltip>
               <el-button 
+                v-else
                 link
                 type="primary"
                 @click="handleSendInvite(row)"
               >
                 Send Invite
               </el-button>
+
+              <el-tooltip
+                v-if="!authStore.featureAccess.canEditGuests"
+                content="You don't have permission to edit guests"
+                placement="top"
+              >
+                <el-button
+                  link
+                  type="primary"
+                  disabled
+                >
+                  Edit
+                </el-button>
+              </el-tooltip>
               <el-button
+                v-else
                 link
                 type="primary"
                 @click="handleEditGuest(row)"
               >
                 Edit
               </el-button>
+
+              <el-tooltip
+                v-if="!authStore.featureAccess.canDeleteGuests"
+                content="You don't have permission to delete guests"
+                placement="top"
+              >
+                <el-button
+                  link
+                  type="danger"
+                  disabled
+                >
+                  Remove
+                </el-button>
+              </el-tooltip>
               <el-button
+                v-else
                 link
                 type="danger"
                 @click="handleDeleteGuest(row)"
@@ -175,7 +232,7 @@ const formatGuestName = (guest: GuestWithRSVP) => {
 const getCategoryType = (category: GuestCategory): 'success' | 'warning' | 'info' => {
   const types: Record<GuestCategory, 'success' | 'warning' | 'info'> = {
     family: 'success',
-    friends: 'warning',
+    friend: 'warning',
     asoebi: 'info',
     bestman: 'success',
     chiefbridesmaid: 'warning'
@@ -206,13 +263,18 @@ const getStatusText = (guest: GuestWithRSVP) => {
 }
 
 // Event handlers
-const handleGuestSubmit = async (formData: Omit<Guest, 'guest_id' | 'auth_token'>) => {
-  if (selectedGuest.value?.guest_id) {
-    await guestStore.updateGuest(selectedGuest.value.guest_id, formData)
-  } else {
-    await guestStore.createGuest(formData)
+const handleGuestSubmit = async (formData: Omit<Guest, 'guest_id' | 'auth_token' | 'created_by'>) => {
+  try {
+    if (selectedGuest.value?.guest_id) {
+      await guestStore.updateGuest(selectedGuest.value.guest_id, formData)
+    } else {
+      await guestStore.createGuest(formData)
+    }
+    showGuestForm.value = false
+    selectedGuest.value = undefined
+  } catch (error) {
+    console.error('Failed to save guest:', error)
   }
-  selectedGuest.value = undefined
 }
 
 const handleEditGuest = (guest: Guest) => {
@@ -221,6 +283,7 @@ const handleEditGuest = (guest: Guest) => {
 }
 
 const handleDeleteGuest = async (guest: Guest) => {
+    console.log('Guest data:', guest)
   try {
     await ElMessageBox.confirm(
       'Are you sure you want to remove this guest?',

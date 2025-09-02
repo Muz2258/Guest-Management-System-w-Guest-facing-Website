@@ -5,7 +5,6 @@ import type { User, Session } from '@supabase/supabase-js'
 import type { UserStaffProfile, FeatureAccess, FeaturePermission } from '@/types/auth'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
@@ -161,16 +160,38 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       console.log('🚀 Initializing auth store')
-
-      // Check Supabase session
-      console.log('📡 Checking Supabase session')
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
       
-      if (currentSession?.user) {
-        console.log('✅ Found active session')
-        session.value = currentSession
-        user.value = currentSession.user
-        await fetchStaffProfile(currentSession.user.id)
+      // First check local storage
+      const storedData = storage.getSession()
+      console.log('📋 Local storage check:', { hasStoredData: !!storedData })
+
+      if (storedData) {
+        // Immediately set stored data
+        console.log('� Using stored session data')
+        session.value = storedData.session
+        user.value = storedData.session.user
+        staffProfile.value = storedData.profile
+        
+        // Mark as initialized but start validation
+        initialized.value = true
+        isValidating.value = true
+        
+        // Validate with server in background
+        validateStoredSession(storedData).catch(console.error)
+      } else {
+        // No stored session, check with Supabase
+        console.log('📡 No stored session, checking Supabase')
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        
+        if (currentSession?.user) {
+          console.log('✅ Found Supabase session')
+          session.value = currentSession
+          user.value = currentSession.user
+          await fetchStaffProfile(currentSession.user.id)
+          
+          // Store the session data
+          storage.saveSession(currentSession, staffProfile.value)
+        }
       }
 
       // Set up session listener
@@ -179,6 +200,7 @@ export const useAuthStore = defineStore('auth', () => {
         
         if (_event === 'SIGNED_OUT') {
           console.log('👋 User signed out')
+          storage.clearSession()
           session.value = null
           user.value = null
           staffProfile.value = null
@@ -190,23 +212,43 @@ export const useAuthStore = defineStore('auth', () => {
           session.value = newSession
           user.value = newSession.user
           await fetchStaffProfile(newSession.user.id)
+          storage.saveSession(newSession, staffProfile.value)
+        }
+      })
+
+      // Listen for storage changes (cross-tab synchronization)
+      const unsubscribe = storage.subscribeToChanges((data) => {
+        if (!data) {
+          // Session was cleared in another tab
+          session.value = null
+          user.value = null
+          staffProfile.value = null
+          router.push('/login')
+        } else if (data.session.access_token !== session.value?.access_token) {
+          // Session was updated in another tab
+          session.value = data.session
+          user.value = data.session.user
+          staffProfile.value = data.profile
         }
       })
 
       // Clean up
       onUnmounted(() => {
-        console.log('🧹 Cleaning up auth subscription')
+        console.log('🧹 Cleaning up auth subscriptions')
         subscription.unsubscribe()
+        unsubscribe()
       })
 
       initialized.value = true
     } catch (e) {
       console.error('❌ Error initializing auth:', e)
+      storage.clearSession() // Clear potentially corrupted data
       throw e
     } finally {
       isValidating.value = false
     }
   }
+
 
   async function fetchStaffProfile(userId: string) {
     try {

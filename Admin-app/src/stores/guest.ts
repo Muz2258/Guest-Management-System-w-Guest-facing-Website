@@ -15,16 +15,6 @@ export const useGuestStore = defineStore('guest', () => {
   const error = ref<string | null>(null)
   const totalGuests = ref(0)
 
-  // Ensure session is valid before any operation
-  const ensureAuth = async () => {
-    if (!authStore.isAuthenticated) {
-      error.value = 'Authentication required'
-      await router.push('/login')
-      throw new Error('Authentication required')
-    }
-    return authStore.user?.id
-  }
-
   // Computed
   const hasGuests = computed(() => guests.value.length > 0)
 
@@ -49,7 +39,6 @@ export const useGuestStore = defineStore('guest', () => {
   // Actions
   async function fetchGuests(page = 1, limit = 10) {
     try {
-      await ensureAuth()
       loading.value = true
       error.value = null
 
@@ -62,12 +51,7 @@ export const useGuestStore = defineStore('guest', () => {
         .range(from, to)
         .order('created_at', { ascending: false })
 
-      if (err) {
-        if (err.message?.includes('JWT')) {
-          throw new Error('Session expired. Please login again.')
-        }
-        throw err
-      }
+      if (err) throw err
 
       guests.value = data.map(item => ({
         ...item,
@@ -78,7 +62,7 @@ export const useGuestStore = defineStore('guest', () => {
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to fetch guests'
       ElMessage.error(error.value)
-      if (error.value.includes('session')) {
+      if (e instanceof Error && !authStore.isAuthenticated) {
         await router.push('/login')
       }
     } finally {
@@ -86,45 +70,49 @@ export const useGuestStore = defineStore('guest', () => {
     }
   }
 
-  async function createGuest(guest: Omit<Guest, 'guest_id' | 'auth_token' | 'created_by' | 'created_at' | 'updated_at'>) {
+  async function createGuest(guest: Omit<Guest, 'guest_id' | 'auth_token' | 'created_by'>) {
+    console.log('🎯 GuestStore: Starting guest creation')
+    console.log('📋 Guest data:', guest)
+
     try {
-      const userId = await ensureAuth()
       loading.value = true
       error.value = null
 
-      const { data, error: err } = await supabase
+      if (!authStore.user?.id) {
+        throw new Error('No authenticated user found')
+      }
+
+      console.log('� Creating guest record:', guest)
+
+      const { data: guestResData, error: guestInsertError } = await supabase
         .from('guests')
-        .insert([{
-          ...guest,
-          created_by: userId
-        }])
+        .insert([guest])
         .select()
         .single()
 
-      if (err) {
-        if (err.message?.includes('JWT')) {
-          throw new Error('Session expired. Please login again.')
-        }
-        throw err
+      console.log('📝 Guest creation response:', { guestResData, guestInsertError })
+
+      // Handle response
+      if (guestInsertError) {
+        throw new Error(`Guest creation failed: ${guestInsertError.message}`)
       }
 
-      // Create initial RSVP record
-      await supabase
-        .from('rsvps')
-        .insert([{
-          guest_id: data.guest_id,
-          attendance_status: 'pending',
-          spouse_attending: null,
-          plus_one_attending: null,
-          plus_one_name: null
-        }])
+      if (!guestResData) {
+        throw new Error('Guest creation failed: No data returned')
+      }
 
+      console.log('✅ Guest record created:', guestResData)
+
+      console.log('🔄 Refreshing guest list')
       await fetchGuests()
+      console.log('✨ Guest creation completed successfully')
       ElMessage.success('Guest added successfully')
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to create guest'
+      console.error('❌ Guest creation failed:', error.value)
       ElMessage.error(error.value)
       if (error.value.includes('session')) {
+        console.log('🔑 Session error detected, redirecting to login')
         await router.push('/login')
       }
       throw e
@@ -161,12 +149,13 @@ export const useGuestStore = defineStore('guest', () => {
       loading.value = true
       error.value = null
 
-      const { error: err } = await supabase
+      const {data, error: err } = await supabase
         .from('guests')
         .delete()
         .eq('guest_id', guestId)
 
       if (err) throw err
+      else console.log('Deleted guest:', data)
 
       await fetchGuests()
       ElMessage.success('Guest removed successfully')
@@ -215,6 +204,98 @@ export const useGuestStore = defineStore('guest', () => {
     createGuest,
     updateGuest,
     deleteGuest,
-    updateRSVP
+    updateRSVP,
   }
 })
+
+/* 
+
+// Debugging functions
+  async function debugPermissions() {
+  console.log('=== PERMISSION DEBUG ===')
+  
+  // Test your permission functions directly
+  const { data: guestsPermission, error: guestsError } = await supabase
+    .rpc('user_has_feature_access', { feature_name: 'view_all_guests' })
+  
+  const { data: rsvpPermission, error: rsvpError } = await supabase
+    .rpc('user_has_feature_access', { feature_name: 'view_rsvp_responses' })
+  
+  console.log('view_all_guests permission:', guestsPermission, guestsError)
+  console.log('view_rsvp_responses permission:', rsvpPermission, rsvpError)
+  
+  // Check user's staff profile
+  const { data: profile, error: profileError } = await supabase
+    .from('staff_profiles')
+    .select('*')
+    .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+  
+  console.log('User staff profile:', profile, profileError)
+  
+  // Check user's role features (if you can access this table)
+  if (profile?.[0]?.role) {
+    const { data: roleFeatures, error: roleError } = await supabase
+      .from('role_features')
+      .select('*, features(*)')
+      .eq('role', profile[0].role)
+    
+    console.log('Role features:', roleFeatures, roleError)
+  }
+  
+  console.log('=== END PERMISSION DEBUG ===')
+}
+
+
+  async function testSupportingTables() {
+    console.log('=== SUPPORTING TABLES TEST ===')
+  const userId = (await supabase.auth.getUser()).data.user?.id
+  
+  // Test staff_profiles access
+  const { data: staffData, error: staffError } = await supabase
+    .from('staff_profiles')
+    .select('*')
+    .eq('user_id', userId)
+  console.log('staff_profiles:', staffData, staffError)
+  
+  // Test role_features access
+  const { data: roleData, error: roleError } = await supabase
+    .from('role_features')
+    .select('*')
+    .limit(1)
+  console.log('role_features:', roleData, roleError)
+  
+  // Test features access
+  const { data: featureData, error: featureError } = await supabase
+    .from('features')
+    .select('*')
+    .limit(1)
+  console.log('features:', featureData, featureError)
+  console.log('=== END SUPPORTING TABLES TEST ===') 
+}
+
+    async function testSimpleFetch() {
+        console.log('=== SIMPLE FETCH TEST ===')
+  try {
+    // Test just guests table
+    const { data: guestsOnly, error: guestsError } = await supabase
+      .from('guests')
+      .select('guest_id, name')
+      .limit(1)
+    
+    console.log('Guests only:', guestsOnly, guestsError)
+    
+    // Test just rsvps table  
+    const { data: rsvpsOnly, error: rsvpsError } = await supabase
+      .from('rsvps')
+      .select('rsvp_id, attendance_status')
+      .limit(1)
+    
+    console.log('RSVPs only:', rsvpsOnly, rsvpsError)
+    
+  } catch (e) {
+    console.log('Test error:', e)
+  }
+  console.log('=== END SIMPLE FETCH TEST ===')
+}
+
+*/
