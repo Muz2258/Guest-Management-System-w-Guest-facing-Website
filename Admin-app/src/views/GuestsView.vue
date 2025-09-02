@@ -14,7 +14,7 @@
       <el-button 
         v-if="authStore.featureAccess.canCreateGuests"
         type="primary" 
-        @click="showGuestForm = true"
+        @click="handleAddNewGuest"
       >
         {{ guestStore.hasGuests ? 'Add New Guest' : 'Add First Guest' }}
       </el-button>
@@ -215,7 +215,7 @@ const authStore = useAuthStore()
 
 const guestStore = useGuestStore()
 const showGuestForm = ref(false)
-const selectedGuest = ref<Partial<Guest> | undefined>(undefined)
+const selectedGuest = ref<Guest | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -271,15 +271,18 @@ const handleGuestSubmit = async (formData: Omit<Guest, 'guest_id' | 'auth_token'
       await guestStore.createGuest(formData)
     }
     showGuestForm.value = false
-    selectedGuest.value = undefined
+    selectedGuest.value = null
   } catch (error) {
     console.error('Failed to save guest:', error)
   }
 }
 
 const handleEditGuest = (guest: Guest) => {
+  console.log('🎯 handleEditGuest called with:', guest)
   selectedGuest.value = guest
+  console.log('🎯 selectedGuest.value set to:', selectedGuest.value)
   showGuestForm.value = true
+  console.log('🎯 showGuestForm.value set to:', showGuestForm.value)
 }
 
 const handleDeleteGuest = async (guest: Guest) => {
@@ -339,6 +342,13 @@ const handleCurrentChange = (page: number) => {
 const resetFilters = () => {
   guestStore.filterAttendance = 'all'
   guestStore.filterCategory = 'all'
+}
+
+// Function to handle adding a new guest
+const handleAddNewGuest = () => {
+  console.log('➕ Opening form for new guest')
+  selectedGuest.value = null // Clear any previously selected guest
+  showGuestForm.value = true
 }
 </script>
 

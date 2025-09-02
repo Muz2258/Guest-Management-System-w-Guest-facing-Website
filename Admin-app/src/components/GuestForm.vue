@@ -73,13 +73,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, defineEmits, defineProps, computed } from 'vue'
+import { ref, reactive, defineEmits, defineProps, computed, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { Guest } from '@/types/guest'
 
 const props = defineProps<{
   modelValue: boolean
-  initialData?: Partial<Guest>
+  initialData: Guest | null
 }>()
 
 const emit = defineEmits<{
@@ -97,14 +97,39 @@ const loading = ref(false)
 const formRef = ref<FormInstance>()
 
 const form = reactive<Omit<Guest, 'guest_id' | 'auth_token' | 'created_by'>>({
-    guest_type: props.initialData?.guest_type ?? 'single',
-    name: props.initialData?.name ?? '',
-    phone: props.initialData?.phone ?? '',
-    guest_category: props.initialData?.guest_category ?? 'friend',
-    plus_one_eligibility: props.initialData?.plus_one_eligibility ?? 'not_eligible',
-    invitation_type: props.initialData?.invitation_type ?? 'rsvp_guest',
-    invitation_method: props.initialData?.invitation_method ?? 'digital',
+    guest_type: 'single',
+    name: '',
+    phone: '',
+    guest_category: 'friend',
+    plus_one_eligibility: 'not_eligible',
+    invitation_type: 'rsvp_guest',
+    invitation_method: 'digital',
 })
+
+// Watch for changes in initialData and update form
+watch(() => props.initialData, (newData: Guest | null) => {
+    console.log('📝 Initial data changed:', newData)
+    if (newData) {
+        form.guest_type = newData.guest_type
+        form.name = newData.name
+        form.phone = newData.phone
+        form.guest_category = newData.guest_category
+        form.plus_one_eligibility = newData.plus_one_eligibility
+        form.invitation_type = newData.invitation_type
+        form.invitation_method = newData.invitation_method
+        console.log('📝 Form updated with new data:', form)
+    } else {
+        // Reset form to defaults
+        form.guest_type = 'single'
+        form.name = ''
+        form.phone = ''
+        form.guest_category = 'friend'
+        form.plus_one_eligibility = 'not_eligible'
+        form.invitation_type = 'rsvp_guest'
+        form.invitation_method = 'digital'
+        console.log('📝 Form reset to defaults')
+    }
+}, { immediate: true })
 
 const rules: FormRules = {
   guest_type: [{ required: true, message: 'Please select guest type', trigger: 'change' }],
@@ -116,11 +141,6 @@ const rules: FormRules = {
   guest_category: [{ required: true, message: 'Please select category', trigger: 'change' }],
   invitation_type: [{ required: true, message: 'Please select invitation type', trigger: 'change' }],
   invitation_method: [{ required: true, message: 'Please select invitation method', trigger: 'change' }]
-}
-
-const handleClose = () => {
-  dialogVisible.value = false
-  formRef.value?.resetFields()
 }
 
 const handleSubmit = async () => {
@@ -135,6 +155,45 @@ const handleSubmit = async () => {
     }
   })
 }
+
+// Reset form when dialog is closed
+const handleClose = () => {
+  dialogVisible.value = false
+  loading.value = false
+  formRef.value?.resetFields()
+}
+
+// Watch for dialog opening
+watch(() => dialogVisible.value, (isOpen) => {
+  if (isOpen) {
+    console.log('📝 Dialog opened with initial data:', props.initialData)
+    if (props.initialData) {
+      // Pre-populate form with guest data
+      Object.assign(form, {
+        guest_type: props.initialData.guest_type,
+        name: props.initialData.name,
+        phone: props.initialData.phone,
+        guest_category: props.initialData.guest_category,
+        plus_one_eligibility: props.initialData.plus_one_eligibility,
+        invitation_type: props.initialData.invitation_type,
+        invitation_method: props.initialData.invitation_method
+      })
+      console.log('📝 Form populated with guest data:', form)
+    } else {
+      // Reset form to defaults for new guest
+      Object.assign(form, {
+        guest_type: 'single',
+        name: '',
+        phone: '',
+        guest_category: 'friend',
+        plus_one_eligibility: 'not_eligible',
+        invitation_type: 'rsvp_guest',
+        invitation_method: 'digital'
+      })
+      console.log('📝 Form reset for new guest')
+    }
+  }
+})
 </script>
 
 <style scoped>

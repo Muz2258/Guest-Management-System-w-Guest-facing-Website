@@ -126,12 +126,13 @@ export const useGuestStore = defineStore('guest', () => {
       loading.value = true
       error.value = null
 
-      const { error: err } = await supabase
+      const { data, error: err } = await supabase
         .from('guests')
         .update(updates)
         .eq('guest_id', guestId)
 
       if (err) throw err
+      else console.log('Updated guest:', data)
 
       await fetchGuests()
       ElMessage.success('Guest updated successfully')
