@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import LoginView from '../views/LoginView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
+import GuestsView from '../views/GuestsView.vue'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
@@ -32,6 +34,7 @@ const routes = [
   {
     path: '/guests',
     name: 'Guests',
+    component: GuestsView,
     meta: { requiresAuth: true }
   },
 ]
