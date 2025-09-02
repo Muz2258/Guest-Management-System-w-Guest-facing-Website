@@ -99,17 +99,26 @@ export const useAuthStore = defineStore('auth', () => {
       const { error: authError } = await supabase.auth.signOut()
       if (authError) throw authError
 
-      // Clear all auth state
+      // Clear all auth state immediately
       session.value = null
       user.value = null
       staffProfile.value = null
 
-      console.log('✅ Logout complete, redirecting to login')
-      await router.push('/login')
+      // Force route change before anything else
+      console.log('✅ Logout complete, forcing navigation to login')
+      // Use replace instead of push to prevent going back
+      await router.replace('/login')
+      
+      // Show success message
+      ElMessage.success('Successfully logged out')
+      
     } catch (e) {
       console.error('❌ Logout error:', e)
       error.value = e instanceof Error ? e.message : 'An error occurred during logout'
       ElMessage.error(error.value)
+      
+      // Even if there's an error, try to redirect to login
+      await router.replace('/login')
     } finally {
       loading.value = false
     }
