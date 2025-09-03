@@ -36,7 +36,7 @@ const handleForgotPassword = () => {
       label-position="top"
       class="login-form"
     >
-      <h2 class="form-title">Admin Login</h2>
+      <h2 class="form-title">Back-office Login</h2>
 
       <el-alert
         v-if="authStore.error"
