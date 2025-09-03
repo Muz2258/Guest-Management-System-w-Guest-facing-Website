@@ -23,16 +23,10 @@
         <el-input v-model="form.name" placeholder="Enter guest name" />
       </el-form-item>
 
-      <el-form-item label="Phone" prop="phone">
-        <el-input v-model="form.phone" placeholder="+234">
-          <template #prepend>+234</template>
-        </el-input>
-      </el-form-item>
-
       <el-form-item label="Category" prop="guest_category">
         <el-select v-model="form.guest_category" placeholder="Select category">
           <el-option label="Family" value="family" />
-          <el-option label="Friends" value="friends" />
+          <el-option label="Friend" value="friend" />
           <el-option label="Asoebi" value="asoebi" />
           <el-option label="Best Man" value="bestman" />
           <el-option label="Chief Bridesmaid" value="chiefbridesmaid" />
@@ -99,7 +93,6 @@ const formRef = ref<FormInstance>()
 const form = reactive<Omit<Guest, 'guest_id' | 'auth_token' | 'created_by'>>({
     guest_type: 'single',
     name: '',
-    phone: '',
     guest_category: 'friend',
     plus_one_eligibility: 'not_eligible',
     invitation_type: 'rsvp_guest',
@@ -112,7 +105,6 @@ watch(() => props.initialData, (newData: Guest | null) => {
     if (newData) {
         form.guest_type = newData.guest_type
         form.name = newData.name
-        form.phone = newData.phone
         form.guest_category = newData.guest_category
         form.plus_one_eligibility = newData.plus_one_eligibility
         form.invitation_type = newData.invitation_type
@@ -122,7 +114,6 @@ watch(() => props.initialData, (newData: Guest | null) => {
         // Reset form to defaults
         form.guest_type = 'single'
         form.name = ''
-        form.phone = ''
         form.guest_category = 'friend'
         form.plus_one_eligibility = 'not_eligible'
         form.invitation_type = 'rsvp_guest'
@@ -134,10 +125,6 @@ watch(() => props.initialData, (newData: Guest | null) => {
 const rules: FormRules = {
   guest_type: [{ required: true, message: 'Please select guest type', trigger: 'change' }],
   name: [{ required: true, message: 'Please enter guest name', trigger: 'blur' }],
-  phone: [
-    { required: true, message: 'Please enter phone number', trigger: 'blur' },
-    { pattern: /^\d{10}$/, message: 'Please enter a valid 10-digit phone number', trigger: 'blur' }
-  ],
   guest_category: [{ required: true, message: 'Please select category', trigger: 'change' }],
   invitation_type: [{ required: true, message: 'Please select invitation type', trigger: 'change' }],
   invitation_method: [{ required: true, message: 'Please select invitation method', trigger: 'change' }]
@@ -172,7 +159,6 @@ watch(() => dialogVisible.value, (isOpen) => {
       Object.assign(form, {
         guest_type: props.initialData.guest_type,
         name: props.initialData.name,
-        phone: props.initialData.phone,
         guest_category: props.initialData.guest_category,
         plus_one_eligibility: props.initialData.plus_one_eligibility,
         invitation_type: props.initialData.invitation_type,
@@ -184,7 +170,6 @@ watch(() => dialogVisible.value, (isOpen) => {
       Object.assign(form, {
         guest_type: 'single',
         name: '',
-        phone: '',
         guest_category: 'friend',
         plus_one_eligibility: 'not_eligible',
         invitation_type: 'rsvp_guest',

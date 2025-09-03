@@ -37,7 +37,7 @@ export const useGuestStore = defineStore('guest', () => {
   })
 
   // Actions
-  async function fetchGuests(page = 1, limit = 10) {
+  async function fetchGuests(page = 1, limit = 20) {
     try {
       loading.value = true
       error.value = null
@@ -170,25 +170,110 @@ export const useGuestStore = defineStore('guest', () => {
   }
 
   async function updateRSVP(rsvpId: string, updates: Partial<RSVP>) {
+    console.log('🔄 updateRSVP: Starting update with:', { rsvpId, updates })
     try {
       loading.value = true
       error.value = null
 
-      const { error: err } = await supabase
+      // If updating plus_one related fields to false/null, ensure we set both fields
+      if (updates.plus_one_attending === false || updates.plus_one_name === null) {
+        updates = {
+          ...updates,
+          plus_one_attending: null,
+          plus_one_name: null
+        }
+      }
+
+      console.log('📝 updateRSVP: Sending update to database')
+      const { data, error: err } = await supabase
         .from('rsvps')
         .update(updates)
         .eq('rsvp_id', rsvpId)
+        .select()
 
-      if (err) throw err
+      if (err) {
+        console.error('❌ updateRSVP: Database error:', err)
+        throw err
+      }
 
+      console.log('✅ updateRSVP: Update successful:', data)
       await fetchGuests()
       ElMessage.success('RSVP updated successfully')
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to update RSVP'
+      console.error('❌ updateRSVP: Error:', error.value)
       ElMessage.error(error.value)
       throw e
     } finally {
       loading.value = false
+      console.log('🏁 updateRSVP: Operation completed')
+    }
+  }
+
+  async function createOrUpdateRSVP(guestId: string, status: AttendanceStatus, spouseAttending?: boolean) {
+    console.log('🔄 createOrUpdateRSVP: Starting with:', { guestId, status })
+    try {
+      loading.value = true
+      error.value = null
+
+      // First try to find existing RSVP
+      console.log('🔍 createOrUpdateRSVP: Checking for existing RSVP')
+      const { data: existingRsvp, error: fetchError } = await supabase
+        .from('rsvps')
+        .select('*')
+        .eq('guest_id', guestId)
+        .single()
+
+      console.log('📋 createOrUpdateRSVP: Existing RSVP check result:', { existingRsvp, fetchError })
+
+      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        console.error('❌ createOrUpdateRSVP: Error fetching existing RSVP:', fetchError)
+        throw fetchError
+      }
+
+      let result
+      if (existingRsvp?.rsvp_id) {
+        console.log('📝 createOrUpdateRSVP: Updating existing RSVP:', existingRsvp.rsvp_id)
+        result = await supabase
+          .from('rsvps')
+          .update({
+            attendance_status: status,
+            ...(spouseAttending !== undefined ? { spouse_attending: spouseAttending } : {})
+          })
+          .eq('rsvp_id', existingRsvp.rsvp_id)
+          .select()
+
+        console.log('📋 createOrUpdateRSVP: Update result:', result)
+      } else {
+        console.log('📝 createOrUpdateRSVP: Creating new RSVP')
+        result = await supabase
+          .from('rsvps')
+          .insert([{
+            guest_id: guestId,
+            attendance_status: status,
+            spouse_attending: spouseAttending
+          }])
+          .select()
+
+        console.log('📋 createOrUpdateRSVP: Insert result:', result)
+      }
+
+      if (result.error) {
+        console.error('❌ createOrUpdateRSVP: Operation failed:', result.error)
+        throw result.error
+      }
+
+      console.log('✅ createOrUpdateRSVP: Operation successful:', result.data)
+      await fetchGuests()
+      ElMessage.success('RSVP status updated successfully')
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to update RSVP status'
+      console.error('❌ createOrUpdateRSVP: Error:', error.value)
+      ElMessage.error(error.value)
+      throw e
+    } finally {
+      loading.value = false
+      console.log('🏁 createOrUpdateRSVP: Operation completed')
     }
   }
 
@@ -206,6 +291,7 @@ export const useGuestStore = defineStore('guest', () => {
     updateGuest,
     deleteGuest,
     updateRSVP,
+    createOrUpdateRSVP,
   }
 })
 
