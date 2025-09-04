@@ -7,11 +7,11 @@
     "Guest-Website"
   ],
   "scripts": {
-    "dev:admin": "cd Admin-app && npm run dev",
-    "dev:guest": "cd Guest-Website && npm run dev",
-    "build:admin": "cd Admin-app && npm run build",
-    "build:guest": "cd Guest-Website && npm run build",
-    "analyze:admin": "cd Admin-app && npm run analyze",
-    "analyze:guest": "cd Guest-Website && npm run analyze"
+    "dev:admin": "npm run dev -w Admin-app",
+    "dev:guest": "npm run dev -w Guest-Website",
+    "build:admin": "npm run build -w Admin-app",
+    "build:guest": "npm run build -w Guest-Website",
+    "analyze:admin": "npm run analyze -w Admin-app",
+    "analyze:guest": "npm run analyze -w Guest-Website"
   }
 }
