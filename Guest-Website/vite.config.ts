@@ -1,21 +1,19 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { visualizer } from 'rollup-plugin-visualizer'
-import path from 'path'
+import AutoImport from 'unplugin-auto-import/vite'
 
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
-    visualizer({
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-    }),
+    AutoImport({
+      imports: [
+        'vue',
+        {
+          '@/utils/colors.ts': ['getColor', 'colors']
+        }
+      ],
+      dts: true
+    })
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
 })
