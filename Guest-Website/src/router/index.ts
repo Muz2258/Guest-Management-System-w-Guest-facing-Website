@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { useGuestStore } from '@/stores/guest'
+import { useGuestStore } from '../stores/guest'
 import MainWebsiteView from '../views/MainWebsiteView.vue'
 import GuestIdentifierView from '../views/GuestIdentifierView.vue'
 
