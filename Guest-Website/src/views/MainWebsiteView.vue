@@ -1,8 +1,8 @@
 <template>
   <main class="main-website">
-    <h1>Main Website</h1>
+    <h1 class="text-heading-mobile">Main Website</h1>
     <div v-if="guestData" class="guest-welcome">
-    <p>
+    <p class="text-body-mobile">
       Welcome,
       <span v-if="typeof guestData.name === 'object'">
         {{ guestData.name.first_name }} {{ guestData.name.last_name }}
@@ -12,17 +12,13 @@
       </span>
     </p>
     </div>
-    <IconDemo />
   </main>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useGuestStore } from '@/stores/guest'
+import { useGuestStore } from '../stores/guest'
 import { storeToRefs } from 'pinia'
-
-import IconDemo from '@/components/IconDemo.vue'
-import Icon from '@/components/Icon'
 
 const guestStore = useGuestStore()
 const { guest } = storeToRefs(guestStore)
