@@ -12,6 +12,7 @@
       </span>
     </p>
     </div>
+    <IconDemo />
   </main>
 </template>
 
@@ -19,6 +20,9 @@
 import { computed } from 'vue'
 import { useGuestStore } from '@/stores/guest'
 import { storeToRefs } from 'pinia'
+
+import IconDemo from '@/components/IconDemo.vue'
+import Icon from '@/components/Icon'
 
 const guestStore = useGuestStore()
 const { guest } = storeToRefs(guestStore)
