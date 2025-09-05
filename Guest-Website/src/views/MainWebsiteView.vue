@@ -1,17 +1,9 @@
 <template>
-  <main class="main-website">
-    <h1 class="text-heading-mobile">Main Website</h1>
-    <div v-if="guestData" class="guest-welcome">
-    <p class="text-body-mobile">
-      Welcome,
-      <span v-if="typeof guestData.name === 'object'">
-        {{ guestData.name.first_name }} {{ guestData.name.last_name }}
-      </span>
-      <span v-else>
-        {{ guestData.name }}
-      </span>
-    </p>
-    </div>
+  <main class="page-wrapper">
+    <container class="content-wrapper">
+      <HeroSection />
+      <EventDetailsSection />
+    </container>
   </main>
 </template>
 
@@ -20,9 +12,15 @@ import { computed } from 'vue'
 import { useGuestStore } from '../stores/guest'
 import { storeToRefs } from 'pinia'
 
+// Components
+import HeroSection from '../components/Templates/Hero.vue'
+import EventDetailsSection from '../components/Templates/EventDetails.vue'
+
+// Composables
 const guestStore = useGuestStore()
 const { guest } = storeToRefs(guestStore)
 
+// Computed Variables
 const guestData = computed(() => {
     console.log('🔄 Computing guest data from:', guest.value)
     const currentGuest = guest?.value ?? null
@@ -46,14 +44,27 @@ const guestData = computed(() => {
 </script>
 
 <style scoped>
-.main-website {
-  padding: 2rem;
+@reference '../styles/main.css';
+
+#main-hero-image::before {
+  content: "Cheema '25";
+  display: inline-block;
+  position: absolute;
+  bottom: 0;
+  left: -9%;
+  writing-mode: sideways-lr;
+  text-orientation: mixed;
+  @apply text-xs text-neutrals-neu-35;
 }
 
-.guest-welcome {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: #f5f5f5;
-  border-radius: 4px;
+#main-hero-image::after {
+  content: "#BuiltToLast";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  right: -9%;
+  writing-mode: sideways-rl;
+  text-orientation: mixed;
+  @apply text-xs text-neutrals-neu-35;
 }
 </style>
