@@ -1,6 +1,89 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,900;1,400;1,900&family=Playfair+Display:wght@400..900&display=swap');
 
+@import 'tailwindcss';
+
 html, body {
   padding: 0;
   margin: 0;
+}
+
+@theme {
+  --color-brand-pri: #4F1E8B;
+  --color-brand-pri-dark-100: #391762;
+  --color-brand-pri-light-100: #6D34B2;
+  --color-brand-sec: #DDC8F8;
+  --color-brand-sec-light-100: #F5EDFF;
+  --color-brand-sec-light-200: #FAF5FF;
+  --color-brand-accent: #177B61;
+
+  --color-neutrals-neu-100: #FFFFFF;
+  --color-neutrals-neu-96: #F5F5F5;
+  --color-neutrals-neu-46: #767676;
+  --color-neutrals-neu-35: #595959;
+  --color-neutrals-neu-0: #000000;
+
+  --color-denotive-red: #AE4646;
+  --color-denotive-yellow_light: #FDF2D3;
+  --color-denotive-green_light: #C9EEE4;
+
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Lato', sans-serif;
+
+  --spacing-2: 0.125rem;
+  --spacing-4: 0.25rem;
+  --spacing-6: 0.375rem;
+  --spacing-8: 0.5rem; 
+  --spacing-12: 0.75rem;
+  --spacing-16: 1rem;
+  --spacing-20: 1.25rem;
+  --spacing-24: 1.5rem;
+  --spacing-32: 2rem;
+  --spacing-40: 2.5rem;
+  --spacing-44: 2.75rem;
+  --spacing-48: 3rem;
+  --spacing-56: 3.5rem;
+  --spacing-64: 4rem;
+  --spacing-72: 4.5rem;
+  --spacing-80: 5rem;
+  --spacing-88: 5.5rem;
+
+  --text-title: 4rem;
+  --text-title--line-height: 0.9;
+
+  --text-heading-lg: 2rem;
+  --text-heading-lg--line-height: 1;
+
+  --text-heading-md: 1.5rem;
+  --text-heading-md--line-height: 1;
+
+  --text-heading-s: 0.875rem;
+  --text-heading-s--line-height: 1.25;
+  --text-heading-s--letter-spacing: 0.05em;
+
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.25;
+  --text-xs--letter-spacing: 0.05em;
+  --text-xs--font-weight: 400;
+
+  --text-s: 0.875rem;
+  --text-s--line-height: 1.25;
+  --text-s--letter-spacing: 0.03em;
+  --text-s--font-weight: 400;
+
+  --text: 1rem;
+  --text--line-height: 1.25;
+  --text--letter-spacing: 0.03em;
+  --text--font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display;
+}
+
+p, span, a, li, div, ::before, ::after {
+  @apply font-body;
+}
+
+.page-wrapper {
+  @apply bg-neutrals-neu-100 min-h-dvh;
 }

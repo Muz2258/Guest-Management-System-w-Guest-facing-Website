@@ -12,6 +12,7 @@ export const colors = {
         neu_100: '#FFFFFF',
         neu_96: '#F5F5F5',
         neu_46: '#767676',
+        neu_35: '#595959',
         neu_0: '#000000'
     },
     denotive: {
@@ -32,6 +33,7 @@ export type colorPath =
   | 'neutral.neu_100'
   | 'neutral.neu_96'
   | 'neutral.neu_46'
+  | 'neutral.neu_35'
   | 'neutral.neu_0'
   | 'denotive.denote_red'
   | 'denotive.denote_yellow_light'
