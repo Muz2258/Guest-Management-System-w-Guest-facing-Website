@@ -8,10 +8,21 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Button: typeof import('./src/components/Atoms/Button.vue')['default']
+    CacheStatus: typeof import('./src/components/Dev/CacheStatus.vue')['default']
+    CookieBanner: typeof import('./src/components/Molecules/CookieBanner.vue')['default']
     DetailsInfo: typeof import('./src/components/Molecules/DetailsInfo.vue')['default']
     EventDetails: typeof import('./src/components/Templates/EventDetails.vue')['default']
+    GuestIdentifierView: typeof import('./src/views/GuestIdentifierView.vue')['default']
     Hero: typeof import('./src/components/Templates/Hero.vue')['default']
+    Icon: typeof import('./src/components/Atoms/Icon.vue')['default']
+    MainWebsiteView: typeof import('./src/views/MainWebsiteView.vue')['default']
+    Modal: typeof import('./src/components/Atoms/Modal.vue')['default']
+    PrivacyPolicy: typeof import('./src/views/PrivacyPolicy.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ToggleSwitch: typeof import('./src/components/Atoms/ToggleSwitch.vue')['default']
+    WelcomeFoot: typeof import('./src/components/Molecules/WelcomeFoot.vue')['default']
+    WelcomeMsg: typeof import('./src/components/Molecules/WelcomeMsg.vue')['default']
   }
 }

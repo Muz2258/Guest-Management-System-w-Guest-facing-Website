@@ -6,7 +6,8 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 const customResolvers = {
-  '@/utils/supabase.ts': ['supabase']
+  '@/utils/supabase.ts': ['supabase'],
+  '@/utils/guestStorage.ts': ['guestStorage']
 }
 
 // https://vite.dev/config/
@@ -25,9 +26,10 @@ export default defineConfig({
       dts: true
     }),
     components({
-      dirs: ['./src/components'],
+      dirs: ['./src/components', './src/views'],
       deep: true,
-      dts: true
+      dts: true,
+      extensions: ['vue'],
     })
   ],
   resolve: {
