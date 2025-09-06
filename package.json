@@ -9,5 +9,8 @@
     "dev": "npm run dev -w Guest-Website",
     "build": "npm run build -w Guest-Website",
     "analyze": "npm run analyze -w Guest-Website"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.2"
   }
 }
