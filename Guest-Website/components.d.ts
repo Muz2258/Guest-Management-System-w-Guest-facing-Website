@@ -8,10 +8,14 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Button: typeof import('./src/components/Atoms/Button.vue')['default']
     DetailsInfo: typeof import('./src/components/Molecules/DetailsInfo.vue')['default']
     EventDetails: typeof import('./src/components/Templates/EventDetails.vue')['default']
     Hero: typeof import('./src/components/Templates/Hero.vue')['default']
+    Modal: typeof import('./src/components/Atoms/Modal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    WelcomeFoot: typeof import('./src/components/Molecules/WelcomeFoot.vue')['default']
+    WelcomeMsg: typeof import('./src/components/Molecules/WelcomeMsg.vue')['default']
   }
 }

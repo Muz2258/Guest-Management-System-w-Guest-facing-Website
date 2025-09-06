@@ -7,7 +7,8 @@ export type PlusOneEligibility = 'eligible' | 'not_eligible'
 
 export interface Guest {
   guest_id: string
-  name: string | Record<string, any>
+  first_name: string
+  last_name: string
   guest_category: GuestCategory
   guest_type: GuestType
   plus_one_eligibility: PlusOneEligibility

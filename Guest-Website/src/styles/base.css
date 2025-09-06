@@ -8,12 +8,14 @@ html, body {
 }
 
 @theme {
+  /* Colors */
   --color-brand-pri: #4F1E8B;
   --color-brand-pri-dark-100: #391762;
   --color-brand-pri-light-100: #6D34B2;
   --color-brand-sec: #DDC8F8;
   --color-brand-sec-light-100: #F5EDFF;
   --color-brand-sec-light-200: #FAF5FF;
+  --color-brand-sec-dark-100: #C3BEC9;
   --color-brand-accent: #177B61;
 
   --color-neutrals-neu-100: #FFFFFF;
@@ -26,9 +28,11 @@ html, body {
   --color-denotive-yellow_light: #FDF2D3;
   --color-denotive-green_light: #C9EEE4;
 
+  /* Fonts */
   --font-display: 'Playfair Display', serif;
   --font-body: 'Lato', sans-serif;
 
+  /* Spacing */
   --spacing-2: 0.125rem;
   --spacing-4: 0.25rem;
   --spacing-6: 0.375rem;
@@ -47,6 +51,7 @@ html, body {
   --spacing-80: 5rem;
   --spacing-88: 5.5rem;
 
+  /* Typography */
   --text-title: 4rem;
   --text-title--line-height: 0.9;
 
@@ -74,6 +79,14 @@ html, body {
   --text--line-height: 1.25;
   --text--letter-spacing: 0.03em;
   --text--font-weight: 400;
+
+  --text-button: 1rem;
+  --text-button--line-height: 1;
+  --text-button-letter-spacing: 0.05em;
+  --text-button-font-weight: 500;
+
+  /* Shadows */
+  --shadow-modal: 0 223px 89px rgba(0, 0, 0, 0.1), 0 56px 56px rgba(0, 0, 0, 0.1), 0 14px 31px rgba(0, 0, 0, 0.2);
 }
 
 h1, h2, h3, h4, h5, h6 {
