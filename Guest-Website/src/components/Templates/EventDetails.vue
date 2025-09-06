@@ -17,12 +17,6 @@
 </template>
 
 <script setup lang="ts">
-// Utilities
-import { ref } from 'vue';
-
-// Components
-import DetailsInfo from '../Molecules/DetailsInfo.vue';
-
 // Reactive Variables
 const sessionDetails = ref<Array<any>>([
     {
