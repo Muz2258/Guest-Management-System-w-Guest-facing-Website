@@ -19,7 +19,7 @@ const props = defineProps({
     type: {
         type: String,
         default: 'primary',
-        validator: (value: string) => ['primary', 'secondary', 'tertiary'].includes(value)
+        validator: (value: string) => ['primary', 'secondary', 'tertiary', 'alt-solid', 'alt-text'].includes(value)
     },
     disabled: {
         type: Boolean,
@@ -40,6 +40,10 @@ const buttonClasses = computed(() => {
             return `${baseClasses} bg-brand-sec-light-100 text-brand-pri hover:bg-brand-sec-light-200 focus:ring-brand-sec`
         case 'tertiary':
             return `${baseClasses} bg-transparent text-brand-pri hover:bg-brand-sec-light-100 focus:ring-brand-pri`
+        case 'alt-solid':
+            return `${baseClasses} bg-neutrals-neu-100 text-brand-accent hover:bg-neutrals-neu-100 focus:ring-neutrals-neu-100`
+        case 'alt-text':
+            return `${baseClasses} bg-transparent text-neutrals-neu-100 hover:bg-neutrals-neu-100 focus:ring-neutrals-neu-100`
     }
 })
 
