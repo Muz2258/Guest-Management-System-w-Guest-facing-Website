@@ -37,10 +37,7 @@
 <script setup lang="ts">
 // Utilities
 import { getColor } from '../../utils/colors';
-import { computed } from 'vue';
-
-// Components
-import Icon from '../Icon.ts';
+import Icon from '../Icon';
 
 // Reactive variables
 const props = defineProps({
