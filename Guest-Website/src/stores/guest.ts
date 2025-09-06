@@ -1,3 +1,7 @@
+import { defineStore } from 'pinia'
+import { ref } from 'vue'
+import { supabase } from '../utils/supabase'
+import { guestStorage } from '../utils/guestStorage'
 import type { RSVP, GuestWithRSVP, GuestJoinResponse } from '../types/guests'
 
 export const useGuestStore = defineStore('guest', () => {

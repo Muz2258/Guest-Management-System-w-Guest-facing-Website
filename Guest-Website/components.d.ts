@@ -15,7 +15,6 @@ declare module 'vue' {
     EventDetails: typeof import('./src/components/Templates/EventDetails.vue')['default']
     GuestIdentifierView: typeof import('./src/views/GuestIdentifierView.vue')['default']
     Hero: typeof import('./src/components/Templates/Hero.vue')['default']
-    Icon: typeof import('./src/components/Atoms/Icon.vue')['default']
     MainWebsiteView: typeof import('./src/views/MainWebsiteView.vue')['default']
     Modal: typeof import('./src/components/Atoms/Modal.vue')['default']
     PrivacyPolicy: typeof import('./src/views/PrivacyPolicy.vue')['default']
