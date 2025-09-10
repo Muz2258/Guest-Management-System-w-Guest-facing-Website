@@ -8,7 +8,6 @@ export {}
 declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
-  const colors: typeof import('@/utils/colors.ts')['colors']
   const computed: typeof import('vue')['computed']
   const createApp: typeof import('vue')['createApp']
   const createPinia: typeof import('pinia')['createPinia']
@@ -18,7 +17,6 @@ declare global {
   const defineStore: typeof import('pinia')['defineStore']
   const effectScope: typeof import('vue')['effectScope']
   const getActivePinia: typeof import('pinia')['getActivePinia']
-  const getColor: typeof import('@/utils/colors.ts')['getColor']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getCurrentWatcher: typeof import('vue')['getCurrentWatcher']
@@ -74,6 +72,7 @@ declare global {
   const useAttrs: typeof import('vue')['useAttrs']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
+  const useEventStore: typeof import('./src/stores/event')['useEventStore']
   const useGuestCache: typeof import('./src/composables/useGuestCache')['useGuestCache']
   const useGuestStore: typeof import('./src/stores/guest')['useGuestStore']
   const useId: typeof import('vue')['useId']
@@ -86,6 +85,7 @@ declare global {
   const useSlots: typeof import('vue')['useSlots']
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useUIStore: typeof import('./src/stores/ui')['useUIStore']
+  const useWellWishesStore: typeof import('./src/stores/wellWishes')['useWellWishesStore']
   const watch: typeof import('vue')['watch']
   const watchEffect: typeof import('vue')['watchEffect']
   const watchPostEffect: typeof import('vue')['watchPostEffect']
@@ -99,4 +99,7 @@ declare global {
   // @ts-ignore
   export type { ConsentPreferences } from './src/stores/privacy'
   import('./src/stores/privacy')
+  // @ts-ignore
+  export type { WellWish } from './src/stores/wellWishes'
+  import('./src/stores/wellWishes')
 }
