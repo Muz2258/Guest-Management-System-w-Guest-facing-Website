@@ -1,0 +1,28 @@
+<template>
+    <section id="love-story" class="pt-80 flex flex-col items-center overflow-x-hidden">
+        <div class="flex gap-4 items-center mb-20">
+            <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
+            <h4 class="text-heading-s text-brand-pri">#BuiltToLast</h4>
+            <img src="../../assets/vectors/leaf-branch__right--purple.svg" class="h-6" />
+        </div>
+        <h3 class="text-neutrals-neu-0 text-heading-md mb-16">Our love story</h3>
+        <div class="text-neutrals-neu-35 text-center text w-[86%] mb-56 space-y-8">
+            <p>Our love story began where neither of us expected, at a neighborhood gym!!😅 A quiet corper noticed a young gym lover enjoying a game of pool with his friends. One glance turned into a smile, a smile into a hello, and that simple beginning blossomed into a connection that grew deeper with every passing day 💘</p>
+            <p>It didn’t take long for us to realize we were meant to be. Every glance, every laugh, every moment drew us closer, until it became undeniable that we weren’t just in love, we are #BuiltToLast!!!💕✨</p>
+            <p>Our journey hasn’t always been perfect, but it has always been ours, filled with laughter, sweet memories, and moments that only made our love stronger than we ever imagined🥰. Through every season, we’ve found in each other a safe haven, a best friend, and the kind of love that feels like home. What we share isn’t just love…. It’s Forever!!! 😊</p>
+        </div>
+        <div class="flex gap-8 justify-center w-full mt-24 h-[30vh]">
+            <img class="self-end" src="../../assets/png/temp-image-details-1.png" />
+            <img class="self-center" src="../../assets/png/temp-image-details-2.png" />
+            <img class="self-start" src="../../assets/png/temp-image-details-3.png" />
+        </div>
+    </section>
+</template>
+
+<script setup lang="ts">
+
+</script>
+
+<style scoped>
+
+</style>
