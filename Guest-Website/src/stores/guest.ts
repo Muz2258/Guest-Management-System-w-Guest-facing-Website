@@ -1,5 +1,3 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
 import { supabase } from '../utils/supabase'
 import { guestStorage } from '../utils/guestStorage'
 import type { RSVP, GuestWithRSVP, GuestJoinResponse } from '../types/guests'
@@ -9,6 +7,7 @@ export const useGuestStore = defineStore('guest', () => {
   const guest = ref<GuestWithRSVP | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const hasCachedData = ref(false)
 
   // Functions
   const fetchGuestByToken = async (token: string, forceRefresh = false) => {
@@ -23,6 +22,7 @@ export const useGuestStore = defineStore('guest', () => {
         if (cacheLoaded){
           loading.value = false
           guestStorage.refreshExpiry()
+          hasCachedData.value = true
           return
         }
       }
@@ -133,10 +133,208 @@ export const useGuestStore = defineStore('guest', () => {
     return false
   }
 
+  const savePlusOne = async (firstName: string, lastName: string) => {
+    if (!guest.value) {
+      console.error('❌ No guest data available to save plus one')
+      throw new Error('No guest data available')
+    }
+
+    try {
+      loading.value = true
+      console.log('💾 Simulating plus one data save...', { firstName, lastName })
+
+      // Construct the full name
+      const plusOneName = lastName ? `${firstName} ${lastName}` : firstName
+
+      // Simulate database update with delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Simulate successful database response
+      const simulatedData = {
+        rsvp_id: guest.value.rsvp?.rsvp_id || `rsvp_${Date.now()}`,
+        guest_id: guest.value.guest_id,
+        attendance_status: guest.value.rsvp?.attendance_status || 'pending',
+        spouse_attending: guest.value.rsvp?.spouse_attending || null,
+        plus_one_attending: true,
+        plus_one_name: plusOneName
+      }
+
+      console.log('✅ Plus one save simulated successfully:', simulatedData)
+
+      // Update local guest data
+      if (guest.value.rsvp) {
+        guest.value.rsvp.plus_one_attending = true
+        guest.value.rsvp.plus_one_name = plusOneName
+      } else {
+        // Create new RSVP if it doesn't exist
+        guest.value.rsvp = simulatedData as RSVP
+      }
+
+      // Save updated data to cache
+      await guestStorage.saveGuestData(guest.value.auth_token, guest.value)
+      
+      console.log('✅ Plus one data updated in store and cache (simulated)')
+      return simulatedData
+
+    } catch (e) {
+      console.error('❌ Error simulating plus one save:', e)
+      error.value = e instanceof Error ? e.message : 'Failed to save plus one data'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const removePlusOne = async () => {
+    if (!guest.value) {
+      console.error('❌ No guest data available to remove plus one')
+      throw new Error('No guest data available')
+    }
+
+    try {
+      loading.value = true
+      console.log('🗑️ Simulating plus one removal...')
+
+      // Simulate database update with delay
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      // Simulate successful database response
+      const simulatedData = {
+        rsvp_id: guest.value.rsvp?.rsvp_id || `rsvp_${Date.now()}`,
+        guest_id: guest.value.guest_id,
+        attendance_status: guest.value.rsvp?.attendance_status || 'pending',
+        spouse_attending: guest.value.rsvp?.spouse_attending || null,
+        plus_one_attending: false,
+        plus_one_name: null
+      }
+
+      console.log('✅ Plus one removal simulated successfully:', simulatedData)
+
+      // Update local guest data
+      if (guest.value.rsvp) {
+        guest.value.rsvp.plus_one_attending = false
+        guest.value.rsvp.plus_one_name = null
+      }
+
+      // Save updated data to cache
+      await guestStorage.saveGuestData(guest.value.auth_token, guest.value)
+      
+      console.log('✅ Plus one data removed from store and cache (simulated)')
+      return simulatedData
+
+    } catch (e) {
+      console.error('❌ Error simulating plus one removal:', e)
+      error.value = e instanceof Error ? e.message : 'Failed to remove plus one data'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const updateGuestRSVP = async (attendanceStatus: 'attending' | 'not_attending') => {
+    if (!guest.value) {
+      console.error('❌ No guest data available to update RSVP')
+      throw new Error('No guest data available')
+    }
+
+    try {
+      loading.value = true
+      console.log('💾 Simulating guest RSVP update...', { attendanceStatus })
+
+      // Simulate database update with delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Simulate successful database response
+      const simulatedData = {
+        rsvp_id: guest.value.rsvp?.rsvp_id || `rsvp_${Date.now()}`,
+        guest_id: guest.value.guest_id,
+        attendance_status: attendanceStatus,
+        spouse_attending: guest.value.rsvp?.spouse_attending || null,
+        plus_one_attending: guest.value.rsvp?.plus_one_attending || null,
+        plus_one_name: guest.value.rsvp?.plus_one_name || null
+      }
+
+      console.log('✅ Guest RSVP update simulated successfully:', simulatedData)
+
+      // Update local guest data
+      if (guest.value.rsvp) {
+        guest.value.rsvp.attendance_status = attendanceStatus
+      } else {
+        // Create new RSVP if it doesn't exist
+        guest.value.rsvp = simulatedData as RSVP
+      }
+
+      // Save updated data to cache
+      await guestStorage.saveGuestData(guest.value.auth_token, guest.value)
+      
+      console.log('✅ Guest RSVP data updated in store and cache (simulated)')
+      return simulatedData
+
+    } catch (e) {
+      console.error('❌ Error simulating guest RSVP update:', e)
+      error.value = e instanceof Error ? e.message : 'Failed to update guest RSVP'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const updateSpouseRSVP = async (spouseAttending: boolean) => {
+    if (!guest.value) {
+      console.error('❌ No guest data available to update spouse RSVP')
+      throw new Error('No guest data available')
+    }
+
+    try {
+      loading.value = true
+      console.log('💾 Simulating spouse RSVP update...', { spouseAttending })
+
+      // Simulate database update with delay
+      await new Promise(resolve => setTimeout(resolve, 900))
+
+      // Simulate successful database response
+      const simulatedData = {
+        rsvp_id: guest.value.rsvp?.rsvp_id || `rsvp_${Date.now()}`,
+        guest_id: guest.value.guest_id,
+        attendance_status: guest.value.rsvp?.attendance_status || 'pending',
+        spouse_attending: spouseAttending,
+        plus_one_attending: guest.value.rsvp?.plus_one_attending || null,
+        plus_one_name: guest.value.rsvp?.plus_one_name || null
+      }
+
+      console.log('✅ Spouse RSVP update simulated successfully:', simulatedData)
+
+      // Update local guest data
+      if (guest.value.rsvp) {
+        guest.value.rsvp.spouse_attending = spouseAttending
+      } else {
+        // Create new RSVP if it doesn't exist
+        guest.value.rsvp = simulatedData as RSVP
+      }
+
+      // Save updated data to cache
+      await guestStorage.saveGuestData(guest.value.auth_token, guest.value)
+      
+      console.log('✅ Spouse RSVP data updated in store and cache (simulated)')
+      return simulatedData
+
+    } catch (e) {
+      console.error('❌ Error simulating spouse RSVP update:', e)
+      error.value = e instanceof Error ? e.message : 'Failed to update spouse RSVP'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
+    // States
     guest,
     loading,
     error,
+    hasCachedData,
+
+    // Functions
     fetchGuestByToken,
     setError,
     loadFromCache,
@@ -144,6 +342,10 @@ export const useGuestStore = defineStore('guest', () => {
     refreshGuestData,
     hasValidCachedData,
     saveCurrentGuestData,
-    loadAnyValidCachedData
+    loadAnyValidCachedData,
+    savePlusOne,
+    removePlusOne,
+    updateGuestRSVP,
+    updateSpouseRSVP
   }
 })
