@@ -26,7 +26,7 @@ const routes = [
         nextTick(() => {
           console.log('🎉 Showing welcome modal for cached guest:', guestStore.guest?.first_name)
           uiStore.showCookie = false // Don't show cookie banner if they already have cached data
-          uiStore.showWelcome = false
+          uiStore.hideAllModals()
         })
       } else {
         console.log('📭 No cached data found, proceeding with basic website experience')
@@ -78,8 +78,14 @@ const routes = [
         // Use nextTick to ensure navigation is complete before showing modal
         nextTick(() => {
           console.log('🎉 Showing personalized welcome modal for:', guestStore.guest?.first_name)
-          uiStore.showCookie = true
-          uiStore.showWelcome = true
+          if(guestStore.hasCachedData){
+            uiStore.showCookie = false // Don't show cookie banner if they already have cached data
+            uiStore.hideAllModals()
+          }else {
+            uiStore.showCookie = true
+            uiStore.showModal = true
+            uiStore.showWelcome = true
+          }
         })
         
         return { name: 'main-website' }

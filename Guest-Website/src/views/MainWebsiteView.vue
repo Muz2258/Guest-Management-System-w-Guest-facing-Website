@@ -1,11 +1,21 @@
 <template>
   <main class="page-wrapper">
     <Hero />
-    <EventDetails id="details" />
+    <RSVP id="rsvp" />
+    <EventDetails v-if="isRsvpGuest" id="details" />
+    <LoveStory />
+    <Gallery />
   </main>
 </template>
 
 <script setup lang="ts">
+// Store variables
+const guestStore = useGuestStore()
+
+// Computed variables
+const isRsvpGuest = computed(() => {
+  return guestStore.guest?.invitation_type === 'rsvp_guest'
+})
 </script>
 
 <style lang="postcss" scoped>
