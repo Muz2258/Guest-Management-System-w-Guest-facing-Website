@@ -40,7 +40,7 @@
                     <template #footer>
                         <div v-if="hasPlusOne" class="flex flex-col gap-8 w-full">
                             <Button 
-                                label="Change +1" 
+                                label="Edit +1" 
                                 type="secondary" 
                                 class="w-full" 
                                 :is-loading="activeButton === 'change-plus-one'" 
@@ -59,14 +59,14 @@
                                 type="primary" 
                                 class="w-full" 
                                 :is-loading="activeButton === 'spouse-yes'" 
-                                @click="setSpouseRSVP('attending')"
+                                @click="setSpouseRSVP(true)"
                             />
                             <Button 
                                 label="No" 
                                 type="secondary" 
                                 class="w-full" 
                                 :is-loading="activeButton === 'spouse-no'" 
-                                @click="setSpouseRSVP('not-attending')"
+                                @click="setSpouseRSVP(false)"
                             />
                         </div>
                         <div v-else-if="spouseResponse === 'not-attending'" class="flex flex-col gap-8 w-full">
@@ -107,7 +107,7 @@
                         />
                         <div v-if="hasPlusOne" class="flex flex-col gap-8 w-full">
                             <Button 
-                                label="Change +1" 
+                                label="Edit +1" 
                                 type="secondary" 
                                 class="w-full" 
                                 @click="updatePlusOne"
@@ -121,7 +121,7 @@
                         </div>
                     </template>
                 </Card>
-                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                <!-- <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
                     <template #footer>
                         <Button 
                             v-if="!hasGift" 
@@ -135,17 +135,17 @@
                             😘
                         </div>
                     </template>
-                </Card>
-                <Card :title="wellWishesCardInfo.title" :description="wellWishesCardInfo.description">
+                </Card> -->
+                <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
                     <template #footer>
                         <Button 
-                            v-if="!hasWished" 
+                            v-if="!hasSentMessage" 
                             label="Leave a message" 
                             type="primary" 
                             class="w-full" 
                             @click="leaveMessage"
                         />
-                        <div v-else="spouseResponse === 'pending'" class="flex flex-col gap-8 w-full">
+                        <div v-else class="flex flex-col gap-8 w-full">
                             <Button 
                                 label="Edit your message" 
                                 type="secondary" 
@@ -156,7 +156,6 @@
                                 label="Delete your message" 
                                 type="tertiary" 
                                 class="w-full" 
-                                :is-loading="activeButton === 'delete-message'" 
                                 @click="deleteMessage"
                             />
                         </div>
@@ -172,7 +171,7 @@
                 Thank you for letting us know <span class="text-neutrals-neu-0">{{ guestName }}</span>, we totally understand. You can still share in our joy by sending a gift or leaving a message.
             </p>
             <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                <!-- <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
                     <template #footer>
                         <Button 
                             v-if="!hasGift" 
@@ -186,17 +185,17 @@
                             😘
                         </div>
                     </template>
-                </Card>
-                <Card :title="wellWishesCardInfo.title" :description="wellWishesCardInfo.description">
+                </Card> -->
+                <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
                     <template #footer>
                         <Button 
-                            v-if="!hasWished" 
+                            v-if="!hasSentMessage" 
                             label="Leave a message" 
                             type="primary" 
                             class="w-full" 
                             @click="leaveMessage"
                         />
-                        <div v-else="spouseResponse === 'pending'" class="flex flex-col gap-8 w-full">
+                        <div v-else class="flex flex-col gap-8 w-full">
                             <Button 
                                 label="Edit your message" 
                                 type="secondary" 
@@ -207,7 +206,6 @@
                                 label="Delete your message" 
                                 type="tertiary" 
                                 class="w-full" 
-                                :is-loading="activeButton === 'delete-message'" 
                                 @click="deleteMessage"
                             />
                         </div>
@@ -223,7 +221,7 @@
                 Though we're having a small, private ceremony with immediate family, we couldn't celebrate without letting you know. Thank you for being part of our journey.
             </p>
             <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                <!-- <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
                     <template #footer>
                         <Button 
                             v-if="!hasGift" 
@@ -237,17 +235,17 @@
                             😘
                         </div>
                     </template>
-                </Card>
-                <Card :title="wellWishesCardInfo.title" :description="wellWishesCardInfo.description">
+                </Card> -->
+                <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
                     <template #footer>
                         <Button 
-                            v-if="!hasWished" 
+                            v-if="!hasSentMessage" 
                             label="Leave a message" 
                             type="primary" 
                             class="w-full"
                             @click="leaveMessage"
                         />
-                        <div v-else="spouseResponse === 'pending'" class="flex flex-col gap-8 w-full">
+                        <div v-else class="flex flex-col gap-8 w-full">
                             <Button 
                                 label="Edit your message" 
                                 type="secondary" 
@@ -258,7 +256,6 @@
                                 label="Delete your message" 
                                 type="tertiary" 
                                 class="w-full" 
-                                :is-loading="activeButton === 'delete-message'" 
                                 @click="deleteMessage"
                             />
                         </div>
@@ -272,18 +269,25 @@
 </template>
 
 <script setup lang="ts">
-// Store variables
-const guestStore = useGuestStore();
-const eventStore = useEventStore();
+// Stores
 const uiStore = useUIStore();
-const wellWishesStore = useWellWishesStore();
-const { isRSVPOpen } = eventStore;
-const { deleteWellWish } = wellWishesStore;
+const eventStore = useEventStore();
+const guestStore = useGuestStore();
+const rsvpStore = useRSVPStore();
+const goodWillStore = useGoodWillStore();
+
+// Store functions
+
+// Store variables
+const { isRSVPOpen } = storeToRefs(eventStore);
+const { guestData } = storeToRefs(guestStore);
+const { rsvpData } = storeToRefs(rsvpStore);
+const { goodWillMessage } = storeToRefs(goodWillStore);
 
 // Reactive variables
 const activeButton = ref<string | null>(null);
-const hasGift = ref(false);
 const spouseResponse = ref<string>('pending');
+// const hasGift = ref(false);
 const countdown = ref({
     days: 0,
     hours: 0
@@ -293,33 +297,26 @@ const countdown = ref({
 let countdownInterval: NodeJS.Timeout | null = null;
 
 // Computed variables 
-const guestResponse = computed(() => guestStore.guest?.rsvp?.attendance_status || 'pending')
-
-const hasPlusOne = computed(() => guestStore.guest?.rsvp?.plus_one_attending === true)
-
-const plusOneName = computed(() => guestStore.guest?.rsvp?.plus_one_name || '')
-
-const hasWished = computed(() => wellWishesStore.hasWellWish)
+const guestInfo = computed(() => guestData.value?.guest)
+const guestRsvp = computed(() => rsvpData.value)
+const guestPermissions = computed(() => guestData.value?.permissions)
+const guestResponse = computed(() => guestRsvp.value?.attendance_status || 'pending')
+const hasPlusOne = computed(() => guestRsvp.value?.plus_one_attending)
+const plusOneName = computed(() => guestRsvp.value?.plus_one_name || '')
+const hasSentMessage = computed(() => goodWillMessage.value?.has_message)
+const isCouple = computed(() => guestPermissions.value?.is_couple)
+const isRsvpGuest = computed(() => guestPermissions.value?.can_rsvp)
+const plusOneEligible = computed(() => guestPermissions.value?.can_bring_plus_one)
 
 const guestName = computed(() => {
-    const firstName = guestStore.guest?.first_name || '';
-    const lastName = guestStore.guest?.last_name || '';
+    const firstName = guestInfo.value?.first_name || '';
+    const lastName = guestInfo.value?.last_name || '';
 
     if(isCouple.value && lastName) {
         return `Mr. & Mrs. ${lastName}`;
     } else {
         return firstName;
     }
-})
-
-const isCouple = computed(() => guestStore.guest?.guest_type === 'couple')
-
-const isRsvpGuest = computed(() => {
-    return guestStore.guest?.invitation_type === 'rsvp_guest';
-})
-
-const plusOneEligible = computed(() => {
-    return guestStore.guest?.plus_one_eligibility === 'eligible';
 })
 
 const plusOneCardInfo = computed(() => {
@@ -368,7 +365,7 @@ const plusOneCardInfo = computed(() => {
     }
 })
 
-const giftingCardInfo = computed(() => {
+/* const giftingCardInfo = computed(() => {
     if(hasGift.value) {
         return {
             title: 'Gift sent!',
@@ -384,10 +381,10 @@ const giftingCardInfo = computed(() => {
             description: 'If you wish to honor us with a gift, we have a registry set up for your convenience.'
         }
     }
-})
+}) */
 
-const wellWishesCardInfo = computed(() => {
-    if(hasWished.value) {
+const goodWillCardInfo = computed(() => {
+    if(hasSentMessage.value) {
         return {
             title: 'Message Sent!',
             description: {
@@ -437,13 +434,15 @@ const updateRSVP = async (status: 'attending' | 'not_attending') => {
     const buttonId = status === 'attending' ? 'rsvp-yes' : 'rsvp-no';
     activeButton.value = buttonId;
 
+    if(!guestData.value?.auth_token) {
+        console.error('❌ No guest token available to update RSVP');
+        return;
+    }
+
+    const token = guestData.value.auth_token;
+
     try {
-        if(!guestStore.guest?.guest_id) {
-            throw new Error('No guest ID available');
-        }
-
-        await guestStore.updateGuestRSVP(status);
-
+        await rsvpStore.updateGuestRsvp(token, {attendance_status: status});
         console.log(`RSVP updated to ${status} successfully.`);
     } catch (error) {
         console.error('Error updating RSVP:', error);
@@ -452,23 +451,30 @@ const updateRSVP = async (status: 'attending' | 'not_attending') => {
     }
 }
 
-const setSpouseRSVP = (status: string) => {
-    const buttonId = status === 'attending' ? 'spouse-yes' : 'spouse-no';
-    activeButton.value = buttonId;
+const setSpouseRSVP = async (status: boolean) => {
+    spouseResponse.value = status ? 'attending' : 'not-attending';
+    activeButton.value = status ? 'spouse-yes' : 'spouse-no';
 
-    setTimeout(() => {
-        spouseResponse.value = status;
+    if(!guestData.value?.auth_token) {
+        console.error('❌ No guest token available to update RSVP');
+        return;
+    }
+    
+    const token = guestData.value.auth_token;
+
+    try {
+        await rsvpStore.updateGuestRsvp(token, {spouse_attending: status});
+        console.log(`Spouse RSVP set to ${status} successfully.`);
+    } catch (error) {
+        console.error('Error setting spouse RSVP:', error);
+    } finally {
         activeButton.value = null;
-    }, 1000);
+    }
 }
 
 const changeSpouseRSVP = () => {
     activeButton.value = 'update-spouse-response';
-
-    setTimeout(() => {
-        spouseResponse.value = 'pending';
-        activeButton.value = null;
-    }, 1000);
+    spouseResponse.value = 'pending';
 }
 
 const addPlusOne = () => {
@@ -486,42 +492,28 @@ const removePlusOne = () => {
     uiStore.showRemovePlusOneModal();
 }
 
-const sendGift = () => {
+/* const sendGift = () => {
     activeButton.value = 'send-gift';
 
     setTimeout(() => {
         hasGift.value = true;
         activeButton.value = null;
     }, 1000);
-}
+} */
 
 const leaveMessage = () => {
-    console.log('Sending well wishes message...');
-    uiStore.showWellWishesModal();
+    console.log('Sending good will message...');
+    uiStore.showGoodWillModal();
 }
 
 const editMessage = () => {
-    console.log('Editing well wishes message...');
-    uiStore.showWellWishesModal();
+    console.log('Editing good will message...');
+    uiStore.showGoodWillModal();
 }
 
-const deleteMessage = async () => {
-    try {
-        if(!guestStore.guest?.guest_id) {
-            throw new Error('No guest ID available');
-        }
-
-        console.log('Deleting well wishes message...');
-        activeButton.value = 'delete-message';
-
-        await deleteWellWish(guestStore.guest?.guest_id);
-
-        console.log('Well wishes message deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting well wishes message:', error);
-    } finally {
-        activeButton.value = null;
-    }
+const deleteMessage = () => {
+    console.log('Showing delete confirmation dialog...');
+    uiStore.showDeleteGoodWillModal();
 }
 
 const showUpdateRSVPModal = () => {
