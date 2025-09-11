@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
-import { nextTick } from 'vue'
 import { useGuestStore } from '../stores/guest'
+import { useRSVPStore } from '../stores/rsvp'
 import { useUIStore } from '../stores/ui'
+import { useGoodWillStore } from '../stores/goodWill'
+import { guestStorage } from '../utils/guestStorage'
 import MainWebsiteView from '../views/MainWebsiteView.vue'
 import GuestIdentifierView from '../views/GuestIdentifierView.vue'
 import PrivacyPolicy from '../views/PrivacyPolicy.vue'
@@ -12,22 +14,20 @@ const routes = [
     name: 'main-website',
     component: MainWebsiteView,
     beforeEnter: async () => {
-      console.log('🏠 Accessing main website without token, checking for cached data...')
-      
       const guestStore = useGuestStore()
-      const uiStore = useUIStore()
+
+      if(guestStore.accessedViaToken){
+        console.log('ℹ️ Navigated here from token-handler, skipping cached data check')
+        return
+      }
       
       // Try to load any valid cached guest data
-      const hasCachedData = guestStore.loadAnyValidCachedData()
+      console.log('🏠 Accessing main website without token, checking for cached data...')
+      const hasCachedData = guestStorage.checkCache()
       
       if (hasCachedData) {
-        console.log('✅ Found cached guest data, enabling enhanced experience')
-        // Show welcome modal for returning guests
-        nextTick(() => {
-          console.log('🎉 Showing welcome modal for cached guest:', guestStore.guest?.first_name)
-          uiStore.showCookie = false // Don't show cookie banner if they already have cached data
-          uiStore.hideAllModals()
-        })
+        console.log('✅ Found cached data, initialising store from cache')
+        await initialiseStoreFromCache()
       } else {
         console.log('📭 No cached data found, proceeding with basic website experience')
       }
@@ -59,36 +59,25 @@ const routes = [
       
       try {
         console.log('🔑 Attempting to validate token...')
-        await guestStore.fetchGuestByToken(to.params.token as string)
+        // await guestStore.fetchGuestByToken(to.params.token as string)
+        await initialiseStoreWithToken(to.params.token as string)
         console.log('✅ Token validation successful')
-        
-        // Step 1: Verify if guest data has been successfully fetched and stored
-        if (!guestStore.guest) {
-          console.error('❌ Guest data not found after successful token validation')
-          guestStore.setError('Failed to load guest information')
-          return { name: 'guest-identifier' }
-        }
-        
-        console.log('✅ Guest data verified in store:', guestStore.guest)
-        
-        // Step 2: Navigate to the 'main-website' view
+
+        //Navigate to the 'main-website' view
         console.log('🧭 Navigating to main-website view')
+        guestStore.accessedViaToken = true
+        await router.push({ name: 'main-website' })
         
-        // Step 3: Show the modal with the personalised welcome message
         // Use nextTick to ensure navigation is complete before showing modal
-        nextTick(() => {
-          console.log('🎉 Showing personalized welcome modal for:', guestStore.guest?.first_name)
-          if(guestStore.hasCachedData){
-            uiStore.showCookie = false // Don't show cookie banner if they already have cached data
-            uiStore.hideAllModals()
-          }else {
-            uiStore.showCookie = true
-            uiStore.showModal = true
-            uiStore.showWelcome = true
-          }
-        })
-        
-        return { name: 'main-website' }
+        if(guestStore.hasCachedData){
+          uiStore.showCookie = false
+          uiStore.hideAllModals()
+        }else {
+          console.log('🎉 Showing personalized welcome modal for:', guestStore.guestData?.guest.first_name)
+          uiStore.showCookie = true
+          uiStore.showModal = true
+          uiStore.showWelcome = true
+        }
       } catch (e) {
         console.error('❌ Token validation failed:', e)
         guestStore.setError(e instanceof Error ? e.message : 'Invalid invitation link')
@@ -98,6 +87,50 @@ const routes = [
     }
   }
 ]
+
+const initialiseStoreWithToken = async (token: string) => {
+  console.log('🚀 Initialising stores with token:', token)
+  const guestStore = useGuestStore()
+  const rsvpStore = useRSVPStore()
+  const goodWillStore = useGoodWillStore()
+  
+  const results = await Promise.allSettled([
+    guestStore.fetchGuestByToken(token),
+    rsvpStore.fetchRSVPData(token),
+    goodWillStore.fetchGoodWillMessage(token)
+  ])
+
+  results.forEach((result, index) => {
+    const stores = [guestStore, rsvpStore, goodWillStore]
+    if (result.status === 'rejected') {
+      console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
+    } else {
+      console.log(`✅ Store ${index} initialized successfully`)
+    }
+  })
+}
+
+const initialiseStoreFromCache = async() => {
+  console.log('🚀 Initialising stores from cache')
+  const guestStore = useGuestStore()
+  const rsvpStore = useRSVPStore()
+  const goodWillStore = useGoodWillStore()
+
+  const results = await Promise.allSettled([
+    guestStore.initialiseGuestStoreFromCache(),
+    rsvpStore.initialiseRsvpStoreFromCache(),
+    goodWillStore.initialiseGoodWillStoreFromCache()
+  ])
+
+  results.forEach((result, index) => {
+    const stores = [guestStore, rsvpStore, goodWillStore]
+    if (result.status === 'rejected') {
+      console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
+    } else {
+      console.log(`✅ Store ${index} initialized successfully`)
+    }
+  })
+}
 
 const router = createRouter({
   history: createWebHistory(),
