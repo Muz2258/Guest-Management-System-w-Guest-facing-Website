@@ -11,17 +11,20 @@
           @form-valid="handleFormValidityChange"
           @submit="handlePlusOneSubmit"
         />
-        <WellWishesForm 
-          v-if="showWellWishesForm" 
-          ref="wellWishesFormRef"
-          @form-valid="handleWellWishesFormValidityChange"
-          @submit="handleWellWishesSubmit"
+        <GoodWillForm 
+          v-if="showGoodWillForm" 
+          ref="goodWillFormRef"
+          @form-valid="handleGoodWillValidityChange"
+          @submit="handleGoodWillSubmit"
         />
         <RemovePlusOneDialog 
           v-if="showRemovePlusOneDialog"
         />
-        <UpdateRSVPDialog 
+        <UpdateRSVPDialog
           v-if="showUpdateRSVPDialog"
+        />
+        <DeleteGoodWillDialog
+          v-if="showDeleteGoodWillDialog"
         />
       </template>
       <template #footer>
@@ -36,11 +39,11 @@
           :is-submitting="isPlusOneSubmitting"
           @submit="handlePlusOneFooterSubmit"
         />
-        <WellWishesFooter
-          v-if="showWellWishesForm"
-          :is-form-valid="isWellWishesFormValid"
-          :is-submitting="isWellWishesSubmitting"
-          @submit="handleWellWishesFooterSubmit"
+        <GoodWillFooter
+          v-if="showGoodWillForm"
+          :is-form-valid="isGoodWillFormValid"
+          :is-submitting="isGoodWillSubmitting"
+          @submit="handleGoodWillFooterSubmit"
         />
         <RemovePlusOneFooter 
           v-if="showRemovePlusOneDialog"
@@ -55,6 +58,12 @@
           @update-rsvp="handleUpdateRSVP"
           @cancel="handleClose"
         />
+        <DeleteGoodWillFooter
+          v-if="showDeleteGoodWillDialog"
+          :is-deleting="isDeletingGoodWill"
+          @cancel="handleDeleteGoodWillCancel"
+          @confirm="handleDeleteGoodWillConfirm"
+        />
       </template>
     </Modal>
     <!-- <CacheStatus :token="guestData?.auth_token" :show="true"/> -->
@@ -66,26 +75,29 @@
 const privacyStore = usePrivacyStore()
 const uiStore = useUIStore()
 const guestStore = useGuestStore()
-const wellWishesStore = useWellWishesStore()
+const rsvpStore = useRSVPStore()
+const goodWillStore = useGoodWillStore()
 
 // Refs for form handling
 const plusOneFormRef = ref<{ handleSubmit: () => void } | null>(null)
-const wellWishesFormRef = ref<{ handleSubmit: () => void } | null>(null)
+const goodWillFormRef = ref<{ handleSubmit: () => void } | null>(null)
 const isPlusOneFormValid = ref(false)
 const isPlusOneSubmitting = ref(false)
 const isRemovingPlusOne = ref(false)
-const isWellWishesFormValid = ref(false)
-const isWellWishesSubmitting = ref(false)
+const isGoodWillFormValid = ref(false)
+const isGoodWillSubmitting = ref(false)
 const isUpdatingRSVP = ref(false)
 const selectedRSVPResponse = ref('')
+const isDeletingGoodWill = ref(false)
 
 // Computed properties
 const showModal = computed(() => uiStore.showModal)
 const showWelcome = computed(() => uiStore.showWelcome)
 const showPlusOneForm = computed(() => uiStore.showPlusOneForm)
 const showRemovePlusOneDialog = computed(() => uiStore.showRemovePlusOneDialog)
-const showWellWishesForm = computed(() => uiStore.showWellWishesForm)
+const showGoodWillForm = computed(() => uiStore.showGoodWillForm)
 const showUpdateRSVPDialog = computed(() => uiStore.showUpdateRSVPDialog)
+const showDeleteGoodWillDialog = computed(() => uiStore.showDeleteGoodWillDialog)
 const showCookie = computed(() => uiStore.showCookie && !privacyStore.hasSeenBanner)
 
 // Functions
@@ -109,20 +121,25 @@ const handleFormValidityChange = (isValid: boolean) => {
 }
 
 const handlePlusOneSubmit = async (data: { firstName: string; lastName: string }) => {
+  if(!guestStore.guestData?.auth_token) {
+    throw new Error('No guest token available')
+  }
+
+  const token = guestStore.guestData.auth_token
+  isPlusOneSubmitting.value = true
+
   try {
     console.log('💾 Saving plus one data:', data)
     
-    // Save to guest store and database
-    await guestStore.savePlusOne(data.firstName, data.lastName)
+    await rsvpStore.updateGuestRsvp(token, {
+      plus_one_name: `${data.firstName} ${data.lastName ? data.lastName : ''}`.trim(),
+      plus_one_attending: true
+    })
     
     console.log('✅ Plus one saved successfully')
     uiStore.hideAllModals()
-    
-    // You could add a success toast/notification here if needed
-    
   } catch (error) {
     console.error('❌ Error saving plus one:', error)
-    // You could add error handling/notification here
   }finally {
     isPlusOneSubmitting.value = false
   }
@@ -137,89 +154,117 @@ const handlePlusOneFooterSubmit =  () => {
 }
 
 const handleDeletePlusOne = async () => {
+  if(!guestStore.guestData?.auth_token) {
+    throw new Error('No guest token available')
+  }
+
+  const token = guestStore.guestData.auth_token
+  isRemovingPlusOne.value = true
+
   try {
-    console.log('🗑️ Deleting plus one')
-    isRemovingPlusOne.value = true
+    console.log('💾 Removing plus one data... ')
     
-    // Remove plus one from guest store and database
-    await guestStore.removePlusOne()
-    
+    await rsvpStore.updateGuestRsvp(token, {
+      plus_one_name: null,
+      plus_one_attending: null
+    })
+
     console.log('✅ Plus one removed successfully')
     uiStore.hideAllModals()
-    
   } catch (error) {
     console.error('❌ Error removing plus one:', error)
-    // You could add error handling/notification here
-  } finally {
+  }finally {
     isRemovingPlusOne.value = false
   }
 }
 
-// Well Wishes form handling
-const handleWellWishesFormValidityChange = (isValid: boolean) => {
-  isWellWishesFormValid.value = isValid
+// Good Will form handling
+const handleGoodWillValidityChange = (isValid: boolean) => {
+  isGoodWillFormValid.value = isValid
 }
 
-const handleWellWishesSubmit = async (data: { message: string }) => {
+const handleGoodWillSubmit = async (data: { message: string }) => {
+  if (!guestStore.guestData?.auth_token) {
+    throw new Error('No guest token available')
+  }
+
+  const token = guestStore.guestData.auth_token
+  isGoodWillSubmitting.value = true
+
   try {
-    console.log('💾 Saving well wishes data:', data)
-    
-    if (!guestStore.guest?.guest_id) {
-      throw new Error('No guest ID available')
-    }
-    
-    // Save to well wishes store
-    await wellWishesStore.saveWellWish(guestStore.guest.guest_id, data.message)
-    
-    console.log('✅ Well wishes saved successfully')
+    console.log('💾 Saving good will data:', data)
+
+    // Save to good will store
+    await goodWillStore.saveGoodWillMessage(token, data.message)
+
+    console.log('✅ Good will message saved successfully')
     uiStore.hideAllModals()
     
   } catch (error) {
-    console.error('❌ Error saving well wishes:', error)
-    // You could add error handling/notification here
+    console.error('❌ Error saving good will message:', error)
   }finally {
-    isWellWishesSubmitting.value = false
+    isGoodWillSubmitting.value = false
   }
 }
 
-const handleWellWishesFooterSubmit = () => {
-  if (wellWishesFormRef.value && isWellWishesFormValid.value) {
-    isWellWishesSubmitting.value = true
-    
-    wellWishesFormRef.value?.handleSubmit()
+const handleGoodWillFooterSubmit = () => {
+  if (goodWillFormRef.value && isGoodWillFormValid.value) {
+    isGoodWillSubmitting.value = true
+
+    goodWillFormRef.value?.handleSubmit()
   }
 }
 
 // RSVP Update handling
 const handleUpdateRSVP = async (response: 'attending' | 'not_attending') => {
   console.log('handleUpdateRSVP called with response:', response);
+  isUpdatingRSVP.value = true
+  selectedRSVPResponse.value = response
+
+  if(!guestStore.guestData?.auth_token) {
+      console.error('❌ No guest token available to update RSVP');
+      return;
+  }
+
+  const token = guestStore.guestData.auth_token;
+
   try {
-    console.log('📝 Updating RSVP to:', response)
-    isUpdatingRSVP.value = true
-    selectedRSVPResponse.value = response
-    
-    if (!guestStore.guest?.guest_id) {
-      throw new Error('No guest ID available')
-    }
-    
-    // Update guest RSVP in store and database
-    await guestStore.updateGuestRSVP(response)
-    
-    // If guest is a couple, also update spouse RSVP
-    if (guestStore.guest.guest_type === 'couple') {
-      const spouseAttending = response === 'attending'
-      await guestStore.updateSpouseRSVP(spouseAttending)
-    }
+    await rsvpStore.updateGuestRsvp(token, {attendance_status: response});
     
     console.log('✅ RSVP updated successfully')
     uiStore.hideAllModals()
-    
   } catch (error) {
-    console.error('❌ Error updating RSVP:', error)
-    // You could add error handling/notification here
+    console.error('Error updating RSVP:', error);
   } finally {
     isUpdatingRSVP.value = false
     selectedRSVPResponse.value = ''
+  }
+}
+
+// Delete Good Will message handling
+const handleDeleteGoodWillCancel = () => {
+  uiStore.hideAllModals()
+}
+
+const handleDeleteGoodWillConfirm = async () => {
+  isDeletingGoodWill.value = true
+
+  if(!guestStore.guestData?.auth_token) {
+      console.error('❌ No guest token available to delete good will message');
+      return;
+  }
+
+  const token = guestStore.guestData.auth_token;
+
+  try {
+    await goodWillStore.deleteGoodWillMessage(token);
+    
+    console.log('✅ Good will message deleted successfully')
+    uiStore.hideAllModals()
+  } catch (error) {
+    console.error('Error deleting good will message:', error);
+  } finally {
+    isDeletingGoodWill.value = false
   }
 }
 
