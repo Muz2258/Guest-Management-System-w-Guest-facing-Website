@@ -10,6 +10,9 @@
 // Stores and Utilities
 const guestStore = useGuestStore()
 
+// Store variables
+const { guestData } = guestStore
+
 // Define emits for parent component
 const emit = defineEmits<{
   rsvpClick: []
@@ -18,11 +21,9 @@ const emit = defineEmits<{
 }>()
 
 // Computed properties
-const guest = computed(() => guestStore.guest)
-
 const canRSVP = computed(() => {
-  if (!guest.value) return false
-  return guest.value.invitation_type === 'rsvp_guest'
+  if (!guestData) return false
+  return guestData.permissions.can_rsvp
 })
 
 // Event handlers

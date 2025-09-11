@@ -9,8 +9,8 @@
         </p>
         <ul class="list-disc list-inside mt-8 text-neutrals-neu-35 text">
             <li>Explore our big day details</li>
-            <li v-if="guest?.invitation_type === 'rsvp_guest'">Confirm you're coming <span class="text-brand-accent">(Required)</span></li>
-            <li v-if="guest?.plus_one_eligibility === 'eligible'">Add your plus one</li>
+            <li v-if="canRsvp">Update your RSVP <span class="text-brand-accent">(Required)</span></li>
+            <li v-if="canAddPlusOne">Add your plus one</li>
             <li>Spoil us with gifts 😜</li>
             <li>and get ready to party! 💃🏾🕺🏾</li>
         </ul>
@@ -21,8 +21,12 @@
 // Stores and Utilities
 const guestStore = useGuestStore()
 
+// Store variables
+const { guestData } = guestStore
+
 // Computed properties
-const guest = computed(() => guestStore.guest)
+const guest = computed(() => guestData?.guest)
+const guestPermissions = computed(() => guestData?.permissions)
 
 const guestDisplayName = computed(() => {
   if (!guest.value) {
@@ -31,7 +35,7 @@ const guestDisplayName = computed(() => {
   
   const firstName = guest.value.first_name || ''
   const lastName = guest.value.last_name || ''
-  const isCouple = guest.value.guest_type === 'couple'
+  const isCouple = guestPermissions.value?.is_couple
   
   if (isCouple && lastName) {
     return `Mr. & Mrs. ${lastName}`
@@ -39,6 +43,9 @@ const guestDisplayName = computed(() => {
     return firstName
   }
 })
+
+const canAddPlusOne = computed(() => guestPermissions.value?.can_bring_plus_one)
+const canRsvp = computed(() => guestPermissions.value?.can_rsvp)
 </script>
 
 <style scoped>

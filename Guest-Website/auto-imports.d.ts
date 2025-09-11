@@ -73,6 +73,7 @@ declare global {
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
   const useEventStore: typeof import('./src/stores/event')['useEventStore']
+  const useGoodWillStore: typeof import('./src/stores/goodWill')['useGoodWillStore']
   const useGuestCache: typeof import('./src/composables/useGuestCache')['useGuestCache']
   const useGuestStore: typeof import('./src/stores/guest')['useGuestStore']
   const useId: typeof import('vue')['useId']
@@ -80,12 +81,13 @@ declare global {
   const useModel: typeof import('vue')['useModel']
   const usePrivacy: typeof import('./src/composables/usePrivacy')['usePrivacy']
   const usePrivacyStore: typeof import('./src/stores/privacy')['usePrivacyStore']
+  const useRSVPStore: typeof import('./src/stores/rsvp')['useRSVPStore']
   const useRoute: typeof import('vue-router')['useRoute']
   const useRouter: typeof import('vue-router')['useRouter']
   const useSlots: typeof import('vue')['useSlots']
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useUIStore: typeof import('./src/stores/ui')['useUIStore']
-  const useWellWishesStore: typeof import('./src/stores/wellWishes')['useWellWishesStore']
+  const useWellWishesStore: typeof import('./src/stores/goodWill')['useWellWishesStore']
   const watch: typeof import('vue')['watch']
   const watchEffect: typeof import('vue')['watchEffect']
   const watchPostEffect: typeof import('vue')['watchPostEffect']
@@ -99,7 +101,4 @@ declare global {
   // @ts-ignore
   export type { ConsentPreferences } from './src/stores/privacy'
   import('./src/stores/privacy')
-  // @ts-ignore
-  export type { WellWish } from './src/stores/wellWishes'
-  import('./src/stores/wellWishes')
 }

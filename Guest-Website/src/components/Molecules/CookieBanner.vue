@@ -113,6 +113,9 @@
 </template>
 
 <script setup lang="ts">
+// Imports
+import Icon from '../Icon'
+
 // Stores
 const privacyStore = usePrivacyStore()
 

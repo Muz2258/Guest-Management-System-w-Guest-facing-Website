@@ -17,11 +17,15 @@
 
 <script setup lang="ts">
 // Stores
-const guestStore = useGuestStore()
+const rsvpStore = useRSVPStore()
+
+// Store variables
+const { rsvpData } = rsvpStore
 
 // Computed properties
+const guestRsvp = computed(() => rsvpData)
 const currentRSVPText = computed(() => {
-    const status = guestStore.guest?.rsvp?.attendance_status
+    const status = guestRsvp.value?.attendance_status
     if (status === 'attending') return "Yes, I'll be there"
     if (status === 'not_attending') return "Sorry, I can't make it"
     return 'No response yet'
