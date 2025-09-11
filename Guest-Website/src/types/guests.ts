@@ -14,23 +14,41 @@ export interface Guest {
   plus_one_eligibility: PlusOneEligibility
   invitation_type: InvitationType
   invitation_method: InvitationMethod
-  auth_token: string
-  created_by: string
 }
 
 export interface RSVP {
   rsvp_id: string
-  guest_id: string
   attendance_status: AttendanceStatus
   spouse_attending: boolean | null
   plus_one_attending: boolean | null
   plus_one_name: string | null
+  submitted_at: string | null
+  updated_at: string | null
 }
 
-export interface GuestWithRSVP extends Guest {
-  rsvp: RSVP | null
+export interface Permissions {
+  can_rsvp: boolean
+  can_bring_plus_one: boolean
+  is_couple: boolean
+  token_expires_at: string | null
+  has_goodwill: boolean
 }
 
-export interface GuestJoinResponse extends Guest {
-  rsvps: RSVP[] | null
+export interface GoodWillMessage {
+  has_message: boolean
+  message_id: string
+  guest_id: string
+  message_text: string
+  is_approved: boolean
+  created_at: string
+  updated_at: string | null
+  approved_at: string | null
+  approved_by: string | null
+}
+
+export interface GuestData {
+  auth_token: string
+  authenticated: boolean
+  guest: Guest
+  permissions: Permissions
 }
