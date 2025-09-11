@@ -55,31 +55,44 @@ class SecureGuestStorage {
   /**
    * Save guest data to local storage with encryption
    */
-  async saveGuestData(token: string, guestData: any): Promise<void> {
-    try {
-      // Check if functional cookies are allowed
+  async saveGuestData(token: string, partialData: Partial<{
+    guestInfo?: any;
+    guestRsvp?: any;
+    guestMessage?: any;
+  }>): Promise<void> {
+    try{
       const canStore = await this.canUseStorage()
       if (!canStore) {
-        console.log('🚫 Functional cookies not allowed, skipping storage')
+        console.warn('🚫 Functional cookies not allowed, skipping guest data storage')
         return
       }
 
+      // Get existing data to merge
+      const existing = this.getGuestData(token)
+      const currentData = existing?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}}
+
+      // Merge new partial data with existing data
+      const mergedData = {
+        guestInfo: partialData.guestInfo || currentData.guestInfo,
+        guestRsvp: partialData.guestRsvp || currentData.guestRsvp,
+        guestMessage: partialData.guestMessage || currentData.guestMessage
+      }
+
       const now = Date.now()
-      const dataToStore: StoredGuestData = {
+      const storedData: StoredGuestData = {
         token,
-        guestData,
+        guestData: mergedData,
         timestamp: now,
         expiresAt: now + this.TTL
       }
 
-      const jsonString = JSON.stringify(dataToStore)
+      const jsonString = JSON.stringify(storedData)
       const encryptedData = this.encrypt(jsonString)
-      
+
       localStorage.setItem(this.STORAGE_KEY, encryptedData)
-      
-      console.log('✅ Guest data saved securely to local storage')
-    } catch (error) {
-      console.error('❌ Failed to save guest data:', error)
+      console.log('✅ Guest data securely saved to storage')
+    }catch(err){
+      console.error('❌ Failed to save guest data:', err)
     }
   }
 
@@ -122,6 +135,25 @@ class SecureGuestStorage {
       this.clearGuestData()
       return null
     }
+  }
+
+  /**
+   * Check if guest data exists for a specific token
+   */
+  checkCache(token?: string): boolean {
+    console.log('📦 Attempting to load guest data from cache...')
+    let cachedData = null
+
+    if(!token) cachedData = this.getGuestData()
+    else cachedData = this.getGuestData(token)
+    
+    if (cachedData && cachedData.isValid) {
+      console.log('✅ Loaded guest data from cache:', cachedData.guestData)
+      return true
+    }
+    
+    console.log('📭 No valid cached data found')
+    return false
   }
 
   /**
