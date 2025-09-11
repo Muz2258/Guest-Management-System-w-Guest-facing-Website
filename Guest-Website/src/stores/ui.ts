@@ -7,7 +7,8 @@ export const useUIStore = defineStore('ui', () => {
     const showPlusOneForm = ref(false)
     const showRemovePlusOneDialog = ref(false)
     const showUpdateRSVPDialog = ref(false)
-    const showWellWishesForm = ref(false)
+    const showGoodWillForm = ref(false)
+    const showDeleteGoodWillDialog = ref(false)
     const isLoading = ref(false)
     const isGuestDataLoading = ref(false)
 
@@ -16,9 +17,10 @@ export const useUIStore = defineStore('ui', () => {
         showModal.value = false
         showWelcome.value = false
         showPlusOneForm.value = false
-        showWellWishesForm.value = false
+        showGoodWillForm.value = false
         showRemovePlusOneDialog.value = false
         showUpdateRSVPDialog.value = false
+        showDeleteGoodWillDialog.value = false
     }
 
     const showPlusOneModal = () => {
@@ -27,10 +29,10 @@ export const useUIStore = defineStore('ui', () => {
         showPlusOneForm.value = true
     }
 
-    const showWellWishesModal = () => {
+    const showGoodWillModal = () => {
         hideAllModals()
         showModal.value = true
-        showWellWishesForm.value = true
+        showGoodWillForm.value = true
     }
 
     const showRemovePlusOneModal = () => {
@@ -43,6 +45,12 @@ export const useUIStore = defineStore('ui', () => {
         hideAllModals()
         showModal.value = true
         showUpdateRSVPDialog.value = true
+    }
+
+    const showDeleteGoodWillModal = () => {
+        hideAllModals()
+        showModal.value = true
+        showDeleteGoodWillDialog.value = true
     }
 
     // Navigation functions
@@ -72,7 +80,8 @@ export const useUIStore = defineStore('ui', () => {
         showPlusOneForm,
         showRemovePlusOneDialog,
         showUpdateRSVPDialog,
-        showWellWishesForm,
+        showGoodWillForm,
+        showDeleteGoodWillDialog,
         showModal,
 
         // Functions
@@ -80,7 +89,8 @@ export const useUIStore = defineStore('ui', () => {
         showPlusOneModal,
         showRemovePlusOneModal,
         showUpdateRSVPModal,
-        showWellWishesModal,
+        showGoodWillModal,
+        showDeleteGoodWillModal,
         scrollToSection,
     }
 })

@@ -79,7 +79,7 @@ export const usePrivacyStore = defineStore('privacy', () => {
     
     // Save guest data if available and we now have functional consent
     const guestStore = useGuestStore()
-    if (guestStore.guest) {
+    if (guestStore.guestData) {
       guestStore.saveCurrentGuestData()
     }
 
@@ -112,7 +112,7 @@ export const usePrivacyStore = defineStore('privacy', () => {
 
     // Save guest data if available and functional consent is now enabled
     const guestStore = useGuestStore()
-    if (guestStore.guest && preferences.value.functional) {
+    if (guestStore.guestData && preferences.value.functional) {
       guestStore.saveCurrentGuestData()
     }
     
