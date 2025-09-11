@@ -46,3 +46,6 @@ coverage/
 
 # JSON
 package-lock.json
+
+# Exclude Guest-Website from admin-app branch
+Guest-Website/
