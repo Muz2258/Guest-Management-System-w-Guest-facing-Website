@@ -4,11 +4,13 @@ export type InvitationType = 'rsvp_guest' | 'information_only'
 export type InvitationMethod = 'digital' | 'physical_qr'
 export type AttendanceStatus = 'attending' | 'not_attending' | 'pending'
 export type PlusOneEligibility = 'eligible' | 'not_eligible'
+export type GiftType = 'monetary' | 'item'
 
 export interface Guest {
   guest_id: string
   first_name: string
   last_name: string
+  email: string | null
   guest_category: GuestCategory
   guest_type: GuestType
   plus_one_eligibility: PlusOneEligibility
@@ -35,7 +37,6 @@ export interface Permissions {
 }
 
 export interface GoodWillMessage {
-  has_message: boolean
   message_id: string
   guest_id: string
   message_text: string
@@ -44,6 +45,21 @@ export interface GoodWillMessage {
   updated_at: string | null
   approved_at: string | null
   approved_by: string | null
+  has_message: boolean
+}
+
+export interface GiftItem {
+  gift_name: string
+  gift_description: string
+  gift_image_url: string
+  gift_link: string
+}
+
+export interface Gift {
+  gift_type: GiftType
+  gift_amount: number | null
+  gift_details: GiftItem | null
+  guest_email: string | null
 }
 
 export interface GuestData {

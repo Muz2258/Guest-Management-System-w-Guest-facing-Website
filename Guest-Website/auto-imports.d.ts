@@ -73,6 +73,7 @@ declare global {
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
   const useEventStore: typeof import('./src/stores/event')['useEventStore']
+  const useGiftStore: typeof import('./src/stores/gift')['useGiftStore']
   const useGoodWillStore: typeof import('./src/stores/goodWill')['useGoodWillStore']
   const useGuestCache: typeof import('./src/composables/useGuestCache')['useGuestCache']
   const useGuestStore: typeof import('./src/stores/guest')['useGuestStore']
