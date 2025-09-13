@@ -4,19 +4,16 @@
     <RSVP id="rsvp" />
     <EventDetails v-if="isRsvpGuest" id="details" />
     <LoveStory />
-    <Gallery />
+    <Gallery id="gallery" />
   </main>
 </template>
 
 <script setup lang="ts">
-// Stores
+/* ------------------ Stores ------------------ */
 const guestStore = useGuestStore()
 
-// Store states
-const { guestData } = guestStore
-
-// Computed variables
+/* ------------------ Computed Properties ------------------ */
 const isRsvpGuest = computed(() => {
-  return guestData?.permissions.can_rsvp
+  return guestStore.guestData?.permissions.can_rsvp
 })
 </script>
