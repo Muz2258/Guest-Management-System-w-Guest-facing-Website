@@ -142,77 +142,17 @@ export const useGoodWillStore = defineStore('goodWill', () => {
     }
   }
 
-
-  /* 
-
-  const loadGoodWillMessage = async (token: string) => {
-    if (!token) {
-        console.error('❌ No guest token available to load good will message')
-        return null
+  const initializeGoodWillFormData = () => {
+    if(!goodWillMessage.value || !goodWillMessage.value.has_message) {
+        return ''
     }
 
-    try {
-        loading.value = true
-        error.value = null
-        console.log('📖 Starting good will message load...', token)
-
-        const { data: goodWillResponse, error: supaBaseError } = await supabase
-          .rpc('get_guest_messages', {
-            auth_token: token
-          })
-
-        if (supaBaseError) {
-            console.error('❌ Supabase RPC error:', supaBaseError)
-            throw supaBaseError
-        }
-
-        console.log('✅ Good will message load simulated successfully:', goodWillResponse)
-
-        const messageData = goodWillResponse.messages?.[0] || null;
-
-        currentGoodWillMessage.value = messageData
-        updateGoodWillStatus();
-
-    } catch (e) {
-        console.error('❌ Error simulating good will message load:', e)
-        error.value = e instanceof Error ? e.message : 'Failed to load good will message'
-        throw e
-    } finally {
-        loading.value = false
-    }
+    return goodWillMessage.value.message_text
   }
 
-  const updateGoodWillStatus = () => {
-    hasGoodWillMessage.value = !!currentGoodWillMessage.value?.message_text
+  const saveCurrentGoodWillData = async (token: string) => {
+    guestStorage.saveGuestData(token, {guestMessage: goodWillMessage.value})
   }
-
-  const clearError = () => {
-    error.value = null
-  }
-
-  const clearGoodWillMessage = () => {
-    currentGoodWillMessage.value = null
-    error.value = null
-  }
-
-  const initializeGoodWillStore = () => {
-    if (!guestStore.guestData?.others.has_goodwill) {
-      console.log('No good will message available for this guest.')
-      currentGoodWillMessage.value = null
-      updateGoodWillStatus();
-      return
-    }
-    
-    console.log('Initializing good will store with existing guest data...')
-
-    currentGoodWillMessage.value = guestStore.guestData?.others.goodwill_message || null
-    updateGoodWillStatus();
-
-    console.log('Good will store initialized:', {
-      hasGoodWillMessage: hasGoodWillMessage.value,
-      currentGoodWillMessage: currentGoodWillMessage.value
-    })
-  } */
 
   return {
     // State
@@ -225,6 +165,8 @@ export const useGoodWillStore = defineStore('goodWill', () => {
     fetchGoodWillMessage,
     initialiseGoodWillStoreFromCache,
     deleteGoodWillMessage,
-    saveGoodWillMessage
+    saveGoodWillMessage,
+    initializeGoodWillFormData,
+    saveCurrentGoodWillData
   }
 })

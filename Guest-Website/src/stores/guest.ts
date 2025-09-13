@@ -88,12 +88,20 @@ export const useGuestStore = defineStore('guest', () => {
     }
   }
 
-  const saveCurrentGuestData = async () => {
-    guestStorage.saveGuestData(guestData.value?.auth_token || '', {guestInfo: guestData.value})
+  const saveCurrentGuestData = async (token: string) => {
+    guestStorage.saveGuestData(token, {guestInfo: guestData.value})
   }
 
   const setError = (message: string) => {
     error.value = message
+  }
+
+  const setGuestEmail = (email: string) => {
+    if(guestData.value) {
+      guestData.value.guest.email = email
+      const token = guestData.value.auth_token
+      saveCurrentGuestData(token)
+    }
   }
 
   return {
@@ -108,6 +116,7 @@ export const useGuestStore = defineStore('guest', () => {
     fetchGuestByToken,
     initialiseGuestStoreFromCache,
     setError,
-    saveCurrentGuestData
+    saveCurrentGuestData,
+    setGuestEmail
   }
 })

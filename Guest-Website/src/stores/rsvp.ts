@@ -2,19 +2,20 @@ import type { RSVP } from '../types/guests'
 import { guestStorage } from '../utils/guestStorage';
 
 export const useRSVPStore = defineStore('rsvp', () => {
-    // States
+    /* -------------------- States -------------------- */
     const rsvpData = ref<RSVP | null>(null)
+    const loadingInit = ref(false)
     const loading = ref(false)
     const error = ref<string | null>(null)
 
-    // Functions
+
+    /* -------------------- Functions ------------------- */
     const fetchRSVPData = async (token: string, forceRefresh = false) => {
         console.log('🔄 Starting RSVP fetch process...', token)
-        loading.value = true
+        loadingInit.value = true
         error.value = null
 
         try {
-            // Check if we have valid cached data first (unless forcing refresh)
             if (!forceRefresh) {
                 console.log('Checking for cached RSVP data...')
                 const isDataCached = guestStorage.checkCache(token)
@@ -25,7 +26,7 @@ export const useRSVPStore = defineStore('rsvp', () => {
                     if(cachedData?.guestData?.guestRsvp) {
                         rsvpData.value = cachedData.guestData.guestRsvp
                         console.log('✅ Loaded RSVP data from cache:', rsvpData.value)
-                        loading.value = false
+                        loadingInit.value = false
                         guestStorage.refreshExpiry()
                         return
                     }else {
@@ -34,7 +35,7 @@ export const useRSVPStore = defineStore('rsvp', () => {
                 }
             }
 
-            console.log('📡 Fetching fresh RSVP data from database...')
+            console.log('📡 Fetching RSVP data from database...')
 
             const { data: res, error: err } = await supabase
                 .rpc('guest_get_rsvp_data', {
@@ -58,17 +59,18 @@ export const useRSVPStore = defineStore('rsvp', () => {
         } catch (e) {
             error.value = e instanceof Error ? e.message : 'An error occurred'
         } finally {
-            loading.value = false
+            loadingInit.value = false
         }
     }
 
     const initialiseRsvpStoreFromCache = () => {
-        console.log('🚀 Initialising RSVP store...')
+        console.log('🚀 Fetching RSVP data from cache...')
         const cachedData = guestStorage.getGuestData()
+        loadingInit.value = true
 
         if(cachedData?.guestData?.guestRsvp) {
             rsvpData.value = cachedData.guestData.guestRsvp
-            loading.value = false
+            loadingInit.value = false
             guestStorage.refreshExpiry()
             return
         }else {
@@ -116,15 +118,37 @@ export const useRSVPStore = defineStore('rsvp', () => {
         }
     }
 
+    const initializePlusOneFormData = () => {
+        const existingPlusOne = rsvpData.value?.plus_one_name || ''
+        if (existingPlusOne) {
+            const names = existingPlusOne.trim().split(' ')
+            return {
+                firstName: names[0] || '',
+                lastName: names.slice(1).join(' ') || ''
+            }
+        }
+        return {
+            firstName: '',
+            lastName: ''
+        }
+    }
+
+    const saveCurrentRsvpData = async (token: string) => {
+        guestStorage.saveGuestData(token, {guestRsvp: rsvpData.value})
+    }
+
     return {
         // States
         rsvpData,
+        loadingInit,
         loading,
         error,
 
         // Functions
         fetchRSVPData,
         initialiseRsvpStoreFromCache,
-        updateGuestRsvp
+        updateGuestRsvp,
+        initializePlusOneFormData,
+        saveCurrentRsvpData
     }
 });

@@ -3,54 +3,110 @@ export const useUIStore = defineStore('ui', () => {
     const activeSection = ref('')
     const showCookie = ref(false)
     const showModal = ref(false)
-    const showWelcome = ref(false)
-    const showPlusOneForm = ref(false)
-    const showRemovePlusOneDialog = ref(false)
-    const showUpdateRSVPDialog = ref(false)
-    const showGoodWillForm = ref(false)
-    const showDeleteGoodWillDialog = ref(false)
+    const showWelcomeModal = ref(false)
+    const showPlusOneModal = ref(false)
+    const showRemovePlusOneModal = ref(false)
+    const showUpdateRSVPModal = ref(false)
+    const showGoodWillModal = ref(false)
+    const showDeleteGoodWillModal = ref(false)
+    const showGiftBottomSheet = ref(false)
+    const showGiftingForm = ref(false)
+    const showGiftSummary = ref(false)
+
     const isLoading = ref(false)
     const isGuestDataLoading = ref(false)
 
     // Modal functions
+    const hideAllBottomSheets = () => {
+        showGiftBottomSheet.value = false
+    }
+
     const hideAllModals = () => {
         showModal.value = false
-        showWelcome.value = false
-        showPlusOneForm.value = false
-        showGoodWillForm.value = false
-        showRemovePlusOneDialog.value = false
-        showUpdateRSVPDialog.value = false
-        showDeleteGoodWillDialog.value = false
+        showWelcomeModal.value = false
+        showPlusOneModal.value = false
+        showGoodWillModal.value = false
+        showRemovePlusOneModal.value = false
+        showUpdateRSVPModal.value = false
+        showDeleteGoodWillModal.value = false
     }
 
-    const showPlusOneModal = () => {
-        hideAllModals()
-        showModal.value = true
-        showPlusOneForm.value = true
+    const showHidePlusOneModal = (show: boolean) => {
+        if(show) {
+            hideAllModals()
+            showPlusOneModal.value = true
+        }else {
+            hideAllModals()
+        }
     }
 
-    const showGoodWillModal = () => {
-        hideAllModals()
-        showModal.value = true
-        showGoodWillForm.value = true
+    const showHideRemovePlusOneModal = (show: boolean) => {
+        if(show) {
+            hideAllModals()
+            showRemovePlusOneModal.value = true
+        }else {
+            hideAllModals()
+        }
     }
 
-    const showRemovePlusOneModal = () => {
-        hideAllModals()
-        showModal.value = true
-        showRemovePlusOneDialog.value = true
+    const showHideUpdateRSVPModal = (show: boolean) => {
+        if(show) {
+            hideAllModals()
+            showUpdateRSVPModal.value = true
+        }else {
+            hideAllModals()
+        }
     }
 
-    const showUpdateRSVPModal = () => {
-        hideAllModals()
-        showModal.value = true
-        showUpdateRSVPDialog.value = true
+    const showHideGoodWillModal = (show: boolean) => {
+        if(show) {
+            hideAllModals()
+            showGoodWillModal.value = true
+        }else {
+            hideAllModals()
+        }
     }
 
-    const showDeleteGoodWillModal = () => {
+    const showHideDeleteGoodWillModal = (show: boolean) => {
+        if(show) {
+            hideAllModals()
+            showDeleteGoodWillModal.value = true
+        }else {
+            hideAllModals()
+        }
+    }
+
+    const showHideWelcomeModal = (show: boolean) => {
+        if(show) {
+            hideAllModals()
+            showWelcomeModal.value = true
+        }else {
+            hideAllModals()
+        }
+    }
+
+    const showGiftFormSheet = () => {
+        showGiftingForm.value = true
+        showGiftSummary.value = false
+    }
+
+    const showGiftSummarySheet = () => {
+        showGiftingForm.value = false
+        showGiftSummary.value = true
+    }
+
+    const showGiftingSheet = () => {
+        const prevFormState = showGiftingForm.value
+        const prevSummaryState = showGiftSummary.value
+
         hideAllModals()
-        showModal.value = true
-        showDeleteGoodWillDialog.value = true
+        if(!prevFormState && !prevSummaryState) {
+            showGiftFormSheet()
+        }else {
+            showGiftingForm.value = prevFormState
+            showGiftSummary.value = prevSummaryState
+        }
+        showGiftBottomSheet.value = true
     }
 
     // Navigation functions
@@ -76,21 +132,29 @@ export const useUIStore = defineStore('ui', () => {
         isGuestDataLoading,
         activeSection,
         showCookie,
-        showWelcome,
-        showPlusOneForm,
-        showRemovePlusOneDialog,
-        showUpdateRSVPDialog,
-        showGoodWillForm,
-        showDeleteGoodWillDialog,
-        showModal,
-
-        // Functions
-        hideAllModals,
+        showWelcomeModal,
         showPlusOneModal,
         showRemovePlusOneModal,
         showUpdateRSVPModal,
         showGoodWillModal,
         showDeleteGoodWillModal,
+        showModal,
+        showGiftingForm,
+        showGiftSummary,
+        showGiftBottomSheet,
+
+        // Functions
+        hideAllModals,
+        hideAllBottomSheets,
+        showHidePlusOneModal,
+        showHideRemovePlusOneModal,
+        showHideUpdateRSVPModal,
+        showHideGoodWillModal,
+        showHideDeleteGoodWillModal,
+        showHideWelcomeModal,
+        showGiftFormSheet,
+        showGiftSummarySheet,
         scrollToSection,
+        showGiftingSheet
     }
 })

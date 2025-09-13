@@ -79,8 +79,30 @@ export const usePrivacyStore = defineStore('privacy', () => {
     
     // Save guest data if available and we now have functional consent
     const guestStore = useGuestStore()
+    const rsvpStore = useRSVPStore()
+    const goodWillStore = useGoodWillStore()
+    const giftStore = useGiftStore()
+
+    const token = guestStore.guestData?.auth_token
+
+    if(!token) {
+      throw new Error('No auth token found in guest store')
+    }
+
     if (guestStore.guestData) {
-      guestStore.saveCurrentGuestData()
+      guestStore.saveCurrentGuestData(token)
+    }
+
+    if (rsvpStore.rsvpData) {
+      rsvpStore.saveCurrentRsvpData(token)
+    }
+
+    if (goodWillStore.goodWillMessage) {
+      goodWillStore.saveCurrentGoodWillData(token)
+    }
+
+    if (giftStore.gift) {
+      giftStore.saveCurrentGiftData(token)
     }
 
     console.log('✅ All cookies accepted')
@@ -112,8 +134,14 @@ export const usePrivacyStore = defineStore('privacy', () => {
 
     // Save guest data if available and functional consent is now enabled
     const guestStore = useGuestStore()
+    const token = guestStore.guestData?.auth_token
+
+    if(!token) {
+      throw new Error('No auth token found in guest store')
+    }
+
     if (guestStore.guestData && preferences.value.functional) {
-      guestStore.saveCurrentGuestData()
+      guestStore.saveCurrentGuestData(token)
     }
     
     console.log('✅ Custom preferences accepted:', preferences.value)
