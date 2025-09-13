@@ -18,8 +18,11 @@ export const colors = {
     },
     denotive: {
         denote_red: '#AE4646',
+        denote_red_light: '#FAE6E6',
+        denote_blue: '#3E5297',
+        denote_blue_light: '#E6EFFA',
         denote_yellow_light: '#FDF2D3',
-        denote_green_light: '#C9EEE4'
+        denote_green_light: '#C9EEE4',
     }
 } as const
 
@@ -38,6 +41,9 @@ export type colorPath =
   | 'neutral.neu_35'
   | 'neutral.neu_0'
   | 'denotive.denote_red'
+  | 'denotive.denote_red_light'
+  | 'denotive.denote_blue'
+  | 'denotive.denote_blue_light'
   | 'denotive.denote_yellow_light'
   | 'denotive.denote_green_light'
 

@@ -23,6 +23,8 @@ html, body {
   --color-brand-sec-light-200: #FAF5FF;
   --color-brand-sec-dark-100: #C3BEC9;
   --color-brand-accent: #177B61;
+  --color-brand-accent-dark-100: #136650;
+  --color-brand-accent-light-100: #269377;
 
   --color-neutrals-neu-100: #FFFFFF;
   --color-neutrals-neu-96: #F5F5F5;
@@ -32,8 +34,11 @@ html, body {
   --color-neutrals-neu-0: #000000;
 
   --color-denotive-red: #AE4646;
-  --color-denotive-yellow_light: #FDF2D3;
-  --color-denotive-green_light: #C9EEE4;
+  --color-denotive-blue: #3E5297;
+  --color-denotive-blue-light: #E6EFFA;
+  --color-denotive-yellow-light: #FDF2D3;
+  --color-denotive-green-light: #C9EEE4;
+  --color-denotive-red-light: #FAE6E6;
 
   /* Fonts */
   --font-display: 'Playfair Display', serif;
@@ -125,7 +130,7 @@ body {
   @apply bg-neutrals-neu-100 min-h-dvh;
 }
 
-input, textarea {
+textarea {
   @apply px-12 py-12 border border-brand-sec text-neutrals-neu-0 bg-neutrals-neu-96 focus:outline-none focus:ring-2 focus:ring-brand-pri focus:border-transparent
 }
 

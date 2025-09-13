@@ -72,11 +72,11 @@ const routes = [
         if(guestStore.hasCachedData){
           uiStore.showCookie = false
           uiStore.hideAllModals()
+          uiStore.hideAllBottomSheets()
         }else {
           console.log('🎉 Showing personalized welcome modal for:', guestStore.guestData?.guest.first_name)
           uiStore.showCookie = true
-          uiStore.showModal = true
-          uiStore.showWelcome = true
+          uiStore.showHideWelcomeModal(true)
         }
       } catch (e) {
         console.error('❌ Token validation failed:', e)
@@ -127,7 +127,7 @@ const initialiseStoreFromCache = async() => {
     if (result.status === 'rejected') {
       console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
     } else {
-      console.log(`✅ Store ${index} initialized successfully`)
+      console.log(`✅ ${stores[index]} initialized successfully`)
     }
   })
 }

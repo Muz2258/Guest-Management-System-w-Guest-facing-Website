@@ -59,6 +59,7 @@ class SecureGuestStorage {
     guestInfo?: any;
     guestRsvp?: any;
     guestMessage?: any;
+    guestGift?: any;
   }>): Promise<void> {
     try{
       const canStore = await this.canUseStorage()
@@ -75,7 +76,8 @@ class SecureGuestStorage {
       const mergedData = {
         guestInfo: partialData.guestInfo || currentData.guestInfo,
         guestRsvp: partialData.guestRsvp || currentData.guestRsvp,
-        guestMessage: partialData.guestMessage || currentData.guestMessage
+        guestMessage: partialData.guestMessage || currentData.guestMessage,
+        guestGift: partialData.guestGift || currentData.guestGift
       }
 
       const now = Date.now()
@@ -90,7 +92,7 @@ class SecureGuestStorage {
       const encryptedData = this.encrypt(jsonString)
 
       localStorage.setItem(this.STORAGE_KEY, encryptedData)
-      console.log('✅ Guest data securely saved to storage')
+      console.log('✅ Guest data securely saved to storage:', mergedData)
     }catch(err){
       console.error('❌ Failed to save guest data:', err)
     }
