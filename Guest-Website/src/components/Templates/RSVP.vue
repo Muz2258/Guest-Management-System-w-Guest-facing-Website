@@ -121,21 +121,21 @@
                         </div>
                     </template>
                 </Card>
-                <!-- <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
                     <template #footer>
                         <Button 
                             v-if="!hasGift" 
-                            label="See available gifts" 
+                            label="Send gift" 
                             type="primary" 
                             class="w-full" 
                             :is-loading="activeButton === 'send-gift'" 
                             @click="sendGift"
                         />
-                        <div v-else class="text-center text-5xl p-12">
+                        <div v-else class="flex items-center justify-center text-center text-7xl p-24">
                             😘
                         </div>
                     </template>
-                </Card> -->
+                </Card>
                 <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
                     <template #footer>
                         <Button 
@@ -171,21 +171,21 @@
                 Thank you for letting us know <span class="text-neutrals-neu-0">{{ guestName }}</span>, we totally understand. You can still share in our joy by sending a gift or leaving a message.
             </p>
             <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <!-- <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
                     <template #footer>
                         <Button 
                             v-if="!hasGift" 
-                            label="See available gifts" 
+                            label="Send gift" 
                             type="primary" 
                             class="w-full" 
                             :is-loading="activeButton === 'send-gift'" 
                             @click="sendGift"
                         />
-                        <div v-else class="text-center text-5xl p-12">
+                        <div v-else class="flex items-center justify-center text-center text-7xl p-24">
                             😘
                         </div>
                     </template>
-                </Card> -->
+                </Card>
                 <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
                     <template #footer>
                         <Button 
@@ -221,21 +221,21 @@
                 Though we're having a small, private ceremony with immediate family, we couldn't celebrate without letting you know. Thank you for being part of our journey.
             </p>
             <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <!-- <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
                     <template #footer>
                         <Button 
                             v-if="!hasGift" 
-                            label="See available gifts" 
+                            label="Send gift" 
                             type="primary" 
                             class="w-full" 
                             :is-loading="activeButton === 'send-gift'" 
                             @click="sendGift"
                         />
-                        <div v-else class="text-center text-5xl p-12">
+                        <div v-else class="flex items-center justify-center text-center text-7xl p-24">
                             😘
                         </div>
                     </template>
-                </Card> -->
+                </Card>
                 <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
                     <template #footer>
                         <Button 
@@ -275,6 +275,7 @@ const eventStore = useEventStore();
 const guestStore = useGuestStore();
 const rsvpStore = useRSVPStore();
 const goodWillStore = useGoodWillStore();
+const giftStore = useGiftStore();
 
 // Store functions
 
@@ -287,7 +288,6 @@ const { goodWillMessage } = storeToRefs(goodWillStore);
 // Reactive variables
 const activeButton = ref<string | null>(null);
 const spouseResponse = ref<string>('pending');
-// const hasGift = ref(false);
 const countdown = ref({
     days: 0,
     hours: 0
@@ -307,6 +307,7 @@ const hasSentMessage = computed(() => goodWillMessage.value?.has_message)
 const isCouple = computed(() => guestPermissions.value?.is_couple)
 const isRsvpGuest = computed(() => guestPermissions.value?.can_rsvp)
 const plusOneEligible = computed(() => guestPermissions.value?.can_bring_plus_one)
+const hasGift = computed(() => giftStore.has_gifted)
 
 const guestName = computed(() => {
     const firstName = guestInfo.value?.first_name || '';
@@ -365,7 +366,7 @@ const plusOneCardInfo = computed(() => {
     }
 })
 
-/* const giftingCardInfo = computed(() => {
+const giftingCardInfo = computed(() => {
     if(hasGift.value) {
         return {
             title: 'Gift sent!',
@@ -377,11 +378,11 @@ const plusOneCardInfo = computed(() => {
         }
     } else {
         return {
-            title: 'Send a gift',
+            title: 'Want to send a gift?',
             description: 'If you wish to honor us with a gift, we have a registry set up for your convenience.'
         }
     }
-}) */
+})
 
 const goodWillCardInfo = computed(() => {
     if(hasSentMessage.value) {
@@ -473,52 +474,49 @@ const setSpouseRSVP = async (status: boolean) => {
 }
 
 const changeSpouseRSVP = () => {
+    console.log('Updating spouse RSVP...');
     activeButton.value = 'update-spouse-response';
     spouseResponse.value = 'pending';
 }
 
 const addPlusOne = () => {
     console.log('Adding plus one...');
-    uiStore.showPlusOneModal();
+    uiStore.showHidePlusOneModal(true);
 }
 
 const updatePlusOne = () => {
     console.log('Updating plus one...');
-    uiStore.showPlusOneModal();
+    uiStore.showHidePlusOneModal(true);
 }
 
 const removePlusOne = () => {
     console.log('Removing plus one...');
-    uiStore.showRemovePlusOneModal();
+    uiStore.showHideRemovePlusOneModal(true);
 }
 
-/* const sendGift = () => {
-    activeButton.value = 'send-gift';
-
-    setTimeout(() => {
-        hasGift.value = true;
-        activeButton.value = null;
-    }, 1000);
-} */
+const sendGift = () => {
+    console.log('Sending gift...');
+    uiStore.showGiftingSheet();
+}
 
 const leaveMessage = () => {
     console.log('Sending good will message...');
-    uiStore.showGoodWillModal();
+    uiStore.showHideGoodWillModal(true);
 }
 
 const editMessage = () => {
     console.log('Editing good will message...');
-    uiStore.showGoodWillModal();
+    uiStore.showHideGoodWillModal(true);
 }
 
 const deleteMessage = () => {
     console.log('Showing delete confirmation dialog...');
-    uiStore.showDeleteGoodWillModal();
+    uiStore.showHideDeleteGoodWillModal(true);
 }
 
 const showUpdateRSVPModal = () => {
     console.log('Opening Update RSVP modal...');
-    uiStore.showUpdateRSVPModal();
+    uiStore.showHideUpdateRSVPModal(true);
 }
 
 // Initialize countdown on mount
