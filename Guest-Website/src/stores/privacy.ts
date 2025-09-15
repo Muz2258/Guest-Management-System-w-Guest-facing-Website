@@ -1,202 +1,95 @@
-export interface ConsentPreferences {
-  essential: boolean      // Always true, cannot be disabled
-  functional: boolean     // Guest data caching, remember preferences
-}
+/**
+ * Privacy Store
+ * Manages data storage notification acknowledgment and guest privacy preferences
+ */
+import { guestStorage } from "../utils/guestStorage"
+import { logger, ErrorType, createError } from '../utils/errorHandler'
 
 export const usePrivacyStore = defineStore('privacy', () => {
-  // State
-  const hasSeenBanner = ref(false)
-  const consentGiven = ref(false)
-  const consentTimestamp = ref<number | null>(null)
-  const preferences = ref<ConsentPreferences>({
-    essential: true,    // Always required
-    functional: false,  // Guest caching - requires consent
-  })
+  const guestStore = useGuestStore()
 
-  // Constants
-  const CONSENT_STORAGE_KEY = 'wedding_privacy_consent'
-  const CONSENT_VERSION = '1.0'
-  const CONSENT_EXPIRY_DAYS = 365
+  // State - session-based banner visibility
+  const shouldShowBanner = ref(false)
+  const hasClosedBanner = ref(false)
 
-  // Initialize from localStorage
-  const initializeConsent = () => {
+  // Initialize notification state - show banner for new guests or those who haven't closed it
+  const initializeNotice = (token: string) => {
     try {
-      const stored = localStorage.getItem(CONSENT_STORAGE_KEY)
-      if (stored) {
-        const data = JSON.parse(stored)
-        
-        // Check if consent is still valid
-        const now = Date.now()
-        const expiryTime = data.timestamp + (CONSENT_EXPIRY_DAYS * 24 * 60 * 60 * 1000)
-        
-        if (now < expiryTime && data.version === CONSENT_VERSION) {
-          hasSeenBanner.value = true
-          consentGiven.value = data.consentGiven
-          consentTimestamp.value = data.timestamp
-          preferences.value = { ...preferences.value, ...data.preferences }
-          
-          console.log('✅ Loaded valid consent preferences:', preferences.value)
-          return
-        }
+      const storedData = guestStorage.getGuestData(token)
+      
+      // Check if user has permanently dismissed the banner
+      const hasAcknowledgedPermanently = storedData?.data?.cookiesSeen || false
+      
+      if (hasAcknowledgedPermanently) {
+        // User has already acknowledged the notice permanently, don't show banner
+        shouldShowBanner.value = false
+        hasClosedBanner.value = true
+        console.log('✅ User has already acknowledged data notice permanently')
+      } else {
+        // New user or user who hasn't acknowledged yet - show banner
+        shouldShowBanner.value = true
+        hasClosedBanner.value = false
+        console.log('✅ Showing data notice banner for new/returning user')
       }
     } catch (error) {
-      console.error('❌ Error loading consent preferences:', error)
-    }
-    
-    // If no valid consent found, show banner
-    hasSeenBanner.value = false
-    consentGiven.value = false
-  }
-
-  // Save consent to localStorage
-  const saveConsent = () => {
-    try {
-      const consentData = {
-        version: CONSENT_VERSION,
-        timestamp: Date.now(),
-        consentGiven: consentGiven.value,
-        preferences: preferences.value
-      }
-      
-      localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(consentData))
-      consentTimestamp.value = consentData.timestamp
-      
-      console.log('✅ Consent preferences saved:', consentData)
-    } catch (error) {
-      console.error('❌ Error saving consent preferences:', error)
+      const appError = createError(ErrorType.STORAGE, 'Failed to load notice state', {
+        context: 'privacy-store-init'
+      })
+      logger.log(appError)
+      // Default to showing banner for safety
+      shouldShowBanner.value = true
+      hasClosedBanner.value = false
     }
   }
 
-  // Accept all cookies
-  const acceptAll = () => {
-    preferences.value = {
-      essential: true,
-      functional: true,
-    }
-    consentGiven.value = true
-    hasSeenBanner.value = true
-    saveConsent()
-    
-    // Save guest data if available and we now have functional consent
-    const guestStore = useGuestStore()
-    const rsvpStore = useRSVPStore()
-    const goodWillStore = useGoodWillStore()
-    const giftStore = useGiftStore()
+  // Initialize for cached users (no token) - don't show banner since they've been here before
+  const initializeForCachedUser = () => {
+    shouldShowBanner.value = false
+    hasClosedBanner.value = true
+    console.log('✅ Cached user detected, not showing banner')
+  }
 
+  // Temporarily close banner for this session (don't save permanently)
+  const closeBannerTemporarily = () => {
+    shouldShowBanner.value = false
+    hasClosedBanner.value = true
+    console.log('✅ Data storage banner closed for this session')
+  }
+
+  // Permanently acknowledge the data storage notice
+  const acknowledgeDataNotice = () => {
     const token = guestStore.guestData?.auth_token
 
     if(!token) {
-      throw new Error('No auth token found in guest store')
+      const error = createError(ErrorType.AUTHENTICATION, 'No auth token found in guest store', {
+        context: 'privacy-acknowledge-notice'
+      })
+      logger.log(error)
+      throw error
     }
 
-    if (guestStore.guestData) {
-      guestStore.saveCurrentGuestData(token)
-    }
-
-    if (rsvpStore.rsvpData) {
-      rsvpStore.saveCurrentRsvpData(token)
-    }
-
-    if (goodWillStore.goodWillMessage) {
-      goodWillStore.saveCurrentGoodWillData(token)
-    }
-
-    if (giftStore.gift) {
-      giftStore.saveCurrentGiftData(token)
-    }
-
-    console.log('✅ All cookies accepted')
-  }
-
-  // Accept only essential cookies
-  const acceptEssential = () => {
-    preferences.value = {
-      essential: true,
-      functional: false,
-    }
-    consentGiven.value = true
-    hasSeenBanner.value = true
-    saveConsent()
+    // Hide banner immediately
+    shouldShowBanner.value = false
+    hasClosedBanner.value = true
     
-    console.log('✅ Only essential cookies accepted')
-  }
-
-  // Accept custom preferences
-  const acceptCustom = (customPreferences: Partial<ConsentPreferences>) => {
-    preferences.value = {
-      ...preferences.value,
-      ...customPreferences,
-      essential: true, // Always required - ensure this stays true
-    }
-    consentGiven.value = true
-    hasSeenBanner.value = true
-    saveConsent()
-
-    // Save guest data if available and functional consent is now enabled
-    const guestStore = useGuestStore()
-    const token = guestStore.guestData?.auth_token
-
-    if(!token) {
-      throw new Error('No auth token found in guest store')
-    }
-
-    if (guestStore.guestData && preferences.value.functional) {
-      guestStore.saveCurrentGuestData(token)
-    }
-    
-    console.log('✅ Custom preferences accepted:', preferences.value)
-  }
-
-  // Reject all non-essential cookies
-  const rejectAll = () => {
-    acceptEssential()
-  }
-
-  // Clear all consent and reset
-  const clearConsent = () => {
-    try {
-      localStorage.removeItem(CONSENT_STORAGE_KEY)
-      hasSeenBanner.value = false
-      consentGiven.value = false
-      consentTimestamp.value = null
-      preferences.value = {
-        essential: true,
-        functional: false,
-      }
-      
-      console.log('🧹 Consent cleared')
-    } catch (error) {
-      console.error('❌ Error clearing consent:', error)
-    }
-  }
-
-  // Check if specific functionality is allowed
-  const canUseFunction = (type: keyof ConsentPreferences) => {
-    return preferences.value[type]
-  }
-
-  // Check if guest caching is allowed
-  const canCacheGuestData = () => {
-    return canUseFunction('functional')
+    // Save permanent acknowledgment
+    guestStorage.markCookiesAsSeen(token)
+    console.log(guestStorage.getGuestData(token))
+    console.log('✅ Data storage: notice acknowledged permanently')
   }
 
   return {
     // State
-    hasSeenBanner,
-    consentGiven,
-    consentTimestamp,
-    preferences,
+    shouldShowBanner,
+    hasClosedBanner,
     
     // Actions
-    initializeConsent,
-    acceptAll,
-    acceptEssential,
-    acceptCustom,
-    rejectAll,
-    clearConsent,
+    initializeNotice,
+    initializeForCachedUser,
+    closeBannerTemporarily,
+    acknowledgeDataNotice,
     
-    // Getters
-    canUseFunction,
-    canCacheGuestData
+    // Computed for backwards compatibility
+    hasAcknowledgedNotice: computed(() => hasClosedBanner.value)
   }
 })

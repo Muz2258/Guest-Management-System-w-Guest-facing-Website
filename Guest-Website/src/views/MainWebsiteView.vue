@@ -1,8 +1,8 @@
 <template>
   <main class="page-wrapper">
     <Hero />
-    <RSVP id="rsvp" />
-    <EventDetails v-if="isRsvpGuest" id="details" />
+    <RSVP v-if="hasToken" id="rsvp" />
+    <EventDetails v-if="hasToken && isRsvpGuest" id="details" />
     <LoveStory />
     <Gallery id="gallery" />
   </main>
@@ -13,6 +13,10 @@
 const guestStore = useGuestStore()
 
 /* ------------------ Computed Properties ------------------ */
+const hasToken = computed(() => {
+  return !!guestStore.guestData?.auth_token
+})
+
 const isRsvpGuest = computed(() => {
   return guestStore.guestData?.permissions.can_rsvp
 })

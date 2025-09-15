@@ -129,9 +129,9 @@ export const useUIStore = defineStore('ui', () => {
     return {
         // State
         isLoading,
+        showCookie,
         isGuestDataLoading,
         activeSection,
-        showCookie,
         showWelcomeModal,
         showPlusOneModal,
         showRemovePlusOneModal,

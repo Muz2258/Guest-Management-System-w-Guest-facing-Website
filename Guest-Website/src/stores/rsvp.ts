@@ -1,19 +1,29 @@
 import type { RSVP } from '../types/guests'
-import { guestStorage } from '../utils/guestStorage';
+import { guestStorage } from '../utils/guestStorage'
+import { reactive } from 'vue'
+import { 
+  logger, 
+  ErrorType, 
+  createError, 
+  createErrorState, 
+  setError as setErrorState, 
+  clearError, 
+  type ErrorState 
+} from '../utils/errorHandler'
 
 export const useRSVPStore = defineStore('rsvp', () => {
     /* -------------------- States -------------------- */
     const rsvpData = ref<RSVP | null>(null)
     const loadingInit = ref(false)
     const loading = ref(false)
-    const error = ref<string | null>(null)
+    const errorState: ErrorState = reactive(createErrorState())
 
 
     /* -------------------- Functions ------------------- */
     const fetchRSVPData = async (token: string, forceRefresh = false) => {
         console.log('🔄 Starting RSVP fetch process...', token)
         loadingInit.value = true
-        error.value = null
+        clearError(errorState)
 
         try {
             if (!forceRefresh) {
@@ -23,8 +33,8 @@ export const useRSVPStore = defineStore('rsvp', () => {
                 if (isDataCached){
                     const cachedData = guestStorage.getGuestData(token)
 
-                    if(cachedData?.guestData?.guestRsvp) {
-                        rsvpData.value = cachedData.guestData.guestRsvp
+                    if(cachedData?.data?.guestData?.guestRsvp) {
+                        rsvpData.value = cachedData.data.guestData.guestRsvp
                         console.log('✅ Loaded RSVP data from cache:', rsvpData.value)
                         loadingInit.value = false
                         guestStorage.refreshExpiry()
@@ -43,8 +53,11 @@ export const useRSVPStore = defineStore('rsvp', () => {
                 })
 
             if (err) {
-                console.log('❌ Supabase error:', err)
-                throw err
+                const appError = createError(ErrorType.SERVER, err.message, {
+                    context: 'rsvp-fetch',
+                    userMessage: 'Unable to load your RSVP data. Please try again.'
+                })
+                throw appError
             }
 
             console.log('✅ RSVP data retrieved from database:', res)
@@ -57,19 +70,19 @@ export const useRSVPStore = defineStore('rsvp', () => {
             await guestStorage.saveGuestData(token, {guestRsvp: rsvpData.value})
             console.log('✅ RSVP data successfully saved to cache:', rsvpData.value)
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'An error occurred'
+            setErrorState(errorState, e, 'rsvp-fetch')
         } finally {
             loadingInit.value = false
         }
     }
 
     const initialiseRsvpStoreFromCache = () => {
-        console.log('🚀 Fetching RSVP data from cache...')
+        console.log('🚀 Initialising RSVP data from cache...')
         const cachedData = guestStorage.getGuestData()
         loadingInit.value = true
 
-        if(cachedData?.guestData?.guestRsvp) {
-            rsvpData.value = cachedData.guestData.guestRsvp
+        if(cachedData?.data?.guestData?.guestRsvp) {
+            rsvpData.value = cachedData.data.guestData.guestRsvp
             loadingInit.value = false
             guestStorage.refreshExpiry()
             return
@@ -85,13 +98,17 @@ export const useRSVPStore = defineStore('rsvp', () => {
         plus_one_name?: string | null
     }>) => {
         if (!token) {
-            console.error('❌ No guest token available to update RSVP')
-            throw new Error('No guest token available')
+            const error = createError(ErrorType.AUTHENTICATION, 'No guest token available', {
+                context: 'rsvp-update',
+                userMessage: 'Authentication required to update RSVP.'
+            })
+            logger.log(error)
+            throw error
         }
 
         try {
             loading.value = true
-            error.value = null
+            clearError(errorState)
             console.log('🔄 Starting RSVP update process...', { token, data })
 
             const {data: res, error: updateError } = await supabase
@@ -104,15 +121,18 @@ export const useRSVPStore = defineStore('rsvp', () => {
                 })
 
             if (updateError) {
-                console.error('❌ Supabase error:', updateError)
-                throw updateError
+                const appError = createError(ErrorType.SERVER, updateError.message, {
+                    context: 'rsvp-update',
+                    userMessage: 'Unable to update your RSVP. Please try again.'
+                })
+                throw appError
             }
 
             console.log('✅ RSVP updated successfully:', res)
 
             await fetchRSVPData(token, true)
         } catch (e) {
-            error.value = e instanceof Error ? e.message : 'An error occurred'
+            setErrorState(errorState, e, 'rsvp-update')
         } finally {
             loading.value = false
         }
@@ -142,7 +162,7 @@ export const useRSVPStore = defineStore('rsvp', () => {
         rsvpData,
         loadingInit,
         loading,
-        error,
+        errorState,
 
         // Functions
         fetchRSVPData,

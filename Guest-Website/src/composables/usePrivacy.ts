@@ -1,59 +1,34 @@
+import { usePrivacyStore } from '../stores/privacy'
+
 /**
- * Composable for managing privacy consent and GDPR compliance
+ * Composable for managing privacy data storage notice
  */
 export function usePrivacy() {
   const privacyStore = usePrivacyStore()
 
   // Computed properties for easy access
-  const hasConsent = computed(() => privacyStore.consentGiven)
-  const showBanner = computed(() => !privacyStore.hasSeenBanner)
-  const preferences = computed(() => privacyStore.preferences)
+  const showBanner = computed(() => privacyStore.shouldShowBanner)
+  const hasClosedBanner = computed(() => privacyStore.hasClosedBanner)
+  const hasAcknowledgedNotice = computed(() => privacyStore.hasAcknowledgedNotice)
   
-  // Specific consent checks
-  const canUseFunctional = computed(() => preferences.value.functional)
-
-  // Helper methods
-  const canUseFunction = (type: keyof ConsentPreferences): boolean => {
-    return privacyStore.canUseFunction(type)
+  // Methods for banner management
+  const closeBannerTemporarily = () => {
+    privacyStore.closeBannerTemporarily()
   }
 
-  const updatePreferences = (newPreferences: Partial<ConsentPreferences>) => {
-    privacyStore.acceptCustom(newPreferences)
-  }
-
-  const resetConsent = () => {
-    privacyStore.clearConsent()
-  }
-
-  // Consent management methods
-  const acceptAll = () => {
-    privacyStore.acceptAll()
-  }
-
-  const acceptEssential = () => {
-    privacyStore.acceptEssential()
-  }
-
-  const rejectAll = () => {
-    privacyStore.rejectAll()
+  const acknowledgeDataNotice = () => {
+    privacyStore.acknowledgeDataNotice()
   }
 
   return {
     // State
-    hasConsent,
     showBanner,
-    preferences,
-    
-    // Specific consent checks
-    canUseFunctional,
+    hasClosedBanner,
+    hasAcknowledgedNotice,
     
     // Methods
-    canUseFunction,
-    updatePreferences,
-    resetConsent,
-    acceptAll,
-    acceptEssential,
-    rejectAll,
+    closeBannerTemporarily,
+    acknowledgeDataNotice,
     
     // Store access for advanced usage
     privacyStore

@@ -1,6 +1,6 @@
 <template>
   <main class="guest-identifier">
-    <h1>Guest Identifier</h1>
+    <h1>Payment validation</h1>
   </main>
 </template>
 

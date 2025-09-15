@@ -10,7 +10,6 @@ export interface Guest {
   guest_id: string
   first_name: string
   last_name: string
-  email: string | null
   guest_category: GuestCategory
   guest_type: GuestType
   plus_one_eligibility: PlusOneEligibility
@@ -49,17 +48,19 @@ export interface GoodWillMessage {
 }
 
 export interface GiftItem {
-  gift_name: string
-  gift_description: string
-  gift_image_url: string
-  gift_link: string
+  item_id: string
+  item_name: string
+  item_description: string
+  item_image_url: string
+  item_link: string
+  item_price: number
 }
 
 export interface Gift {
   gift_type: GiftType
   gift_amount: number | null
-  gift_details: GiftItem | null
-  guest_email: string | null
+  gift_item_id?: string | null
+  status: 'pending' | 'success' | 'failed'
 }
 
 export interface GuestData {
@@ -67,4 +68,9 @@ export interface GuestData {
   authenticated: boolean
   guest: Guest
   permissions: Permissions
+}
+
+export interface GuestGifts {
+  guest_email: string
+  gifts: Gift[]
 }

@@ -146,6 +146,7 @@ import { getColor } from '../../utils/colors'
 /* ------------------- Stores ------------------- */
 const giftStore = useGiftStore()
 const uiStore = useUIStore()
+const guestStore = useGuestStore()
 
 
 /* ------------------- Reactive State and Variables ------------------- */
@@ -231,11 +232,16 @@ const handleClose = () => {
 const handlePayment = () => {
     console.log('handlePayment called. Waiting for response')
     if (isFormValid.value && !isLoading.value && selectedAmount.value) {
+        const guestToken = guestStore.guestData?.auth_token
+
+        if(!guestToken) {
+            console.log('No guest token found. Cannot proceed with payment.')
+            return
+        }
         giftStore.processGift({
-            gift_type: 'monetary',
             gift_amount: selectedAmount.value,
-            gift_details: null,
-            guest_email: email.value.trim()
+            guest_email: email.value.trim(),
+            guest_token: guestToken
         })
     }
 }

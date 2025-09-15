@@ -3,10 +3,12 @@ import { useGuestStore } from '../stores/guest'
 import { useRSVPStore } from '../stores/rsvp'
 import { useUIStore } from '../stores/ui'
 import { useGoodWillStore } from '../stores/goodWill'
+import { usePrivacyStore } from '../stores/privacy'
+import { useGiftStore } from '../stores/gift'
 import { guestStorage } from '../utils/guestStorage'
 import MainWebsiteView from '../views/MainWebsiteView.vue'
-import GuestIdentifierView from '../views/GuestIdentifierView.vue'
 import PrivacyPolicy from '../views/PrivacyPolicy.vue'
+import PaymentValidation from '../views/PaymentValidation.vue'
 
 const routes = [
   {
@@ -15,6 +17,7 @@ const routes = [
     component: MainWebsiteView,
     beforeEnter: async () => {
       const guestStore = useGuestStore()
+      const privacyStore = usePrivacyStore()
 
       if(guestStore.accessedViaToken){
         console.log('ℹ️ Navigated here from token-handler, skipping cached data check')
@@ -28,15 +31,28 @@ const routes = [
       if (hasCachedData) {
         console.log('✅ Found cached data, initialising store from cache')
         await initialiseStoreFromCache()
+        // For cached users, don't show the banner (they've been here before)
+        privacyStore.initializeForCachedUser()
       } else {
         console.log('📭 No cached data found, proceeding with basic website experience')
+        // For completely new users without tokens, don't show banner either
+        privacyStore.initializeForCachedUser()
       }
     }
   },
   {
-    path: '/guest-identifier',
-    name: 'guest-identifier',
-    component: GuestIdentifierView
+    path: '/payment-validation/:token',
+    name: 'payment-validation',
+    component: PaymentValidation,
+    beforeEnter: async (to: RouteLocationNormalized) => {
+      console.log('🚦 Route guard triggered for payment validation', to.path )
+      const giftStore = useGiftStore()
+      const guestToken = to.params.token as string
+
+      await giftStore.fetchGuestGifts(guestToken)
+
+      return { name: 'main-website'}
+    }
   },
   {
     path: '/privacy-policy',
@@ -54,6 +70,7 @@ const routes = [
         token: to.params.token
       })
 
+      const privacyStore = usePrivacyStore()
       const guestStore = useGuestStore()
       const uiStore = useUIStore()
       
@@ -62,6 +79,7 @@ const routes = [
         // await guestStore.fetchGuestByToken(to.params.token as string)
         await initialiseStoreWithToken(to.params.token as string)
         console.log('✅ Token validation successful')
+        privacyStore.initializeNotice(to.params.token as string)
 
         //Navigate to the 'main-website' view
         console.log('🧭 Navigating to main-website view')
@@ -70,13 +88,14 @@ const routes = [
         
         // Use nextTick to ensure navigation is complete before showing modal
         if(guestStore.hasCachedData){
-          uiStore.showCookie = false
+          // uiStore.showCookie = false
           uiStore.hideAllModals()
           uiStore.hideAllBottomSheets()
         }else {
           console.log('🎉 Showing personalized welcome modal for:', guestStore.guestData?.guest.first_name)
-          uiStore.showCookie = true
+          // uiStore.showCookie = true
           uiStore.showHideWelcomeModal(true)
+          // Note: Data notice will be shown via banner component if not yet acknowledged
         }
       } catch (e) {
         console.error('❌ Token validation failed:', e)
@@ -93,15 +112,17 @@ const initialiseStoreWithToken = async (token: string) => {
   const guestStore = useGuestStore()
   const rsvpStore = useRSVPStore()
   const goodWillStore = useGoodWillStore()
+  const giftStore = useGiftStore()
   
   const results = await Promise.allSettled([
     guestStore.fetchGuestByToken(token),
     rsvpStore.fetchRSVPData(token),
-    goodWillStore.fetchGoodWillMessage(token)
+    goodWillStore.fetchGoodWillMessage(token),
+    giftStore.fetchGuestGifts(token)
   ])
 
   results.forEach((result, index) => {
-    const stores = [guestStore, rsvpStore, goodWillStore]
+    const stores = [guestStore, rsvpStore, goodWillStore, giftStore]
     if (result.status === 'rejected') {
       console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
     } else {
@@ -115,15 +136,17 @@ const initialiseStoreFromCache = async() => {
   const guestStore = useGuestStore()
   const rsvpStore = useRSVPStore()
   const goodWillStore = useGoodWillStore()
+  const giftStore = useGiftStore()
 
   const results = await Promise.allSettled([
     guestStore.initialiseGuestStoreFromCache(),
     rsvpStore.initialiseRsvpStoreFromCache(),
-    goodWillStore.initialiseGoodWillStoreFromCache()
+    goodWillStore.initialiseGoodWillStoreFromCache(),
+    giftStore.initialiseGiftStoreFromCache()
   ])
 
   results.forEach((result, index) => {
-    const stores = [guestStore, rsvpStore, goodWillStore]
+    const stores = [guestStore, rsvpStore, goodWillStore, giftStore]
     if (result.status === 'rejected') {
       console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
     } else {

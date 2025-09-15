@@ -22,8 +22,8 @@ export const useGoodWillStore = defineStore('goodWill', () => {
             if (isDataCached){
                 const cachedData = guestStorage.getGuestData(token)
 
-                if(cachedData?.guestData?.guestMessage) {
-                    hasMessage.value = cachedData.guestData.guestMessage
+                if(cachedData?.data?.guestData?.guestMessage) {
+                    hasMessage.value = cachedData.data.guestData.guestMessage
                     console.log('✅ Loaded good will message from cache:', hasMessage.value)
                     loading.value = false
                     guestStorage.refreshExpiry()
@@ -63,11 +63,11 @@ export const useGoodWillStore = defineStore('goodWill', () => {
   }
 
   const initialiseGoodWillStoreFromCache = () => {
-    console.log('🚀 Initialising guest store...')
+    console.log('🚀 Initialising goodwill store...')
     const cachedData = guestStorage.getGuestData()
 
-    if(cachedData?.guestData?.guestMessage) {
-      goodWillMessage.value = cachedData.guestData.guestMessage
+    if(cachedData?.data?.guestData?.guestMessage) {
+      goodWillMessage.value = cachedData.data.guestData.guestMessage
       loading.value = false
       guestStorage.refreshExpiry()
       return

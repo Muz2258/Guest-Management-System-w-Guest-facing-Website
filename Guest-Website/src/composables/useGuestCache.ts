@@ -1,3 +1,6 @@
+import { useGuestStore } from '../stores/guest'
+import { guestStorage } from '../utils/guestStorage'
+
 /**
  * Composable for guest data caching and storage operations
  */
@@ -7,29 +10,31 @@ export function useGuestCache() {
   /**
    * Check if the current guest data is cached and load it
    */
-  const loadCachedData = (token: string) => {
-    return guestStore.loadFromCache(token)
+  const loadCachedData = () => {
+    return guestStore.initialiseGuestStoreFromCache()
   }
 
   /**
    * Force refresh guest data from the server
    */
   const refreshData = async (token: string) => {
-    await guestStore.refreshGuestData(token)
+    await guestStore.fetchGuestByToken(token)
   }
 
   /**
    * Clear all cached guest data
    */
   const clearCache = () => {
-    guestStore.clearGuestData()
+    // Reset the guest data to null to clear cache
+    guestStore.guestData = null
+    guestStore.hasCachedData = false
   }
 
   /**
    * Check if valid cached data exists
    */
-  const hasCachedData = (token: string) => {
-    return guestStore.hasValidCachedData(token)
+  const hasCachedData = () => {
+    return guestStore.hasCachedData
   }
 
   /**

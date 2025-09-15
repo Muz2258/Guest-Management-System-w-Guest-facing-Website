@@ -1,22 +1,16 @@
 import CryptoJS from 'crypto-js'
+import { 
+  logger, 
+  ErrorType, 
+  handleSync
+} from './errorHandler'
 
 interface StoredGuestData {
   token: string
-  guestData: any
+  cookiesSeen?: boolean
+  guestData?: any
   timestamp: number
   expiresAt: number
-}
-
-// Import privacy store to check consent
-let privacyStore: any = null
-
-// Lazy load privacy store to avoid circular dependencies
-const getPrivacyStore = async () => {
-  if (!privacyStore) {
-    const { usePrivacyStore } = await import('../stores/privacy')
-    privacyStore = usePrivacyStore()
-  }
-  return privacyStore
 }
 
 class SecureGuestStorage {
@@ -40,19 +34,6 @@ class SecureGuestStorage {
   }
 
   /**
-   * Check if functional cookies are allowed before saving
-   */
-  private async canUseStorage(): Promise<boolean> {
-    try {
-      const store = await getPrivacyStore()
-      return store.preferences.functional
-    } catch (error) {
-      console.warn('⚠️ Privacy store not available, allowing storage for now')
-      return true // Fallback to allow storage if privacy store isn't available
-    }
-  }
-
-  /**
    * Save guest data to local storage with encryption
    */
   async saveGuestData(token: string, partialData: Partial<{
@@ -61,16 +42,11 @@ class SecureGuestStorage {
     guestMessage?: any;
     guestGift?: any;
   }>): Promise<void> {
-    try{
-      const canStore = await this.canUseStorage()
-      if (!canStore) {
-        console.warn('🚫 Functional cookies not allowed, skipping guest data storage')
-        return
-      }
-
+    const result = handleSync(() => {
       // Get existing data to merge
       const existing = this.getGuestData(token)
-      const currentData = existing?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}}
+      const currentData = existing?.data?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}, guestGift: {}}
+      const currentCookiesSeen = existing?.data?.cookiesSeen || false
 
       // Merge new partial data with existing data
       const mergedData = {
@@ -83,6 +59,7 @@ class SecureGuestStorage {
       const now = Date.now()
       const storedData: StoredGuestData = {
         token,
+        cookiesSeen: currentCookiesSeen,
         guestData: mergedData,
         timestamp: now,
         expiresAt: now + this.TTL
@@ -93,16 +70,18 @@ class SecureGuestStorage {
 
       localStorage.setItem(this.STORAGE_KEY, encryptedData)
       console.log('✅ Guest data securely saved to storage:', mergedData)
-    }catch(err){
-      console.error('❌ Failed to save guest data:', err)
+    }, 'save-guest-data', ErrorType.STORAGE)
+
+    if (!result.success) {
+      throw result.error
     }
   }
 
   /**
    * Retrieve and decrypt guest data from local storage
    */
-  getGuestData(token?: string): { guestData: any; isValid: boolean } | null {
-    try {
+  getGuestData(token?: string): { data: any; isValid: boolean } | null {
+    const result = handleSync(() => {
       const encryptedData = localStorage.getItem(this.STORAGE_KEY)
       
       if (!encryptedData) {
@@ -128,15 +107,44 @@ class SecureGuestStorage {
 
       console.log('✅ Retrieved valid guest data from storage')
       return {
-        guestData: storedData.guestData,
+        data: storedData,
         isValid: true
       }
-    } catch (error) {
-      console.error('❌ Failed to retrieve guest data:', error)
+    }, 'get-guest-data', ErrorType.STORAGE)
+
+    if (!result.success) {
       // If decryption fails, clear potentially corrupted data
       this.clearGuestData()
       return null
     }
+
+    return result.data
+  }
+
+  markCookiesAsSeen(token: string): boolean {
+    const result = handleSync(() => {
+      // Get existing data to merge
+      const existing = this.getGuestData(token)
+      const currentData = existing?.data?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}, guestGift: {}}
+
+      const now = Date.now()
+      const update: StoredGuestData = {
+        token,
+        cookiesSeen: true,
+        guestData: currentData,
+        timestamp: now,
+        expiresAt: now + this.TTL
+      }
+
+      const jsonString = JSON.stringify(update)
+      const encryptedData = this.encrypt(jsonString)
+
+      localStorage.setItem(this.STORAGE_KEY, encryptedData)
+      console.log('✅ cookiesSeen flag updated in storage')
+      return true
+    }, 'mark-cookies-seen', ErrorType.STORAGE)
+
+    return result.success ? result.data : false
   }
 
   /**
@@ -150,7 +158,7 @@ class SecureGuestStorage {
     else cachedData = this.getGuestData(token)
     
     if (cachedData && cachedData.isValid) {
-      console.log('✅ Loaded guest data from cache:', cachedData.guestData)
+      console.log('✅ Loaded guest data from cache:', cachedData.data)
       return true
     }
     
@@ -170,11 +178,13 @@ class SecureGuestStorage {
    * Clear stored guest data
    */
   clearGuestData(): void {
-    try {
+    const result = handleSync(() => {
       localStorage.removeItem(this.STORAGE_KEY)
       console.log('🧹 Cleared stored guest data')
-    } catch (error) {
-      console.error('❌ Failed to clear guest data:', error)
+    }, 'clear-guest-data', ErrorType.STORAGE)
+
+    if (!result.success) {
+      logger.log(result.error)
     }
   }
 
@@ -182,7 +192,7 @@ class SecureGuestStorage {
    * Get time until stored data expires (in milliseconds)
    */
   getTimeUntilExpiry(): number | null {
-    try {
+    const result = handleSync(() => {
       const encryptedData = localStorage.getItem(this.STORAGE_KEY)
       if (!encryptedData) return null
 
@@ -190,17 +200,16 @@ class SecureGuestStorage {
       const storedData: StoredGuestData = JSON.parse(decryptedData)
 
       return Math.max(0, storedData.expiresAt - Date.now())
-    } catch (error) {
-      console.error('❌ Failed to get expiry time:', error)
-      return null
-    }
+    }, 'get-expiry-time', ErrorType.STORAGE)
+
+    return result.success ? result.data : null
   }
 
   /**
    * Refresh the expiry time of stored data
    */
   refreshExpiry(): void {
-    try {
+    const result = handleSync(() => {
       const encryptedData = localStorage.getItem(this.STORAGE_KEY)
       if (!encryptedData) return
 
@@ -216,8 +225,10 @@ class SecureGuestStorage {
       localStorage.setItem(this.STORAGE_KEY, newEncryptedData)
       
       console.log('🔄 Refreshed guest data expiry')
-    } catch (error) {
-      console.error('❌ Failed to refresh expiry:', error)
+    }, 'refresh-expiry', ErrorType.STORAGE)
+
+    if (!result.success) {
+      logger.log(result.error)
     }
   }
 }

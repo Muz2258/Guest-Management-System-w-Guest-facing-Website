@@ -1,5 +1,5 @@
 <template>
-    <section id="love-story" class="pt-80 flex flex-col items-center overflow-x-hidden">
+    <section id="love-story" class="flex flex-col items-center overflow-x-hidden" :class="{'pt-40 bg-brand-sec-light-100': !hasToken, 'pt-80 bg-transparent': hasToken}">
         <div class="flex gap-4 items-center mb-20">
             <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
             <h4 class="text-heading-s text-brand-pri">#BuiltToLast</h4>
@@ -12,15 +12,22 @@
             <p>Our journey hasn’t always been perfect, but it has always been ours, filled with laughter, sweet memories, and moments that only made our love stronger than we ever imagined🥰. Through every season, we’ve found in each other a safe haven, a best friend, and the kind of love that feels like home. What we share isn’t just love…. It’s Forever!!! 😊</p>
         </div>
         <div class="flex gap-8 justify-center w-full mt-24 h-[30vh]">
-            <img class="self-end" src="../../assets/png/temp-image-details-1.png" />
-            <img class="self-center" src="../../assets/png/temp-image-details-2.png" />
-            <img class="self-start" src="../../assets/png/temp-image-details-3.png" />
+            <img :class="{'self-end': hasToken}" src="../../assets/png/temp-image-details-1.png" />
+            <img :class="{'self-center': hasToken}" src="../../assets/png/temp-image-details-2.png" />
+            <img :class="{'self-start': hasToken}" src="../../assets/png/temp-image-details-3.png" />
         </div>
     </section>
 </template>
 
 <script setup lang="ts">
+/* ----------------------- Stores ----------------------- */
+const guestStore = useGuestStore()
 
+
+/* ----------------------- Computed Properties ----------------------- */
+const hasToken = computed(() => {
+  return !!guestStore.guestData?.auth_token
+})
 </script>
 
 <style scoped>

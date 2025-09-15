@@ -446,7 +446,8 @@ const updateRSVP = async (status: 'attending' | 'not_attending') => {
         await rsvpStore.updateGuestRsvp(token, {attendance_status: status});
         console.log(`RSVP updated to ${status} successfully.`);
     } catch (error) {
-        console.error('Error updating RSVP:', error);
+        // Error handling is now done in the store
+        console.error('Error updating RSVP - see store for details');
     } finally {
         activeButton.value = null;
     }
@@ -467,7 +468,8 @@ const setSpouseRSVP = async (status: boolean) => {
         await rsvpStore.updateGuestRsvp(token, {spouse_attending: status});
         console.log(`Spouse RSVP set to ${status} successfully.`);
     } catch (error) {
-        console.error('Error setting spouse RSVP:', error);
+        // Error handling is now done in the store
+        console.error('Error setting spouse RSVP - see store for details');
     } finally {
         activeButton.value = null;
     }

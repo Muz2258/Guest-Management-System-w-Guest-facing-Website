@@ -53,7 +53,7 @@ const showCacheStatus = computed(() => {
 const cacheInfo = computed(() => guestCache.getCacheInfo())
 
 const hasCachedData = computed(() => {
-  return props.token ? guestCache.hasCachedData(props.token) : false
+  return props.token ? guestCache.hasCachedData() : false
 })
 
 const cacheStatusColor = computed(() => {

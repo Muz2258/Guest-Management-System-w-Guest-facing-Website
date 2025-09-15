@@ -52,6 +52,8 @@
 </template>
 
 <script setup lang="ts">
+import { validateRequired, validateLength, ErrorType, createError } from '../../utils/errorHandler'
+
 /* ------------------- Stores ------------------- */
 const uiStore = useUIStore()
 const goodWillStore = useGoodWillStore()
@@ -84,26 +86,33 @@ const handleClose =() => {
 }
 
 const validateMessage = (message: string) => {    
-    if (!message) {
-        errors.value.message = 'Message is required'
+    // Clear previous errors
+    errors.value.message = ''
+    
+    // Use standardized validation
+    const requiredError = validateRequired(message, 'Message')
+    if (requiredError) {
+        errors.value.message = requiredError.userMessage
         return false
-    } else if (message.length > 200) {
-        errors.value.message = 'Message must be 200 characters or less'
-        return false
-    } else if (message.length < 5) {
-        errors.value.message = 'Message must be at least 5 characters'
-        return false
-    } else {
-        errors.value.message = ''
-        return true
     }
+    
+    const lengthError = validateLength(message, 5, 200, 'Message')
+    if (lengthError) {
+        errors.value.message = lengthError.userMessage
+        return false
+    }
+    
+    return true
 }
 
 const handleSubmit = async () => {
     const guestToken = guestStore.guestData?.auth_token
 
     if (!guestToken) {
-        throw new Error('Guest is not authenticated')
+        const error = createError(ErrorType.AUTHENTICATION, 'Guest is not authenticated', {
+            userMessage: 'Please refresh the page and try again.'
+        })
+        throw error
     }
 
     const message = formData.value.trim()
