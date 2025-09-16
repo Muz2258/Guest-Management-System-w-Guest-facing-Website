@@ -1,5 +1,5 @@
 <template>
-    <Modal @close="handleClose">
+    <Modal @close="handleClose" :is-visible="isVisible">
         <template #body>
             <div class="px-24 py-24">
                 <h3 class="text-heading-md text-center text-neutrals-neu-0 mb-16">
@@ -60,6 +60,16 @@ const goodWillStore = useGoodWillStore()
 const guestStore = useGuestStore()
 
 
+/* ------------------- Props and Emits ------------------- */
+interface Props {
+    isVisible?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    isVisible: false
+})
+
+
 /* ------------------- Local Variables ----------------- */
 const formData = ref(goodWillStore.initializeGoodWillFormData())
 
@@ -78,6 +88,7 @@ const isFormValid = computed(() => {
 
 const isEditing = computed(() => !!goodWillStore.goodWillMessage?.message_text)
 const isSubmitting = computed(() => goodWillStore.loading)
+const isVisible = computed(() => props.isVisible)
 
 
 /* ------------------- Functions ----------------- */

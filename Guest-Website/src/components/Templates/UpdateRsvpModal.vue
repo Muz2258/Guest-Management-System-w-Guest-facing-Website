@@ -1,5 +1,5 @@
 <template>
-    <Modal @close="handleClose">
+    <Modal @close="handleClose" :is-visible="isVisible">
         <template #body>
             <div class="px-24 py-24">
                 <h3 class="text-heading-md text-center text-neutrals-neu-0 mb-16">
@@ -21,18 +21,11 @@
             <div class="px-24 pb-24">
                 <div class="flex flex-col gap-12">
                     <Button 
-                        label="Yes, I'll be there"
+                        :label="buttonLabel"
                         type="primary" 
                         class="w-full" 
-                        :is-loading="isUpdating && selectedResponse === 'attending'"
-                        @click="handleRSVPUpdate('attending')"
-                    />
-                    <Button 
-                        label="Sorry, I can't make it"
-                        type="secondary" 
-                        class="w-full" 
-                        :is-loading="isUpdating && selectedResponse === 'not_attending'"
-                        @click="handleRSVPUpdate('not_attending')"
+                        :is-loading="isUpdating"
+                        @click="handleRSVPUpdate(submitValue)"
                     />
                     <Button 
                         label="Cancel"
@@ -53,12 +46,23 @@ const rsvpStore = useRSVPStore()
 const guestStore = useGuestStore()
 
 
+/* ---------------------- Props and Emits ----------------------- */
+interface Props {
+    isVisible?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    isVisible: false
+})
+
+
 /* ---------------------- Local Variables ----------------------- */
 const selectedResponse = ref<'attending' | 'not_attending' | 'pending'>(rsvpStore.rsvpData?.attendance_status || 'pending')
 
 
 /* ---------------------- Computed Properties --------------------- */
 const isUpdating = computed(() => rsvpStore.loading)
+const isVisible = computed(() => props.isVisible)
 
 const currentRSVPText = computed(() => {
     const status = rsvpStore.rsvpData?.attendance_status
@@ -67,6 +71,20 @@ const currentRSVPText = computed(() => {
     if (status === 'not_attending') return "Sorry, I can't make it"
 
     return 'No response yet'
+})
+
+const buttonLabel = computed(() => {
+    const status = rsvpStore.rsvpData?.attendance_status
+
+    if(status === 'attending') return "Update to 'Sorry, I can't make it'"
+    return "Update to 'Yes, I'll be there'"
+})
+
+const submitValue = computed(() => {
+    const status = rsvpStore.rsvpData?.attendance_status
+
+    if(status === 'attending') return 'not_attending'
+    return 'attending'
 })
 
 

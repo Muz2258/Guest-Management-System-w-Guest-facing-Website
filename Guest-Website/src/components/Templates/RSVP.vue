@@ -9,260 +9,273 @@
             <img src="../../assets/vectors/leaf-branch__right--purple.svg" class="h-6" />
         </div>
 
-        <div v-if="isRSVPOpen && isRsvpGuest && guestResponse === 'pending'" class="flex flex-col items-center">
-            <h3 class="text-neutrals-neu-0 text-heading-md mb-16">Let's celebrate</h3>
-            <p class="mb-40 max-w-[87vw] text text-neutrals-neu-46 text-center">
-                Join us as we celebrate this great milestone. Whether you can or cannot be present, you mean the world to us.
-            </p>
-            <div v-if="isRSVPOpen" class="flex flex-col gap-12 w-full">
-                <Button label="Yes! I'd be there" type="primary" class="w-full" :is-loading="activeButton === 'rsvp-yes'" @click="updateRSVP('attending')"/>
-
-                <Button label="Sorry, I can't make it" type="secondary" class="w-full" :is-loading="activeButton === 'rsvp-no'" @click="updateRSVP('not_attending')"/>
-
-                <div class="text-center">
-                    <p class="text-xs text-neutrals-neu-46 mb-4">RSVP CLOSES IN:
-                        <span class="text-heading-s text-neutrals-neu-0 font-bold ml-8">{{ countdown.days }}</span>
-                        <span class="text-xs text-neutrals-neu-46 ml-4"> {{ countdown.days === 1 ? 'day' : 'days' }} </span>
-                        <span class="text-heading-s text-neutrals-neu-0 font-bold ml-8"> {{ countdown.hours }}</span>
-                        <span class="text-xs text-neutrals-neu-46 ml-4"> {{ countdown.hours === 1 ? 'hour' : 'hours' }}</span>
+        <transition name="rsvp-animation" mode="out-in">
+            <div class="rsvp-content flex flex-col items-center" :key="activeCondition">
+                <template v-if="pending">
+                    <h3 class="heading text-neutrals-neu-0 text-heading-md mb-16">Let's celebrate</h3>
+                    <p class="copy mb-40 max-w-[87vw] text text-neutrals-neu-46 text-center">
+                        Join us as we celebrate this great milestone. Whether you can or cannot be present, you mean the world to us.
                     </p>
-                </div>
-            </div>
-        </div>
+                    <div v-if="isRSVPOpen" class="content flex flex-col gap-12 w-full">
+                        <Button label="Yes! I'd be there" type="primary" class="w-full" :is-loading="activeButton === 'rsvp-yes'" @click="updateRSVP('attending')"/>
 
-        <div v-else-if="isRSVPOpen && isRsvpGuest && guestResponse === 'attending'" class="flex flex-col items-center">
-            <h3 class="text-neutrals-neu-0 text-heading-md mb-16">Great!!</h3>
-            <p class="mb-16 max-w-[87vw] text text-neutrals-neu-46 text-center">
-                We’re so excited that you’d be there to celebrate with us. We can’t wait to celebrate this milestone with you <span class="text-neutrals-neu-0">{{ guestName }}</span>. See you soon!
-            </p>
-            <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <Card v-if="isCouple" :title="plusOneCardInfo.title" :description="plusOneCardInfo.description">
-                    <template #footer>
-                        <div v-if="hasPlusOne" class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Edit +1" 
-                                type="secondary" 
-                                class="w-full" 
-                                :is-loading="activeButton === 'change-plus-one'" 
-                                @click="updatePlusOne"
-                            />
-                            <Button 
-                                label="Remove +1" 
-                                type="tertiary" 
-                                class="w-full" 
-                                @click="removePlusOne"
-                            />
-                        </div>
-                        <div v-else-if="spouseResponse === 'pending'" class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Yes" 
-                                type="primary" 
-                                class="w-full" 
-                                :is-loading="activeButton === 'spouse-yes'" 
-                                @click="setSpouseRSVP(true)"
-                            />
-                            <Button 
-                                label="No" 
-                                type="secondary" 
-                                class="w-full" 
-                                :is-loading="activeButton === 'spouse-no'" 
-                                @click="setSpouseRSVP(false)"
-                            />
-                        </div>
-                        <div v-else-if="spouseResponse === 'not-attending'" class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Add +1" 
-                                type="primary" 
-                                class="w-full" 
-                                :is-loading="activeButton === 'add-plus-one'" 
-                                @click="addPlusOne"
-                            />
-                            <Button 
-                                label="Update response" 
-                                type="secondary" 
-                                class="w-full" 
-                                :is-loading="activeButton === 'update-spouse-response'" 
-                                @click="changeSpouseRSVP"
-                            />
-                        </div>
-                        <Button 
-                            v-else 
-                            label="Update response" 
-                            type="secondary" 
-                            class="w-full" 
-                            :is-loading="activeButton === 'update-spouse-response'" 
-                            @click="changeSpouseRSVP"
-                        />
-                    </template>
-                </Card>
-                <Card v-else-if="!isCouple && plusOneEligible" :title="plusOneCardInfo.title" :description="plusOneCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasPlusOne" 
-                            label="Add +1" 
-                            type="primary" 
-                            class="w-full" 
-                            :is-loading="activeButton === 'add-plus-one'" 
-                            @click="addPlusOne"
-                        />
-                        <div v-if="hasPlusOne" class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Edit +1" 
-                                type="secondary" 
-                                class="w-full" 
-                                @click="updatePlusOne"
-                            />
-                            <Button 
-                                label="Remove +1" 
-                                type="tertiary" 
-                                class="w-full" 
-                                @click="removePlusOne"
-                            />
-                        </div>
-                    </template>
-                </Card>
-                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasGift" 
-                            label="Send gift" 
-                            type="primary" 
-                            class="w-full" 
-                            :is-loading="activeButton === 'send-gift'" 
-                            @click="sendGift"
-                        />
-                        <div v-else class="flex items-center justify-center text-center text-7xl p-24">
-                            😘
-                        </div>
-                    </template>
-                </Card>
-                <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasSentMessage" 
-                            label="Leave a message" 
-                            type="primary" 
-                            class="w-full" 
-                            @click="leaveMessage"
-                        />
-                        <div v-else class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Edit your message" 
-                                type="secondary" 
-                                class="w-full" 
-                                @click="editMessage"
-                            />
-                            <Button 
-                                label="Delete your message" 
-                                type="tertiary" 
-                                class="w-full" 
-                                @click="deleteMessage"
-                            />
-                        </div>
-                    </template>
-                </Card>
-            </div>
-            <p class="text-sm text-neutrals-neu-46">Want to change your response? <span class="text-brand-pri underline" @click="showUpdateRSVPModal">Update RSVP</span></p>
-        </div>
+                        <Button label="Sorry, I can't make it" type="secondary" class="w-full" :is-loading="activeButton === 'rsvp-no'" @click="updateRSVP('not_attending')"/>
 
-        <div v-else-if="isRSVPOpen && isRsvpGuest && guestResponse === 'not_attending'" class="flex flex-col items-center">
-            <h3 class="text-neutrals-neu-0 text-heading-md mb-16">That's alright</h3>
-            <p class="mb-16 max-w-[87vw] text text-neutrals-neu-46 text-center">
-                Thank you for letting us know <span class="text-neutrals-neu-0">{{ guestName }}</span>, we totally understand. You can still share in our joy by sending a gift or leaving a message.
-            </p>
-            <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasGift" 
-                            label="Send gift" 
-                            type="primary" 
-                            class="w-full" 
-                            :is-loading="activeButton === 'send-gift'" 
-                            @click="sendGift"
-                        />
-                        <div v-else class="flex items-center justify-center text-center text-7xl p-24">
-                            😘
+                        <div class="text-center">
+                            <p class="text-xs text-neutrals-neu-46 mb-4">RSVP CLOSES IN:
+                                <span class="text-heading-s text-neutrals-neu-0 font-bold ml-8">{{ countdown.days }}</span>
+                                <span class="text-xs text-neutrals-neu-46 ml-4"> {{ countdown.days === 1 ? 'day' : 'days' }} </span>
+                                <span class="text-heading-s text-neutrals-neu-0 font-bold ml-8"> {{ countdown.hours }}</span>
+                                <span class="text-xs text-neutrals-neu-46 ml-4"> {{ countdown.hours === 1 ? 'hour' : 'hours' }}</span>
+                            </p>
                         </div>
-                    </template>
-                </Card>
-                <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasSentMessage" 
-                            label="Leave a message" 
-                            type="primary" 
-                            class="w-full" 
-                            @click="leaveMessage"
-                        />
-                        <div v-else class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Edit your message" 
-                                type="secondary" 
-                                class="w-full"
-                                @click="editMessage"
-                            />
-                            <Button 
-                                label="Delete your message" 
-                                type="tertiary" 
-                                class="w-full" 
-                                @click="deleteMessage"
-                            />
-                        </div>
-                    </template>
-                </Card>
-            </div>
-            <p class="text-sm text-neutrals-neu-46">Want to change your response? <span class="text-brand-pri underline" @click="showUpdateRSVPModal">Update RSVP</span></p>
-        </div>
+                    </div>
+                </template>
 
-        <div v-else class="flex flex-col items-center">
-            <h3 class="text-neutrals-neu-0 text-heading-md mb-16">Share in our joy</h3>
-            <p class="mb-16 max-w-[87vw] text text-neutrals-neu-46 text-center">
-                Though we're having a small, private ceremony with immediate family, we couldn't celebrate without letting you know. Thank you for being part of our journey.
-            </p>
-            <div class="flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
-                <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasGift" 
-                            label="Send gift" 
-                            type="primary" 
-                            class="w-full" 
-                            :is-loading="activeButton === 'send-gift'" 
-                            @click="sendGift"
-                        />
-                        <div v-else class="flex items-center justify-center text-center text-7xl p-24">
-                            😘
-                        </div>
-                    </template>
-                </Card>
-                <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
-                    <template #footer>
-                        <Button 
-                            v-if="!hasSentMessage" 
-                            label="Leave a message" 
-                            type="primary" 
-                            class="w-full"
-                            @click="leaveMessage"
-                        />
-                        <div v-else class="flex flex-col gap-8 w-full">
-                            <Button 
-                                label="Edit your message" 
-                                type="secondary" 
-                                class="w-full"
-                                @click="editMessage"
-                            />
-                            <Button 
-                                label="Delete your message" 
-                                type="tertiary" 
-                                class="w-full" 
-                                @click="deleteMessage"
-                            />
-                        </div>
-                    </template>
-                </Card>
+                <template v-else-if="attending">
+                    <h3 class="heading text-neutrals-neu-0 text-heading-md mb-16">Great!!</h3>
+                    <p class="copy mb-16 max-w-[87vw] text text-neutrals-neu-46 text-center">
+                        We’re so excited that you’d be there to celebrate with us. We can’t wait to celebrate this milestone with you <span class="text-neutrals-neu-0">{{ guestName }}</span>. See you soon!
+                    </p>
+                    <div class="content flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
+                        <Card v-if="isCouple" :title="plusOneCardInfo.title" :description="plusOneCardInfo.description">
+                            <template #footer>
+                                <div v-if="hasPlusOne" class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Edit +1" 
+                                        type="secondary" 
+                                        class="w-full" 
+                                        :is-loading="activeButton === 'change-plus-one'" 
+                                        @click="updatePlusOne"
+                                    />
+                                    <Button 
+                                        label="Remove +1" 
+                                        type="tertiary" 
+                                        class="w-full" 
+                                        @click="removePlusOne"
+                                    />
+                                </div>
+                                <div v-else-if="spouseResponse === 'pending'" class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Yes" 
+                                        type="primary" 
+                                        class="w-full" 
+                                        :is-loading="activeButton === 'spouse-yes'" 
+                                        @click="setSpouseRSVP(true)"
+                                    />
+                                    <Button 
+                                        label="No" 
+                                        type="secondary" 
+                                        class="w-full" 
+                                        :is-loading="activeButton === 'spouse-no'" 
+                                        @click="setSpouseRSVP(false)"
+                                    />
+                                </div>
+                                <div v-else-if="spouseResponse === 'not-attending'" class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Add +1" 
+                                        type="primary" 
+                                        class="w-full" 
+                                        :is-loading="activeButton === 'add-plus-one'" 
+                                        @click="addPlusOne"
+                                    />
+                                    <Button 
+                                        label="Update response" 
+                                        type="secondary" 
+                                        class="w-full" 
+                                        :is-loading="activeButton === 'update-spouse-response'" 
+                                        @click="changeSpouseRSVP"
+                                    />
+                                </div>
+                                <Button 
+                                    v-else 
+                                    label="Update response" 
+                                    type="secondary" 
+                                    class="w-full" 
+                                    :is-loading="activeButton === 'update-spouse-response'" 
+                                    @click="changeSpouseRSVP"
+                                />
+                            </template>
+                        </Card>
+                        <Card v-else-if="!isCouple && plusOneEligible" :title="plusOneCardInfo.title" :description="plusOneCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasPlusOne" 
+                                    label="Add +1" 
+                                    type="primary" 
+                                    class="w-full" 
+                                    :is-loading="activeButton === 'add-plus-one'" 
+                                    @click="addPlusOne"
+                                />
+                                <div v-if="hasPlusOne" class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Edit +1" 
+                                        type="secondary" 
+                                        class="w-full" 
+                                        @click="updatePlusOne"
+                                    />
+                                    <Button 
+                                        label="Remove +1" 
+                                        type="tertiary" 
+                                        class="w-full" 
+                                        @click="removePlusOne"
+                                    />
+                                </div>
+                            </template>
+                        </Card>
+                        <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasGift" 
+                                    label="Send gift" 
+                                    type="primary" 
+                                    class="w-full" 
+                                    :is-loading="activeButton === 'send-gift'" 
+                                    @click="sendGift"
+                                />
+                                <div v-else class="flex items-center justify-center text-center p-24">
+                                    <picture>
+                                        <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
+                                        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
+                                    </picture>
+                                </div>
+                            </template>
+                        </Card>
+                        <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasSentMessage" 
+                                    label="Leave a message" 
+                                    type="primary" 
+                                    class="w-full" 
+                                    @click="leaveMessage"
+                                />
+                                <div v-else class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Edit your message" 
+                                        type="secondary" 
+                                        class="w-full" 
+                                        @click="editMessage"
+                                    />
+                                    <Button 
+                                        label="Delete your message" 
+                                        type="tertiary" 
+                                        class="w-full" 
+                                        @click="deleteMessage"
+                                    />
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+                    <p class="foot text-sm text-neutrals-neu-46">Want to change your response? <span class="text-brand-pri underline" @click="showUpdateRSVPModal">Update RSVP</span></p>
+                </template>
+
+                <template v-else-if="notAttending">
+                    <h3 class="heading text-neutrals-neu-0 text-heading-md mb-16">That's alright</h3>
+                    <p class="copy mb-16 max-w-[87vw] text text-neutrals-neu-46 text-center">
+                        Thank you for letting us know <span class="text-neutrals-neu-0">{{ guestName }}</span>, we totally understand. You can still share in our joy by sending a gift or leaving a message.
+                    </p>
+                    <div class="content flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
+                        <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasGift" 
+                                    label="Send gift" 
+                                    type="primary" 
+                                    class="w-full" 
+                                    :is-loading="activeButton === 'send-gift'" 
+                                    @click="sendGift"
+                                />
+                                <div v-else class="flex items-center justify-center text-center text-7xl p-24">
+                                    <picture>
+                                        <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
+                                        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
+                                    </picture>
+                                </div>
+                            </template>
+                        </Card>
+                        <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasSentMessage" 
+                                    label="Leave a message" 
+                                    type="primary" 
+                                    class="w-full" 
+                                    @click="leaveMessage"
+                                />
+                                <div v-else class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Edit your message" 
+                                        type="secondary" 
+                                        class="w-full"
+                                        @click="editMessage"
+                                    />
+                                    <Button 
+                                        label="Delete your message" 
+                                        type="tertiary" 
+                                        class="w-full" 
+                                        @click="deleteMessage"
+                                    />
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+                    <p class="foot text-sm text-neutrals-neu-46">Want to change your response? <span class="text-brand-pri underline" @click="showUpdateRSVPModal">Update RSVP</span></p>
+                </template>
+
+                <template v-else>
+                    <h3 class="heading text-neutrals-neu-0 text-heading-md mb-16">Share in our joy</h3>
+                    <p class="copy mb-16 max-w-[87vw] text text-neutrals-neu-46 text-center">
+                        Though we're having a small, private ceremony with immediate family, we couldn't celebrate without letting you know. Thank you for being part of our journey.
+                    </p>
+                    <div name="card-animation" tag="div" class="content flex gap-8 p-32 w-full overflow-x-auto max-w-screen scrollbar-hide">
+                        <Card :title="giftingCardInfo.title" :description="giftingCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasGift" 
+                                    label="Send gift" 
+                                    type="primary" 
+                                    class="w-full" 
+                                    :is-loading="activeButton === 'send-gift'" 
+                                    @click="sendGift"
+                                />
+                                <div v-else class="flex items-center justify-center text-center text-7xl p-24">
+                                    <picture>
+                                        <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
+                                        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
+                                    </picture>
+                                </div>
+                            </template>
+                        </Card>
+                        <Card :title="goodWillCardInfo.title" :description="goodWillCardInfo.description">
+                            <template #footer>
+                                <Button 
+                                    v-if="!hasSentMessage" 
+                                    label="Leave a message" 
+                                    type="primary" 
+                                    class="w-full"
+                                    @click="leaveMessage"
+                                />
+                                <div v-else class="flex flex-col gap-8 w-full">
+                                    <Button 
+                                        label="Edit your message" 
+                                        type="secondary" 
+                                        class="w-full"
+                                        @click="editMessage"
+                                    />
+                                    <Button 
+                                        label="Delete your message" 
+                                        type="tertiary" 
+                                        class="w-full" 
+                                        @click="deleteMessage"
+                                    />
+                                </div>
+                            </template>
+                        </Card>
+                    </div>
+                </template>
             </div>
-        </div>
+        </transition>
         
         <img src="../../assets/png/test-image-rsvp.png" class="mt-64 w-full">
     </section>
@@ -308,6 +321,25 @@ const isCouple = computed(() => guestPermissions.value?.is_couple)
 const isRsvpGuest = computed(() => guestPermissions.value?.can_rsvp)
 const plusOneEligible = computed(() => guestPermissions.value?.can_bring_plus_one)
 const hasGift = computed(() => giftStore.has_gifted)
+
+const pending = computed(() => {
+    return isRSVPOpen.value && isRsvpGuest.value && guestResponse.value === 'pending';
+})
+
+const attending = computed(() => {
+    return isRSVPOpen.value && isRsvpGuest.value && guestResponse.value === 'attending';
+})
+
+const notAttending = computed(() => {
+    return isRSVPOpen.value && isRsvpGuest.value && guestResponse.value === 'not_attending';
+})
+
+const activeCondition = computed(() => {
+    if(pending.value) return 'pending'
+    if(attending.value) return 'attending'
+    if(notAttending.value) return 'not_attending'
+    return 'noRsvp'
+})
 
 const guestName = computed(() => {
     const firstName = guestInfo.value?.first_name || '';
@@ -537,4 +569,46 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.rsvp-animation-enter-active .heading {
+    transition: all 0.8s cubic-bezier(.32,.19,.24,.98) 0.2s;
+}
+
+.rsvp-animation-enter-active .copy {
+    transition: all 0.6s cubic-bezier(.32,.19,.24,.98);
+}
+
+.rsvp-animation-leave-active .heading {
+    transition: all 0.4s cubic-bezier(.32,.19,.24,.98);
+}
+
+.rsvp-animation-leave-active .copy {
+    transition: all 0.4s cubic-bezier(.32,.19,.24,.98) 0.1s;
+}
+
+.rsvp-animation-enter-active .content {
+    transition: all 1s cubic-bezier(.32,.19,.24,.98) 0.2s;
+}
+
+.rsvp-animation-enter-active .foot {
+    transition: all 0.5s cubic-bezier(.32,.19,.24,.98) 0.6s;
+}
+
+.rsvp-animation-enter-from .heading, .rsvp-animation-leave-to .heading {
+    opacity: 0;
+    transform: translateY(-100%);
+}
+
+.rsvp-animation-enter-from .copy, .rsvp-animation-leave-to .copy {
+    opacity: 0;
+    transform: translateY(-40%);
+}
+
+.rsvp-animation-enter-from .content, .rsvp-animation-leave-to .content {
+    opacity: 0;
+    transform: translateY(40%);
+}
+
+.rsvp-animation-enter-from .foot, .rsvp-animation-leave-to .foot {
+    opacity: 0;
+}
 </style>

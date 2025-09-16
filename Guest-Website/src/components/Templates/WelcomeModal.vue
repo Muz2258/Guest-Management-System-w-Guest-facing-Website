@@ -1,5 +1,5 @@
 <template>
-    <Modal @close="handleClose">
+    <Modal @close="handleClose" :is-visible="isVisible">
         <template #body>
             <div class="px-24 py-16">
                 <p class="text-center text-neutrals-neu-35 text-xs mb-8">Welcome</p>
@@ -35,11 +35,22 @@ const guestStore = useGuestStore()
 const uiStore = useUIStore()
 
 
+/* ------------------ Props and Emits --------------------- */
+interface Props {
+    isVisible?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    isVisible: false
+})
+
+
 /* ------------------ Computed Properties ------------------ */
 const guest = computed(() => guestStore.guestData?.guest)
 const guestPermissions = computed(() => guestStore.guestData?.permissions)
 const canAddPlusOne = computed(() => guestPermissions.value?.can_bring_plus_one)
 const canRsvp = computed(() => guestPermissions.value?.can_rsvp)
+const isVisible = computed(() => props.isVisible)
 
 const guestDisplayName = computed(() => {
   if (!guest.value) {

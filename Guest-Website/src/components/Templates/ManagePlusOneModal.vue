@@ -1,5 +1,5 @@
 <template>
-    <Modal @close="handleClose">
+    <Modal :is-visible="isVisible" @close="handleClose">
         <template #body>
             <div class="px-24 py-24">
                 <h3 class="text-heading-md text-center text-neutrals-neu-0 mb-16">
@@ -52,9 +52,20 @@ const guestStore = useGuestStore()
 const uiStore = useUIStore()
 
 
+/* ------------------- Props and Emits ------------------- */
+interface Props {
+    isVisible?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    isVisible: false
+})
+
+
 /* ------------------- Computed Properties ------------------- */
 const guestRsvp = computed(() => rsvpStore.rsvpData)
 const isLoading = computed(() => rsvpStore.loading)
+const isVisible = computed(() => props.isVisible)
 
 const isFormValid = computed(() => {
     return formData.value.firstName.trim() !== '' && 

@@ -1,5 +1,5 @@
 <template>
-    <bottom-sheet @close="handleClose">
+    <bottom-sheet :is-visible="isVisible" @close="handleClose">
         <template v-if="showGiftingForm" #body>
             <div class="px-24 pb-24">
                 <h3 class="text-heading-md text-neutrals-neu-0 mb-16">
@@ -143,10 +143,21 @@
 import Icon from '../Icon'
 import { getColor } from '../../utils/colors'
 
+
 /* ------------------- Stores ------------------- */
 const giftStore = useGiftStore()
 const uiStore = useUIStore()
 const guestStore = useGuestStore()
+
+
+/* ------------------- Props and Emits --------------------- */
+interface Props {
+    isVisible: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    isVisible: false
+})
 
 
 /* ------------------- Reactive State and Variables ------------------- */
@@ -175,6 +186,7 @@ const showGiftSummary = computed(() => uiStore.showGiftSummary)
 const selectedAmount = computed(() => giftStore.selectedAmount)
 const isLoading = computed(() => giftStore.loading)
 const giftBreakdown = computed(() => giftStore.giftSummary)
+const isVisible = computed(() => props.isVisible)
 
 /* ------------------- Utility Functions ------------------- */
 const formatAmount = (amount: number | null | undefined): string => {
