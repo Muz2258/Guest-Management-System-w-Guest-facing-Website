@@ -44,11 +44,13 @@ class SecureGuestStorage {
   }>): Promise<void> {
     const result = handleSync(() => {
       // Get existing data to merge
+      console.log('fetching existing guest data for merge...')
       const existing = this.getGuestData(token)
       const currentData = existing?.data?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}, guestGift: {}}
       const currentCookiesSeen = existing?.data?.cookiesSeen || false
 
       // Merge new partial data with existing data
+      console.log('constructing merged guest data for storage...')
       const mergedData = {
         guestInfo: partialData.guestInfo || currentData.guestInfo,
         guestRsvp: partialData.guestRsvp || currentData.guestRsvp,

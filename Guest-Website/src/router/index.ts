@@ -50,8 +50,9 @@ const routes = [
       const guestToken = to.params.token as string
 
       await giftStore.fetchGuestGifts(guestToken)
+      await initialiseStoreFromCache()
 
-      return { name: 'main-website'}
+      return true
     }
   },
   {
@@ -79,7 +80,6 @@ const routes = [
         // await guestStore.fetchGuestByToken(to.params.token as string)
         await initialiseStoreWithToken(to.params.token as string)
         console.log('✅ Token validation successful')
-        privacyStore.initializeNotice(to.params.token as string)
 
         //Navigate to the 'main-website' view
         console.log('🧭 Navigating to main-website view')
@@ -94,8 +94,11 @@ const routes = [
         }else {
           console.log('🎉 Showing personalized welcome modal for:', guestStore.guestData?.guest.first_name)
           // uiStore.showCookie = true
-          uiStore.showHideWelcomeModal(true)
-          // Note: Data notice will be shown via banner component if not yet acknowledged
+          setTimeout(() => {
+            uiStore.showHideWelcomeModal(true)
+            privacyStore.initializeNotice(to.params.token as string)
+            // Note: Data notice will be shown via banner component if not yet acknowledged
+          }, 4500)
         }
       } catch (e) {
         console.error('❌ Token validation failed:', e)
@@ -157,7 +160,18 @@ const initialiseStoreFromCache = async() => {
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to) {
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth',
+      };
+    } else {
+      // Always scroll to the top of the page on a new route
+      return { top: 0, behavior: 'smooth' };
+    }
+  },
 })
 
 export default router

@@ -2,7 +2,7 @@ import type { GoodWillMessage } from "../types/guests"
 
 export const useGoodWillStore = defineStore('goodWill', () => {
   // States
-  const goodWillMessage = ref<GoodWillMessage | null>(null)
+  const goodWillMessage = ref<GoodWillMessage | any>({})
   const hasMessage = ref(false)
   const loading = ref(false)
   const error = ref<string | null>(null)
@@ -48,7 +48,7 @@ export const useGoodWillStore = defineStore('goodWill', () => {
 
         console.log('✅ Good will message retrieved from database:', res)
 
-        goodWillMessage.value = {has_message: res.has_message, ...res.message}
+        goodWillMessage.value = { ...res.data }
 
         console.log('✅ Good will message saved to store successfully:', goodWillMessage.value)
 
@@ -95,11 +95,12 @@ export const useGoodWillStore = defineStore('goodWill', () => {
 
         console.log('✅ Good will message deleted successfully:', res)
 
-        // Update local state
-        goodWillMessage.value = null
+        console.log('🔄 Refreshing local good will message state...')
+        goodWillMessage.value = {}
         hasMessage.value = false
-
-        // Update cached data
+        console.log('✅ Good will message state cleared locally', { goodWillMessage: goodWillMessage.value, hasMessage: hasMessage.value })
+        
+        console.log('🔄 Removing good will message from cache...')
         await guestStorage.saveGuestData(token, { guestMessage: goodWillMessage.value })
         console.log('✅ Good will message successfully removed from cache')
     } catch (e) {
