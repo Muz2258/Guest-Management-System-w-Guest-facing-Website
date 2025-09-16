@@ -68,8 +68,8 @@ export const useEventStore = defineStore('event', () => {
         {
           sessionTitle: 'Church Service',
           locationName: 'Devout Christian Assembly',
-          locationAddress: 'Alegbo road, off Warri port express way, Warri, Delta state. Nigeria',
-          locationCoordinates: '5.541824846954904, 5.729033854442553',
+          locationAddress: 'After Nativity Catholic Church, off Alegbo Okoribo Road, Warri, Delta State. Nigeria',
+          locationCoordinates: '5.554419397932635, 5.802026810636565',
           startTime: '12:00 PM',
           endTime: '1:30 PM',
           remarks: 'Photoshoot with guests and family follows immediately after (30 minutes)'
@@ -78,7 +78,7 @@ export const useEventStore = defineStore('event', () => {
           sessionTitle: 'Reception',
           locationName: 'DY Events Place',
           locationAddress: 'Edjeba road, off NPA - DSC Express way, Warri, Delta State. Nigeria',
-          locationCoordinates: '5.541824846954904, 5.729033854442553',
+          locationCoordinates: '5.541646646304213, 5.729015750779724',
           startTime: '2:30 PM',
           endTime: '4:00 PM',
           remarks: "Couple's entrance dance starts at 3:00 pm"
