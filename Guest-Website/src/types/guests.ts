@@ -34,12 +34,16 @@ export interface GoodWillMessage {
 }
 
 export interface GiftItem {
-  item_id: string
-  item_name: string
-  item_description: string
-  item_image_url: string
-  item_link: string
-  item_price: number
+  gift_item_id: string
+  name: string
+  image_url: string
+  external_link: string
+  price: number
+  delivery_fee: number
+  amount_contributed: number
+  is_active: boolean
+  contributors: number
+  store_name?: string
 }
 
 export interface Gift {

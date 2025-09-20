@@ -29,3 +29,15 @@ export interface EventConfig {
   requirePhoneNumber: boolean
   requireAddress: boolean
 }
+
+export interface MediaItem {
+  id: string
+  filename: string
+  file_type: string
+  s3_thumbnail_url: string
+  s3_preview_url: string
+  s3_web_url: string
+  caption: string | null
+  is_featured: boolean
+  created_at: string
+}
