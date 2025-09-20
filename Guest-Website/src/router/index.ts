@@ -7,6 +7,7 @@ import { usePrivacyStore } from '../stores/privacy'
 import { useGiftStore } from '../stores/gift'
 import { guestStorage } from '../utils/guestStorage'
 import MainWebsiteView from '../views/MainWebsiteView.vue'
+import GalleryView from '../views/GalleryView.vue'
 import PrivacyPolicy from '../views/PrivacyPolicy.vue'
 import PaymentValidation from '../views/PaymentValidation.vue'
 
@@ -39,6 +40,11 @@ const routes = [
         privacyStore.initializeForCachedUser()
       }
     }
+  },
+  {
+    path: '/gallery',
+    name: 'gallery',
+    component: GalleryView
   },
   {
     path: '/payment-validation/:token',

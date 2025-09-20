@@ -20,15 +20,15 @@
                     class="flex-shrink-0 w-full flex items-center justify-center"
                     style="margin-right: 16px;" 
                 >
-                    <img v-if="item.type === 'image'" :src="item.src" :alt="item.alt" class="max-w-full max-h-full object-contain select-none" draggable="false" />
-                    <video v-else-if="item.type === 'video'" :src="item.src" class="max-w-full max-h-full object-contain" controls :autoplay="index === currentIndex" muted />
+                    <img v-if="item.file_type === 'image'" :src="item.s3_web_url" :alt="item.filename" class="max-w-full max-h-full object-contain select-none" draggable="false" />
+                    <video v-else-if="item.file_type === 'video'" :src="item.s3_web_url" class="max-w-full max-h-full object-contain" controls :autoplay="index === currentIndex" muted />
                 </div>
             </div>
         </div>
 
         <div class="flex flex-col gap-24 items-center py-16 w-full">
-            <div v-if="mediaItems[currentIndex]?.alt" class="bg-black/50 text-white px-16 py-8 rounded-md text-s max-w-md text-center">
-                {{ mediaItems[currentIndex].alt }}
+            <div v-if="mediaItems[currentIndex]?.filename" class="bg-black/50 text-white px-16 py-8 rounded-md text-s max-w-md text-center">
+                {{ mediaItems[currentIndex].filename }}
             </div>
             <div class="w-full">
                 <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
@@ -40,8 +40,8 @@
                         @click="navigateToThumbnail(index)"
                         :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
                     >
-                        <img v-if="item.type === 'image'" :src="item.src" :alt="item.alt" class="w-full h-full object-cover" />
-                        <video v-else-if="item.type === 'video'" :src="item.src" class="w-full h-full object-cover" muted />
+                        <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
+                        <video v-else-if="item.file_type === 'video'" :src="item.s3_thumbnail_url" class="w-full h-full object-cover" muted />
                     </div>
                 </div>
             </div>
@@ -60,13 +60,9 @@
 <script setup lang="ts">
 import Icon from '../Icon'
 import { getColor } from '../../utils/colors';
+import type { MediaItem } from '../../types/event'
 
-// Interfaces, Props, and Emits remain the same
-interface MediaItem {
-    type: 'image' | 'video'
-    src: string
-    alt: string
-}
+ 
 interface Props {
     mediaItems: MediaItem[]
     currentIndex: number

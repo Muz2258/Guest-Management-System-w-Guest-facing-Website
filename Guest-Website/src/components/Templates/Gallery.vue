@@ -11,24 +11,24 @@
         <div class="w-full max-w-4xl px-24">
             <div class="columns-2 gap-6 mb-32 sm:columns-3">
                 <div 
-                    v-for="(item, index) in allMediaItems" 
+                    v-for="(item, index) in previewItems" 
                     :key="`media-${index}`"
                     class="cursor-pointer mb-6 break-inside-avoid"
-                    @click="openLightbox(index)"
+                    @click="openGalleryPage(index)"
                 >
                     <img 
-                        v-if="item.type === 'image'"
-                        :src="item.src" 
-                        :alt="item.alt"
-                        class="w-full object-contain hover:opacity-90 transition-opacity"
+                        v-if="item.file_type === 'image'"
+                        :src="item.s3_preview_url" 
+                        :alt="item.filename"
+                        class="w-full object-contain hover:opacity-90 transition-opacity rounded-lg"
                         loading="lazy"
                     />
                     <div 
-                        v-else-if="item.type === 'video'"
-                        class="relative overflow-hidden hover:opacity-90 transition-opacity"
+                        v-else-if="item.file_type === 'video'"
+                        class="relative overflow-hidden hover:opacity-90 transition-opacity rounded-lg"
                     >
                         <video 
-                            :src="item.src"
+                            :src="item.s3_preview_url"
                             class="w-full object-contain"
                             muted
                             playsinline
@@ -47,93 +47,43 @@
             <!-- View All Button -->
             <div class="flex justify-center">
                 <Button 
-                    label="View Full Gallery" 
+                    label="View all images" 
                     type="tertiary"
                     class="px-32"
                     @click="openFullGallery"
                 />
             </div>
         </div>
-        
-        <!-- Lightbox -->
-        <MediaLightbox 
-            v-if="showLightbox"
-            :media-items="allMediaItems"
-            :current-index="currentLightboxIndex"
-            @close="closeLightbox"
-            @navigate="navigateLightbox"
-            @goTo="(index) => currentLightboxIndex = index"
-        />
     </section>
 </template>
 
 <script setup lang="ts">
-interface MediaItem {
-    type: 'image' | 'video'
-    src: string
-    alt: string
-}
+/* ------------------ Stores ------------------- */
+const galleryStore = useGalleryStore()
+const router = useRouter()
 
-// Sample media data - replace with your actual media
-const allMediaItems = ref<MediaItem[]>([
-    {
-        type: 'image',
-        src: 'https://picsum.photos/400/600?random=1',
-        alt: 'Wedding photo 1',
-    },
-    {
-        type: 'image', 
-        src: 'https://picsum.photos/400/400?random=2',
-        alt: 'Wedding photo 2',
-    },
-    {
-        type: 'video',
-        src: 'https://sample-videos.com/zip/10/mp4/SampleVideo_360x240_1mb.mp4',
-        alt: 'Wedding video 1',
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/400/500?random=4',
-        alt: 'Wedding photo 4',
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/400/350?random=5',
-        alt: 'Wedding photo 5',
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/400/450?random=6',
-        alt: 'Wedding photo 6',
-    }
-])
+/* ------------------ Computed Properties ------------------- */
+const previewItems = computed(() => {
+  return galleryStore.getPreviewItems(6)
+})
 
-// State
-const showLightbox = ref(false)
-const currentLightboxIndex = ref(0)
-
-// Methods
-const openLightbox = (index: number) => {
-    currentLightboxIndex.value = index
-    showLightbox.value = true
-}
-
-const closeLightbox = () => {
-    showLightbox.value = false
-}
-
-const navigateLightbox = (direction: 'prev' | 'next') => {
-    if (direction === 'prev' && currentLightboxIndex.value > 0) {
-        currentLightboxIndex.value = currentLightboxIndex.value - 1
-    } else if (direction === 'next' && currentLightboxIndex.value < allMediaItems.value.length - 1) {
-        currentLightboxIndex.value = currentLightboxIndex.value + 1
-    }
+/* ------------------ Methods ------------------- */
+const openGalleryPage = (index: number) => {
+  // Navigate to gallery page with the specific image index
+  router.push({ 
+    name: 'gallery', 
+    query: { image: index.toString() } 
+  })
 }
 
 const openFullGallery = () => {
-    // Show all items and open lightbox at first item
-    openLightbox(0)
+  // Navigate to gallery page without specific image
+  router.push({ name: 'gallery' })
 }
+
+onMounted(() => {
+  galleryStore.fetchMediaItems()
+})
 </script>
 
 <style scoped>
