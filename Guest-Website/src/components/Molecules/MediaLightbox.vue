@@ -27,9 +27,9 @@
         </div>
 
         <div class="flex flex-col gap-24 items-center py-16 w-full">
-            <div v-if="mediaItems[currentIndex]?.filename" class="bg-black/50 text-white px-16 py-8 rounded-md text-s max-w-md text-center">
+            <!-- <div v-if="mediaItems[currentIndex]?.filename" class="bg-black/50 text-white px-16 py-8 rounded-md text-s max-w-md text-center">
                 {{ mediaItems[currentIndex].filename }}
-            </div>
+            </div> -->
             <div class="w-full">
                 <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
                     <div 
