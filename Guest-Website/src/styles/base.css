@@ -28,6 +28,7 @@ html, body {
 
   --color-neutrals-neu-100: #FFFFFF;
   --color-neutrals-neu-96: #F5F5F5;
+  --color-neutrals-neu-90: #E6E6E6;
   --color-neutrals-neu-76: #C3C3C3;
   --color-neutrals-neu-46: #767676;
   --color-neutrals-neu-35: #595959;
@@ -118,7 +119,7 @@ html, body {
   }
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h5, h6 {
   @apply font-display;
 }
 
