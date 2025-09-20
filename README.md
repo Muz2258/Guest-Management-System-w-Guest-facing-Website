@@ -1,31 +1,26 @@
-# Wedding Guest Management System
+# Wedding Guest Management System - Admin App
 
-This is a complete wedding guest management system built with TypeScript, using Supabase as the backend and two Vue.js frontend applications.
+This is the administrative interface for the wedding guest management system. Built with Vue.js 3, TypeScript, and Element Plus, it provides a comprehensive dashboard for managing wedding guests, RSVPs, and event details.
 
 ## Project Structure
 
 ```
 Code/
 ├── Admin-app/     # Vue.js admin interface with Element Plus
-└── Guest-Website/ # Vue.js public website with Tailwind CSS
+└── package.json   # Root workspace configuration
 ```
 
 ## Getting Started
 
 1. Clone the repository
-2. Install dependencies for all projects:
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development servers:
-
+3. Start the development server:
 ```bash
-# Start admin interface
-npm run dev:admin
-
-# Start guest website
-npm run dev:guest
+npm run dev
 ```
 
 ## Tech Stack
@@ -37,22 +32,22 @@ npm run dev:guest
   - Vue.js 3
   - TypeScript
   - Element Plus
-  - Pinia
+  - Pinia (State Management)
   - Vue Router
+  - Vite (Build Tool)
 
-- Guest Website:
-  - Vue.js 3
-  - TypeScript
-  - Tailwind CSS
-  - Pinia
-  - Vue Router
+## Features
+
+- Guest management and organization
+- RSVP tracking and management
+- User authentication and authorization
+- Real-time data updates
+- Responsive design for desktop and tablet
 
 ## Development
 
-Each project has its own README with specific instructions:
-
+For detailed development instructions, see:
 - [Admin App README](./Admin-app/README.md)
-- [Guest Website README](./Guest-Website/README.md)
 
 ## License
 
