@@ -230,7 +230,7 @@ export const useGiftStore = defineStore('gift', () => {
     console.log('Processing gift:', newGift)
     loading.value = true
 
-    const paystackPublicKey = process.env.VITE_APP_PAYSTACK_PUBLIC_KEY
+    const paystackPublicKey = import.meta.env.VITE_APP_PAYSTACK_PUBLIC_KEY
 
     if(!paystackPublicKey) {
       error.value = 'Payment gateway is not configured properly.'
