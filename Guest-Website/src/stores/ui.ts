@@ -12,6 +12,7 @@ export const useUIStore = defineStore('ui', () => {
     const showGiftBottomSheet = ref(false)
     const showGiftingForm = ref(false)
     const showGiftSummary = ref(false)
+    const showContributingSheet = ref(false)
 
     const isLoading = ref(false)
     const isGuestDataLoading = ref(false)
@@ -109,6 +110,38 @@ export const useUIStore = defineStore('ui', () => {
         showGiftBottomSheet.value = true
     }
 
+    const showHideBottomSheet = (show: boolean) => {
+        showGiftBottomSheet.value = show
+    }
+
+    const showHideGiftingSheets = (sheet: 'gifting-form' | 'contribute-form' | 'summary') => {
+      switch (sheet) {
+        case 'gifting-form':
+          showGiftingForm.value = true
+          showContributingSheet.value = false
+          showGiftSummary.value = false
+          break;
+
+        case 'contribute-form':
+          showGiftingForm.value = false
+          showContributingSheet.value = true
+          showGiftSummary.value = false
+          break;
+
+        case 'summary':
+          showGiftingForm.value = false
+          showContributingSheet.value = false
+          showGiftSummary.value = true
+          break;
+
+        default:
+          showGiftingForm.value = true
+          showContributingSheet.value = false
+          showGiftSummary.value = false
+          break;
+      }
+    }
+
     // Navigation functions
     const scrollToSection = (sectionId: string) => {
         hideAllModals()
@@ -142,6 +175,7 @@ export const useUIStore = defineStore('ui', () => {
         showGiftingForm,
         showGiftSummary,
         showGiftBottomSheet,
+        showContributingSheet,
 
         // Functions
         hideAllModals,
@@ -155,6 +189,8 @@ export const useUIStore = defineStore('ui', () => {
         showGiftFormSheet,
         showGiftSummarySheet,
         scrollToSection,
-        showGiftingSheet
+        showGiftingSheet,
+        showHideGiftingSheets,
+        showHideBottomSheet
     }
 })

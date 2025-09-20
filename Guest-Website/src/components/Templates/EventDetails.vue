@@ -13,10 +13,25 @@
                 :isLast="index === sessionDetails.length - 1" 
             />
         </div>
-        <div class="flex gap-8 justify-center w-full overflow-hidden">
-            <img src="../../assets/png/temp-image-details-1.png" />
-            <img src="../../assets/png/temp-image-details-2.png" />
-            <img src="../../assets/png/temp-image-details-3.png" />
+        <div class="w-full overflow-hidden">
+          <div class="scroller-inner flex gap-8">
+            <div class="flex gap-8 shrink-0">
+              <img src="../../assets/png/native_01.png" />
+              <img src="../../assets/png/native_02.png" />
+              <img src="../../assets/png/native_03.png" />
+              <img src="../../assets/png/native_04.png" />
+              <img src="../../assets/png/native_05.png" />
+              <img src="../../assets/png/native_06.png" />
+            </div>
+            <div class="flex gap-8 shrink-0" aria-hidden="true">
+              <img src="../../assets/png/native_01.png" />
+              <img src="../../assets/png/native_02.png" />
+              <img src="../../assets/png/native_03.png" />
+              <img src="../../assets/png/native_04.png" />
+              <img src="../../assets/png/native_05.png" />
+              <img src="../../assets/png/native_06.png" />
+            </div>
+          </div>
         </div>
     </section>
 </template>
@@ -25,3 +40,19 @@
 // Store
 const sessionDetails = useEventStore().eventDetails?.sessionDetails || [];
 </script>
+
+<style scoped>
+.scroller-inner {
+  width: max-content;
+  animation: scroll-left 100s linear infinite;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-50% - 4px));
+  }
+}
+</style>

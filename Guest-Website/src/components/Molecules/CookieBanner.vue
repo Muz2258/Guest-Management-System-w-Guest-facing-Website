@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-0 z-100 p-24 flex flex-col items-start gap-16 bg-brand-accent">
+  <div class="fixed bottom-0 z-100 p-24 flex flex-col items-start gap-16 bg-brand-accent">
     <div class="flex gap-24 items-start">
       <p class="text-s text-neutrals-neu-100">
         We store essential data locally to remember your invitation and improve your experience. 

@@ -1,7 +1,7 @@
 <template>
     <section 
         id="love-story" 
-        class="flex flex-col items-center bg-brand-sec-light-200 pt-40"
+        class="flex flex-col items-center bg-brand-sec-light-200 pt-40 pb-64"
     >
         <div class="flex gap-4 items-center mb-20">
             <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
@@ -133,11 +133,12 @@
                                     :is-loading="activeButton === 'send-gift'" 
                                     @click="sendGift"
                                 />
-                                <div v-else class="flex items-center justify-center text-center p-24">
+                                <div v-else class="flex flex-col items-center justify-between text-center px-24 pt-24 grow">
                                     <picture>
                                         <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
                                         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
                                     </picture>
+                                    <span v-if="hasGift" class="text-s text-center text-brand-pri underline" @click="sendGift">Send another gift</span>
                                 </div>
                             </template>
                         </Card>
@@ -186,11 +187,12 @@
                                     :is-loading="activeButton === 'send-gift'" 
                                     @click="sendGift"
                                 />
-                                <div v-else class="flex items-center justify-center text-center text-7xl p-24">
+                                <div v-else class="flex flex-col items-center justify-between text-center px-24 pt-24 grow">
                                     <picture>
                                         <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
                                         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
                                     </picture>
+                                    <span v-if="hasGift" class="text-s text-center text-brand-pri underline" @click="sendGift">Send another gift</span>
                                 </div>
                             </template>
                         </Card>
@@ -239,11 +241,12 @@
                                     :is-loading="activeButton === 'send-gift'" 
                                     @click="sendGift"
                                 />
-                                <div v-else class="flex items-center justify-center text-center text-7xl p-24">
+                                <div v-else class="flex flex-col items-center justify-between text-center px-24 pt-24 grow">
                                     <picture>
                                         <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
                                         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
                                     </picture>
+                                    <span v-if="hasGift" class="text-s text-center text-brand-pri underline" @click="sendGift">Send another gift</span>
                                 </div>
                             </template>
                         </Card>
@@ -276,8 +279,6 @@
                 </template>
             </div>
         </transition>
-        
-        <img src="../../assets/png/test-image-rsvp.png" class="mt-64 w-full">
     </section>
 </template>
 
@@ -530,7 +531,8 @@ const removePlusOne = () => {
 
 const sendGift = () => {
     console.log('Sending gift...');
-    uiStore.showGiftingSheet();
+    uiStore.showHideBottomSheet(true);
+    uiStore.showHideGiftingSheets('gifting-form');
 }
 
 const leaveMessage = () => {
