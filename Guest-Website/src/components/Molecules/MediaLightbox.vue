@@ -38,7 +38,7 @@
                         class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
                         :class="{ 'h-80 w-72': index === currentIndex, 'opacity-50': index !== currentIndex }"
                         @click="navigateToThumbnail(index)"
-                        :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
+                        :ref="(el: HTMLElement | null) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
                     >
                         <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
                         <video v-else-if="item.file_type === 'video'" :src="item.s3_thumbnail_url" class="w-full h-full object-cover" muted />

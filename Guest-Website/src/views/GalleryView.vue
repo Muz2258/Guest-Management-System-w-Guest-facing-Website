@@ -92,7 +92,7 @@
       :current-index="currentLightboxIndex"
       @close="closeLightbox"
       @navigate="navigateLightbox"
-      @goTo="(index) => currentLightboxIndex = index"
+      @goTo="(index: number) => currentLightboxIndex = index"
     />
   </main>
 </template>
