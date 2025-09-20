@@ -4,6 +4,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import components from 'unplugin-vue-components/vite'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { resolve } from 'path'
 
 const customResolvers = {
   '@/utils/supabase.ts': ['supabase'],
@@ -40,5 +41,13 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: true,
+  },
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      }
+    }
   }
 })
