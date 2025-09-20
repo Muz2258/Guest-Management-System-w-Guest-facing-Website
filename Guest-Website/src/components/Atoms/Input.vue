@@ -24,9 +24,9 @@
       
       <!-- Input Field -->
       <input
+        type="text"
         :id="inputId"
         :name="label"
-        type="text"
         :placeholder="placeholder"
         :disabled="disabled"
         :readonly="readonly"
@@ -50,11 +50,15 @@
       </span>
     </div>
     
-    <!-- Error Message -->
-    <span class="text-denotive-red text-xs min-h-16" :class="{'opacity-100': error, 'opacity-0': !error}">{{ error }}</span>
-    
-    <!-- Help Text -->
-    <span v-if="helpText && !error" class="text-neutrals-neu-46 text-xs">{{ helpText }}</span>
+    <div class="flex justify-between items-center">
+      <!-- Error Message -->
+      <span class="text-denotive-red text-xs min-h-16" :class="{'opacity-100': error, 'opacity-0': !error}">{{ error }}</span>
+      
+      <!-- Help Text -->
+      <span v-if="helpText && !error" class="text-neutrals-neu-46 text-xs">{{ helpText }}</span>
+
+      <slot name="actions" />
+    </div>
   </div>
 </template>
 

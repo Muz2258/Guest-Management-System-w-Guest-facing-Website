@@ -1,8 +1,8 @@
 <template>
   <transition appear name="bottom-sheet-fade">
     <div v-if="isVisible" class="sheet-backdrop w-full h-full fixed top-0 left-0 bg-neutrals-neu-0/50 backdrop-blur-sm flex items-end justify-center z-[1000]">
-        <div class="sheet-content flex flex-col gap-16 bg-neutrals-neu-100 shadow-modal max-w-lg w-full min-h-[60vh] max-h-[95vh]" >
-            <div class="flex justify-end px-24 pt-24">
+        <div class="sheet-content flex flex-col bg-neutrals-neu-100 shadow-modal max-w-lg w-full h-[95%]" >
+            <div class="flex justify-end px-24 py-24">
                 <Icon name="close" :size="20" :color="getColor('neutral.neu_0')" @click="handleClose" class="cursor-pointer hover:opacity-70 transition-opacity" />
             </div>
             <slot name="body"></slot>
