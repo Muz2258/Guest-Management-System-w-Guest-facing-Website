@@ -1,59 +1,61 @@
 <template>
-  <main class="main-website">
-    <h1>Main Website</h1>
-    <div v-if="guestData" class="guest-welcome">
-    <p>
-      Welcome,
-      <span v-if="typeof guestData.name === 'object'">
-        {{ guestData.name.first_name }} {{ guestData.name.last_name }}
-      </span>
-      <span v-else>
-        {{ guestData.name }}
-      </span>
-    </p>
+  <main v-if="isMobile" class="page-wrapper">
+    <Hero />
+    <RSVP v-if="hasToken" id="rsvp" />
+    <EventDetails v-if="hasToken && isRsvpGuest" id="details" />
+    <LoveStory />
+    <Gallery id="gallery" />
+  </main>
+  <main v-else class="h-dvh flex flex-col justify-center items-center p-32">
+    <div class="flex items-center space-x-16 mb-32">
+      <div><Icon name="no-landscape" :color="getColor('denotive.denote_red')" :size="24"/></div>
+      <div><Icon name="phone" :color="getColor('brand.accent')" :size="32"/></div>
+      <div><Icon name="no-laptops" :color="getColor('denotive.denote_red')" :size="24"/></div>
     </div>
+    <h1 class="text-heading-lg text-neutrals-neu-0 text-center mb-16">Phones in portrait Only</h1>
+    <p class="text-s text-neutrals-neu-35 text-center max-w-[50%]">
+      Sorry! This site works best on mobile phones in portrait mode. Please open your invitation link on your phone.
+    </p>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useGuestStore } from '@/stores/guest'
-import { storeToRefs } from 'pinia'
+/* -------------------- Imports ------------------ */
+import Icon from '../components/Icon'
+import { getColor } from '../utils/colors'
 
+
+/* ------------------ Stores ------------------ */
 const guestStore = useGuestStore()
-const { guest } = storeToRefs(guestStore)
 
-const guestData = computed(() => {
-    console.log('🔄 Computing guest data from:', guest.value)
-    const currentGuest = guest?.value ?? null
 
-    if (!currentGuest) {
-      console.log('ℹ️ No guest data available')
-      return null
-    }
+/* ------------------ Reactive Variables ------------------ */
+const isMobile = ref<boolean>(true)
 
-    if (guest?.value && typeof guest.value.name === 'string' && guest.value.name.includes(' ')) {
-        currentGuest.name = { 
-            first_name: guest.value.name.split(' ')[0], 
-            last_name: guest.value.name.split(' ')[1] ?? null 
-        }
-    }
 
-    console.log('✅ Guest data computed:', currentGuest)
+/* ------------------ Computed Properties ------------------ */
+const hasToken = computed(() => {
+  return !!guestStore.guestData?.auth_token
+})
 
-    return currentGuest
+const isRsvpGuest = computed(() => {
+  return guestStore.guestData?.permissions.can_rsvp
+})
+
+
+/* ------------------- Functions --------------------- */
+const checkMobileSize = () => {
+  isMobile.value = window.innerWidth <= 600
+}
+
+
+/* ------------------- Lifecycle Hooks --------------------- */
+onMounted(() => {
+  checkMobileSize()
+  window.addEventListener('resize', checkMobileSize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkMobileSize)
 })
 </script>
-
-<style scoped>
-.main-website {
-  padding: 2rem;
-}
-
-.guest-welcome {
-  margin-top: 1rem;
-  padding: 1rem;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-}
-</style>

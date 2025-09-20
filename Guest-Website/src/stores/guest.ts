@@ -1,68 +1,131 @@
-import { defineStore } from 'pinia'
-import { supabase } from '@/utils/supabase'
-import { ref } from 'vue'
-import type { Guest, RSVP, GuestWithRSVP, GuestJoinResponse } from '@/types/guest'
+import { supabase } from '../utils/supabase'
+import { guestStorage } from '../utils/guestStorage'
+import type { GuestData } from '../types/guests'
+import { reactive, computed } from 'vue'
+import { 
+  ErrorType, 
+  createError, 
+  createErrorState, 
+  setError as setErrorState, 
+  clearError, 
+  type ErrorState 
+} from '../utils/errorHandler'
 
 export const useGuestStore = defineStore('guest', () => {
-    const guest = ref<GuestWithRSVP | null>(null)
+  // States
+  const accessedViaToken = ref(false)
+  const guestData = ref<GuestData | null>(null)
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  const errorState: ErrorState = reactive(createErrorState())
+  const hasCachedData = ref(false)
 
-  const fetchGuestByToken = async (token: string) => {
-      console.log('🔄 Starting guest fetch process...', { token })
-      loading.value = true
-      error.value = null
-      
-      try {
-        console.log('📡 Sending request to Supabase...')
-        const { data: guestInfo, error: supabaseError } = await supabase
-          .from('guests')
-          .select('*, rsvps (*)')
-          .eq('auth_token', token)
-          .single()
-  
-        if (supabaseError) {
-          console.error('❌ Supabase error:', supabaseError)
-          throw supabaseError
+  // Functions
+  const fetchGuestByToken = async (token: string, forceRefresh = false) => {
+    console.log('🔄 Starting guest fetch process...', { token, forceRefresh })
+    loading.value = true
+    clearError(errorState)
+    
+    try {
+      // Check if we have valid cached data first (unless forcing refresh)
+      if (!forceRefresh) {
+        const isDataCached = guestStorage.checkCache(token)
+
+        if (isDataCached){
+          const cachedData = guestStorage.getGuestData(token)
+
+          if(cachedData?.data?.guestData?.guestInfo) {
+            guestData.value = cachedData.data.guestData.guestInfo
+            loading.value = false
+            guestStorage.refreshExpiry()
+            hasCachedData.value = true
+            return
+          }else {
+            console.log('❌ Cached guest info is invalid or missing, forcing fresh fetch')
+          }
         }
-
-        if (!guestInfo) {
-          console.error('❌ No guest found for token:', token)
-          throw new Error('Guest not found')
-        }
-
-        console.log('✅ Guest data retrieved successfully:', guestInfo)
-
-        const transformGuestInfo = (info: GuestJoinResponse) => {
-          const { rsvps, ...guestDetails } = info
-          return { ...guestDetails, rsvp: rsvps?.[0] as RSVP | null }
-        }
-
-        guest.value = transformGuestInfo(guestInfo)
-
-        console.log('✅ Guest data transformed successfully:', guest.value)
-      } catch (e) {
-        console.error('❌ Error in fetchGuestByToken:', e)
-        error.value = e instanceof Error ? e.message : 'An error occurred'
-        guest.value = null
-      } finally {
-        console.log('🏁 Guest fetch process completed', { 
-          success: !!guest.value,
-          hasError: !!error.value
-        })
-        loading.value = false
       }
-    }
 
-  function setError(message: string | null) {
-    console.error('⚠️ Setting error:', message)
-    error.value = message
+      console.log('📡 Fetching fresh data from database...')
+
+      const {data: res, error: err} = await supabase
+        .rpc('guest_get_primary_data', {
+          auth_token: token
+        })
+
+      if (err) {
+        const appError = createError(ErrorType.SERVER, err.message, {
+          context: 'guest-fetch',
+          userMessage: 'Unable to load your invitation data. Please check your link and try again.'
+        })
+        throw appError
+      }
+
+      console.log('✅ Guest data retrieved successfully:', res)
+
+      guestData.value = { auth_token: token, ...res }
+
+      console.log('🔄 Successfully stored guest data to store:', guestData.value)
+
+      // Save to secure storage for future use
+      await guestStorage.saveGuestData(token, {guestInfo: guestData.value})
+      console.log('✅ Guest data successfully saved to cache:', guestData.value)
+    } catch (e) {
+      setErrorState(errorState, e, 'guest-fetch')
+      guestData.value = null
+
+      // Clear any potentially corrupted cached data
+      guestStorage.clearGuestData()
+    } finally {
+      console.log('🏁 Guest fetch process completed', {
+        success: !!guestData.value,
+        hasError: errorState.hasError
+      })
+      loading.value = false
+    }
+  }
+
+  const initialiseGuestStoreFromCache = () => {
+    console.log('🚀 Initialising guest store...')
+    const cachedData = guestStorage.getGuestData()
+
+    if(cachedData?.data?.guestData?.guestInfo) {
+      guestData.value = cachedData.data.guestData.guestInfo
+      loading.value = false
+      guestStorage.refreshExpiry()
+      hasCachedData.value = true
+      return
+    }else {
+      console.log('❌ Cached guest info is invalid or missing')
+    }
+  }
+
+  const saveCurrentGuestData = async (token: string) => {
+    guestStorage.saveGuestData(token, {guestInfo: guestData.value})
+  }
+
+  const setError = (message: string) => {
+    const error = createError(ErrorType.UNKNOWN, message, {
+      context: 'guest-store',
+      userMessage: message
+    })
+    setErrorState(errorState, error)
   }
 
   return {
-    guest,
-    error,
+    // States
+    accessedViaToken,
+    guestData,
+    hasCachedData,
+    loading,
+    errorState,
+
+    // Functions
     fetchGuestByToken,
-    setError
+    initialiseGuestStoreFromCache,
+    setError,
+    saveCurrentGuestData,
+    
+    // Computed getters for backwards compatibility
+    getGuestToken: computed(() => guestData.value?.auth_token)
   }
 })

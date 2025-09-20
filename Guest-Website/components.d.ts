@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BottomSheet: typeof import('./src/components/Atoms/BottomSheet.vue')['default']
     Button: typeof import('./src/components/Atoms/Button.vue')['default']
     CacheStatus: typeof import('./src/components/Dev/CacheStatus.vue')['default']
     Card: typeof import('./src/components/Atoms/Card.vue')['default']
@@ -21,7 +22,6 @@ declare module 'vue' {
     GiftBottomSheet: typeof import('./src/components/Templates/GiftBottomSheet.vue')['default']
     GiftItemCard: typeof import('./src/components/Molecules/GiftItemCard.vue')['default']
     GiftItemsList: typeof import('./src/components/Organisms/GiftItemsList.vue')['default']
-    GuestIdentifierView: typeof import('./src/views/GuestIdentifierView.vue')['default']
     HeaderNavigation: typeof import('./src/components/Organisms/HeaderNavigation.vue')['default']
     Hero: typeof import('./src/components/Templates/Hero.vue')['default']
     Input: typeof import('./src/components/Atoms/Input.vue')['default']
