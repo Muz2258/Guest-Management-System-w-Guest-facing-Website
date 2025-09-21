@@ -6,16 +6,12 @@ import { useGoodWillStore } from '../stores/goodWill'
 import { usePrivacyStore } from '../stores/privacy'
 import { useGiftStore } from '../stores/gift'
 import { guestStorage } from '../utils/guestStorage'
-import MainWebsiteView from '../views/MainWebsiteView.vue'
-import GalleryView from '../views/GalleryView.vue'
-import PrivacyPolicy from '../views/PrivacyPolicy.vue'
-import PaymentValidation from '../views/PaymentValidation.vue'
 
 const routes = [
   {
     path: '/',
     name: 'main-website',
-    component: MainWebsiteView,
+    component: () => import('../views/MainWebsiteView.vue'),
     beforeEnter: async () => {
       const guestStore = useGuestStore()
       const privacyStore = usePrivacyStore()
@@ -31,32 +27,32 @@ const routes = [
       
       if (hasCachedData) {
         console.log('✅ Found cached data, initialising store from cache')
-        await initialiseStoreFromCache()
-        // For cached users, don't show the banner (they've been here before)
+        initialiseStoreFromCache().catch((e) => console.error(e))
         privacyStore.initializeForCachedUser()
       } else {
         console.log('📭 No cached data found, proceeding with basic website experience')
-        // For completely new users without tokens, don't show banner either
-        privacyStore.initializeForCachedUser()
       }
     }
   },
   {
     path: '/gallery',
     name: 'gallery',
-    component: GalleryView
+    component: () => import('../views/GalleryView.vue'),
+    meta: { preload: false }
   },
   {
     path: '/payment-validation/:token',
     name: 'payment-validation',
-    component: PaymentValidation,
+    component: () => import('../views/PaymentValidation.vue'),
     beforeEnter: async (to: RouteLocationNormalized) => {
       console.log('🚦 Route guard triggered for payment validation', to.path )
       const giftStore = useGiftStore()
       const guestToken = to.params.token as string
 
-      await giftStore.fetchGuestGifts(guestToken)
-      await initialiseStoreFromCache()
+      Promise.allSettled([
+        giftStore.fetchGuestGifts(guestToken),
+        initialiseStoreFromCache()
+      ]).catch((e) => console.error(e))
 
       return true
     }
@@ -64,12 +60,12 @@ const routes = [
   {
     path: '/privacy-policy',
     name: 'privacy-policy',
-    component: PrivacyPolicy
+    component: () => import('../views/PrivacyPolicy.vue')
   },
   {
     path: '/:token',
     name: 'token-handler',
-    component: MainWebsiteView,
+    component: () => import('../views/MainWebsiteView.vue'),
     props: true,
     beforeEnter: async (to: RouteLocationNormalized) => {
       console.log('🚦 Route guard triggered for token handling', {
@@ -80,37 +76,39 @@ const routes = [
       const privacyStore = usePrivacyStore()
       const guestStore = useGuestStore()
       const uiStore = useUIStore()
-      
+
       try {
         console.log('🔑 Attempting to validate token...')
-        // await guestStore.fetchGuestByToken(to.params.token as string)
-        await initialiseStoreWithToken(to.params.token as string)
-        console.log('✅ Token validation successful')
-
-        //Navigate to the 'main-website' view
+        
+        const tokenValidation = initialiseStoreWithToken(to.params.token as string)
+        
         console.log('🧭 Navigating to main-website view')
         guestStore.accessedViaToken = true
-        await router.push({ name: 'main-website' })
         
-        // Use nextTick to ensure navigation is complete before showing modal
+        const navigationPromise = router.push({ name: 'main-website' })
+        
+        const [, tokenResult] = await Promise.allSettled([navigationPromise, tokenValidation])
+        
+        if (tokenResult.status === 'rejected') {
+          throw tokenResult.reason
+        }
+
+        console.log('✅ Token validation successful')
         if(guestStore.hasCachedData){
-          // uiStore.showCookie = false
           uiStore.hideAllModals()
           uiStore.hideAllBottomSheets()
-        }else {
+        } else {
           console.log('🎉 Showing personalized welcome modal for:', guestStore.guestData?.guest.first_name)
-          // uiStore.showCookie = true
           setTimeout(() => {
             uiStore.showHideWelcomeModal(true)
             privacyStore.initializeNotice(to.params.token as string)
-            // Note: Data notice will be shown via banner component if not yet acknowledged
-          }, 4500)
+          }, 3500)
         }
       } catch (e) {
         console.error('❌ Token validation failed:', e)
         guestStore.setError(e instanceof Error ? e.message : 'Invalid invitation link')
-        console.log('🔄 Redirecting to guest identifier')
-        return { name: 'guest-identifier' }
+        console.log('🔄 Redirecting to main website')
+        return { name: 'main-website' }
       }
     }
   }
@@ -123,21 +121,33 @@ const initialiseStoreWithToken = async (token: string) => {
   const goodWillStore = useGoodWillStore()
   const giftStore = useGiftStore()
   
-  const results = await Promise.allSettled([
-    guestStore.fetchGuestByToken(token),
-    rsvpStore.fetchRSVPData(token),
-    goodWillStore.fetchGoodWillMessage(token),
-    giftStore.fetchGuestGifts(token)
-  ])
+  try {
+    const [guestResult, ...otherResults] = await Promise.allSettled([
+      guestStore.fetchGuestByToken(token), // Critical - must succeed
+      rsvpStore.fetchRSVPData(token),
+      goodWillStore.fetchGoodWillMessage(token),
+      giftStore.fetchGuestGifts(token)
+    ])
 
-  results.forEach((result, index) => {
-    const stores = [guestStore, rsvpStore, goodWillStore, giftStore]
-    if (result.status === 'rejected') {
-      console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
-    } else {
-      console.log(`✅ Store ${index} initialized successfully`)
+    // Guest data is critical - fail if this fails
+    if (guestResult.status === 'rejected') {
+      throw guestResult.reason
     }
-  })
+
+    // Log other failures but don't block the app
+    const storeNames = ['guest', 'rsvp', 'goodWill', 'gift']
+    ;[guestResult, ...otherResults].forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.warn(`❌ Error initializing ${storeNames[index]} store:`, result.reason)
+      } else {
+        console.log(`✅ ${storeNames[index]} store initialized successfully`)
+      }
+    })
+
+  } catch (error) {
+    console.error('❌ Critical error during store initialization:', error)
+    throw error
+  }
 }
 
 const initialiseStoreFromCache = async() => {
@@ -147,37 +157,87 @@ const initialiseStoreFromCache = async() => {
   const goodWillStore = useGoodWillStore()
   const giftStore = useGiftStore()
 
-  const results = await Promise.allSettled([
-    guestStore.initialiseGuestStoreFromCache(),
-    rsvpStore.initialiseRsvpStoreFromCache(),
-    goodWillStore.initialiseGoodWillStoreFromCache(),
-    giftStore.initialiseGiftStoreFromCache()
-  ])
+  try {
+    // Load guest data first (most important)
+    await guestStore.initialiseGuestStoreFromCache()
+    
+    // Load others in parallel (less critical)
+    const results = await Promise.allSettled([
+      rsvpStore.initialiseRsvpStoreFromCache(),
+      goodWillStore.initialiseGoodWillStoreFromCache(),
+      giftStore.initialiseGiftStoreFromCache()
+    ])
 
-  results.forEach((result, index) => {
-    const stores = [guestStore, rsvpStore, goodWillStore, giftStore]
-    if (result.status === 'rejected') {
-      console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
-    } else {
-      console.log(`✅ ${stores[index]} initialized successfully`)
-    }
-  })
+    const storeNames = ['rsvp', 'goodWill', 'gift']
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.warn(`❌ Error initializing ${storeNames[index]} store from cache:`, result.reason)
+      } else {
+        console.log(`✅ ${storeNames[index]} store initialized from cache`)
+      }
+    })
+  } catch (error) {
+    console.error('❌ Error initializing guest store from cache:', error)
+    // Don't throw - let the app continue with fresh data
+  }
+}
+
+const preloadRoute = (routeName: string) => {
+  const route = routes.find(r => r.name === routeName)
+  if (route && typeof route.component === 'function') {
+    route.component().catch(console.error)
+  }
 }
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to) {
+  scrollBehavior(to, from, savedPosition) {
+    // ✅ OPTIMIZATION 14: Optimize scroll behavior
+    if (savedPosition) {
+      // Restore scroll position when using browser back/forward
+      return savedPosition
+    }
+    
     if (to.hash) {
-      return {
-        el: to.hash,
-        behavior: 'smooth',
-      };
-    } else {
-      // Always scroll to the top of the page on a new route
-      return { top: 0, behavior: 'smooth' };
+      // Delay scroll to hash to allow content to load
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({
+            el: to.hash,
+            behavior: 'smooth',
+          })
+        }, 100)
+      })
+    }
+    
+    // Only smooth scroll on different routes, instant for same route
+    const shouldSmoothScroll = to.name !== from.name
+    return { 
+      top: 0, 
+      behavior: shouldSmoothScroll ? 'smooth' : 'instant'
     }
   },
+})
+
+router.beforeEach(async (to) => {
+  // Preload likely next routes based on current route
+  if (to.name === 'main-website') {
+    // User likely to visit gallery next
+    setTimeout(() => preloadRoute('gallery'), 2000)
+  }
+  
+  // Add loading state for longer operations
+  const uiStore = useUIStore()
+  if (to.meta?.showLoading !== false) {
+    uiStore.setGlobalLoading(true)
+  }
+})
+
+router.afterEach(() => {
+  // Clear loading state
+  const uiStore = useUIStore()
+  uiStore.setGlobalLoading(false)
 })
 
 export default router

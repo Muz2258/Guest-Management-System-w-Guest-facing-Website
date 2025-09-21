@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:check": "vue-tsc && vite build",
-    "build": "vite build --mode production",
-    "preview": "vite preview",
-    "analyze": "vite build --mode analyze"
+    "build:production": "vite build --mode production",
+    "build:staging": "vite build",
+    "build:local": "vite build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
