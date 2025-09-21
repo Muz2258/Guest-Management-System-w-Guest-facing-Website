@@ -4,7 +4,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import components from 'unplugin-vue-components/vite'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
-import { resolve } from 'path'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 const customResolvers = {
   '@/utils/supabase.ts': ['supabase'],
@@ -15,6 +15,12 @@ const customResolvers = {
 export default defineConfig({
   plugins: [
     vue(),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
+    }),
     tailwindcss(),
     AutoImport({
       imports: [
@@ -41,13 +47,5 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: true,
-  },
-  build: {
-    outDir: 'dist',
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    }
   }
 })

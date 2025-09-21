@@ -1,5 +1,5 @@
 <template>
-    <section id="gallery" class="pt-80 pb-48 flex flex-col items-center overflow-x-hidden">
+    <section class="py-40 flex flex-col items-center overflow-x-hidden">
         <div class="flex gap-4 items-center mb-20">
             <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
             <h4 class="text-heading-s text-brand-pri">Media Gallery</h4>

@@ -13,6 +13,7 @@ export const useUIStore = defineStore('ui', () => {
     const showGiftingForm = ref(false)
     const showGiftSummary = ref(false)
     const showContributingSheet = ref(false)
+    const globalLoading = ref(false)
 
     const isLoading = ref(false)
     const isGuestDataLoading = ref(false)
@@ -159,6 +160,10 @@ export const useUIStore = defineStore('ui', () => {
         })
     }
 
+    const setGlobalLoading = (loading: boolean) => {
+        globalLoading.value = loading
+    }
+
     return {
         // State
         isLoading,
@@ -176,6 +181,7 @@ export const useUIStore = defineStore('ui', () => {
         showGiftSummary,
         showGiftBottomSheet,
         showContributingSheet,
+        globalLoading,
 
         // Functions
         hideAllModals,
@@ -191,6 +197,7 @@ export const useUIStore = defineStore('ui', () => {
         scrollToSection,
         showGiftingSheet,
         showHideGiftingSheets,
-        showHideBottomSheet
+        showHideBottomSheet,
+        setGlobalLoading
     }
 })
