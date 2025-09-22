@@ -1,9 +1,9 @@
 <template>
     <section class="py-40 flex flex-col items-center">
-      <div class="flex gap-4 items-center mb-32">
-          <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
-          <h4 class="text-heading-s text-brand-pri">Details</h4>
-          <img src="../../assets/vectors/leaf-branch__right--purple.svg" class="h-6" />
+      <div class="mb-32">
+          <DecorativeBranches variant="purple">
+            <h4 class="text-heading-s text-brand-pri">Details</h4>
+          </DecorativeBranches>
       </div> 
       <div class="flex flex-col items-center w-[87%]">
           <DetailsInfo 
@@ -17,6 +17,9 @@
 </template>
 
 <script setup lang="ts">
+// Components
+import DecorativeBranches from '../Atoms/DecorativeBranches.vue'
+
 // Store
 const sessionDetails = useEventStore().eventDetails?.sessionDetails || [];
 </script>

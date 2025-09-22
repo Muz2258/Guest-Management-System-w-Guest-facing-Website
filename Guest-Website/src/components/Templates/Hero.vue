@@ -1,6 +1,8 @@
 <template>
     <transition appear name="hero-animation">
-        <section class="pb-48 pt-[108px] h-[calc(100svh - 60px)] flex flex-col justify-center items-center">
+        <section 
+          class="pb-48 pt-[108px] h-[calc(100svh - 60px)] flex flex-col justify-center items-center overflow-hidden"
+        >
             <div class="mx-auto mb-48 flex flex-col justify-center items-center">
                 <h1 class="bride text-title text-neutrals-neu-0">Chidera</h1>
                 <h1 class="groom text-title text-neutrals-neu-0">Emamuzo</h1>
@@ -27,27 +29,38 @@
 
 <script setup lang="ts">
 const s3Url = import.meta.env.VITE_APP_S3_STATIC_URI || '';
+
+const emit = defineEmits<{
+  'hero-ready': []
+}>()
+
+onMounted(() => {
+  nextTick(() => {
+    emit('hero-ready')
+  })
+})
 </script>
 
 <style scoped>
-.hero-animation-enter-active .bride, .hero-animation-enter-active .groom {
-  transition: all 2s cubic-bezier(.12,.6,.24,.99) 1s;
-}
 
-.hero-animation-enter-active .and {
-  transition: all 0.45s cubic-bezier(.88,-0.66,.15,1.51) 1.8s;
+.hero-animation-enter-active .image {
+  transition: opacity 1.5s cubic-bezier(.81,.15,.52,.84);
 }
 
 .hero-animation-enter-active .img-container::after, .hero-animation-enter-active .img-container::before {
     transition: all 1.2s cubic-bezier(.45,.33,.36,.98) 0.5s;
 }
 
-.hero-animation-enter-active .image {
-  transition: opacity 1.5s cubic-bezier(.81,.15,.52,.84);
+.hero-animation-enter-active .bride, .hero-animation-enter-active .groom {
+  transition: all 2s cubic-bezier(.12,.6,.24,.99) 1s;
 }
 
 .hero-animation-enter-active .logo, .hero-animation-enter-active .date {
   transition: all 1.5s cubic-bezier(.33,.22,.3,.98) 1.5s;
+}
+
+.hero-animation-enter-active .and {
+  transition: all 0.45s cubic-bezier(.88,-0.66,.15,1.51) 1.8s;
 }
 
 .hero-animation-enter-from .bride {

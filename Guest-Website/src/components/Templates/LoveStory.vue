@@ -1,9 +1,9 @@
 <template>
   <section id="love-story" class="flex flex-col items-center overflow-x-hidden py-40">
-    <div class="flex gap-4 items-center mb-20">
-        <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
-        <h4 class="text-heading-s text-brand-pri">#BuiltToLast</h4>
-        <img src="../../assets/vectors/leaf-branch__right--purple.svg" class="h-6" />
+    <div class="mb-20">
+        <DecorativeBranches variant="purple">
+            <h4 class="text-heading-s text-brand-pri">#BuiltToLast</h4>
+        </DecorativeBranches>
     </div>
     <h3 class="text-neutrals-neu-0 text-heading-md mb-16">Our love story</h3>
     <div class="text-neutrals-neu-35 text w-[86%] space-y-8">
@@ -15,6 +15,7 @@
 </template>
 
 <script setup lang="ts">
+import DecorativeBranches from '../Atoms/DecorativeBranches.vue'
 </script>
 
 <style scoped>
