@@ -8,7 +8,7 @@
                 <h1 class="groom text-title text-neutrals-neu-0">Emamuzo</h1>
                 <h1 class="and absolute size-[3rem] flex items-center justify-center top-auto right-auto bg-brand-pri text-neutrals-neu-100 text-[1.75rem] rounded-full mt-12">&</h1>
             </div>
-            <div  class="img-container mx-auto mb-24 max-w-[75%] grow relative before:content-[var(--name)] before:absolute before:bottom-0 before:left-[-20px] before:[writing-mode:sideways-lr] before:text-xs before:text-neutrals-neu-35 before:[text-orientation:mixed] before:block after:content-[var(--hashtag)] after:absolute after:top-0 after:right-[-20px] after:text-xs after:text-neutrals-neu-35 after:[text-orientation:mixed] after:[writing-mode:sideways-rl] after:block" id="main-hero-image">
+            <div  class="img-container mx-auto mb-24 max-w-[75%] grow relative before:content-[var(--name)] before:absolute before:bottom-0 before:left-[-20px] before:[writing-mode:sideways-lr] before:[-webkit-writing-mode:sideways-lr] before:text-xs before:text-neutrals-neu-35 before:[text-orientation:mixed] before:block after:content-[var(--hashtag)] after:absolute after:top-0 after:right-[-20px] after:text-xs after:text-neutrals-neu-35 after:[text-orientation:mixed] after:[writing-mode:sideways-rl] after:[-webkit-writing-mode:sideways-rl] after:block" id="main-hero-image">
               <picture>
                   <source 
                     :srcset="`${s3Url}/images/base/hero-image.webp 1x, ${s3Url}/images/@2x/hero-image@2x.webp 2x, ${s3Url}/images/@3x/hero-image@3x.webp 3x`" 
