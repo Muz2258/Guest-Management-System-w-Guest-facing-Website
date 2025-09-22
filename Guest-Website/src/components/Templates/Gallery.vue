@@ -1,9 +1,9 @@
 <template>
     <section class="py-40 flex flex-col items-center overflow-x-hidden">
-        <div class="flex gap-4 items-center mb-20">
-            <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
-            <h4 class="text-heading-s text-brand-pri">Media Gallery</h4>
-            <img src="../../assets/vectors/leaf-branch__right--purple.svg" class="h-6" />
+        <div class="mb-20">
+            <DecorativeBranches variant="purple">
+                <h4 class="text-heading-s text-brand-pri">Media Gallery</h4>
+            </DecorativeBranches>
         </div>
         <h3 class="text-neutrals-neu-0 text-heading-md mb-40">Follow the celebration</h3>
         
@@ -58,6 +58,9 @@
 </template>
 
 <script setup lang="ts">
+/* ------------------ Components ------------------- */
+import DecorativeBranches from '../Atoms/DecorativeBranches.vue'
+
 /* ------------------ Stores ------------------- */
 const galleryStore = useGalleryStore()
 const router = useRouter()

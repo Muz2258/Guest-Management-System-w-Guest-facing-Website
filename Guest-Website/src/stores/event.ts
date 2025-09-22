@@ -4,6 +4,7 @@ export const useEventStore = defineStore('event', () => {
   // States
   const eventDetails = ref<EventDetails | null>(null)
   const eventConfig = ref<EventConfig | null>(null)
+  const isInitialized = ref(false)
 
   // Computed getters
   const isRSVPOpen = computed(() => {
@@ -52,8 +53,13 @@ export const useEventStore = defineStore('event', () => {
     })
   })
 
-  // Actions
+  // ✅ OPTIMIZATION: Lazy initialization - only load when needed
   const initializeEventData = () => {
+    if (isInitialized.value) {
+      console.log('🎉 Event data already initialized, skipping...')
+      return
+    }
+
     console.log('🎉 Initializing event data...')
     
     // Default event data - in a real app, this would come from an API or database
@@ -104,18 +110,30 @@ export const useEventStore = defineStore('event', () => {
       requireAddress: false
     }
 
+    isInitialized.value = true
     console.log('✅ Event data initialized successfully:', eventDetails.value)
   }
 
-  // Initialize event data on store creation
-  if (!eventDetails.value) {
-    initializeEventData()
+  // ✅ OPTIMIZATION: Auto-initialize only when data is accessed
+  const ensureInitialized = () => {
+    if (!isInitialized.value) {
+      initializeEventData()
+    }
   }
 
+  // Computed that auto-initializes when accessed
+  const eventDetailsReactive = computed(() => {
+    ensureInitialized()
+    return eventDetails.value
+  })
+
   return {
-    // State
-    eventDetails,
-    eventConfig,
+    // State (with lazy initialization)
+    eventDetails: eventDetailsReactive,
+    eventConfig: computed(() => {
+      ensureInitialized()
+      return eventConfig.value
+    }),
     
     // Computed
     isRSVPOpen,
@@ -124,6 +142,7 @@ export const useEventStore = defineStore('event', () => {
     formattedRSVPDeadline,
     
     // Actions
-    initializeEventData
+    initializeEventData,
+    ensureInitialized
   }
 })

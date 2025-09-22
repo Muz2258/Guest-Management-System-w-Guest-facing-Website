@@ -1,12 +1,11 @@
 <template>
   <section 
-      id="love-story" 
       class="flex flex-col items-center bg-neutrals-neu-100 py-40"
   >
-    <div class="flex gap-4 items-center mb-20">
-        <img src="../../assets/vectors/leaf-branch__left--purple.svg" class="h-6" />
-        <h4 class="text-heading-s text-brand-pri">RSVP</h4>
-        <img src="../../assets/vectors/leaf-branch__right--purple.svg" class="h-6" />
+    <div class="mb-20">
+        <DecorativeBranches variant="purple">
+            <h4 class="text-heading-s text-brand-pri">RSVP</h4>
+        </DecorativeBranches>
     </div>
 
     <transition name="rsvp-animation" mode="out-in">
@@ -283,6 +282,9 @@
 </template>
 
 <script setup lang="ts">
+// Components
+import DecorativeBranches from '../Atoms/DecorativeBranches.vue'
+
 // Stores
 const uiStore = useUIStore();
 const eventStore = useEventStore();
