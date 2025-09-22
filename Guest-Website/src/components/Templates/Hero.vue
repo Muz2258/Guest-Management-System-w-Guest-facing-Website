@@ -1,7 +1,7 @@
 <template>
     <transition appear name="hero-animation">
         <section 
-          class="pb-48 pt-[108px] h-[calc(100svh - 60px)] flex flex-col justify-center items-center overflow-hidden"
+          class="pb-48 pt-[108px] h-svh flex flex-col justify-center items-center overflow-hidden"
         >
             <div class="mx-auto mb-48 flex flex-col justify-center items-center">
                 <h1 class="bride text-title text-neutrals-neu-0">Chidera</h1>
