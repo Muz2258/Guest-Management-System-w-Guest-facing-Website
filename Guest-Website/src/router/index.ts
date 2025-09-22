@@ -1,11 +1,33 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
-import { useGuestStore } from '../stores/guest'
-import { useRSVPStore } from '../stores/rsvp'
-import { useUIStore } from '../stores/ui'
-import { useGoodWillStore } from '../stores/goodWill'
-import { usePrivacyStore } from '../stores/privacy'
-import { useGiftStore } from '../stores/gift'
 import { guestStorage } from '../utils/guestStorage'
+
+// ✅ OPTIMIZATION: Helper to lazy load stores only when needed
+const lazyStoreAccess = {
+  async getGuestStore() {
+    const { useGuestStore } = await import('../stores/guest')
+    return useGuestStore()
+  },
+  async getPrivacyStore() {
+    const { usePrivacyStore } = await import('../stores/privacy')
+    return usePrivacyStore()
+  },
+  async getRSVPStore() {
+    const { useRSVPStore } = await import('../stores/rsvp')
+    return useRSVPStore()
+  },
+  async getUIStore() {
+    const { useUIStore } = await import('../stores/ui')
+    return useUIStore()
+  },
+  async getGoodWillStore() {
+    const { useGoodWillStore } = await import('../stores/goodWill')
+    return useGoodWillStore()
+  },
+  async getGiftStore() {
+    const { useGiftStore } = await import('../stores/gift')
+    return useGiftStore()
+  }
+}
 
 const routes = [
   {
@@ -13,8 +35,10 @@ const routes = [
     name: 'main-website',
     component: () => import('../views/MainWebsiteView.vue'),
     beforeEnter: async () => {
-      const guestStore = useGuestStore()
-      const privacyStore = usePrivacyStore()
+      const [guestStore, privacyStore] = await Promise.all([
+        lazyStoreAccess.getGuestStore(),
+        lazyStoreAccess.getPrivacyStore()
+      ])
 
       if(guestStore.accessedViaToken){
         console.log('ℹ️ Navigated here from token-handler, skipping cached data check')
@@ -27,7 +51,14 @@ const routes = [
       
       if (hasCachedData) {
         console.log('✅ Found cached data, initialising store from cache')
-        initialiseStoreFromCache().catch((e) => console.error(e))
+        // ✅ CRITICAL FIX: Wait for cache initialization to complete before proceeding
+        try {
+          await initialiseStoreFromCache()
+          console.log('🎯 Cache initialization completed, proceeding with navigation')
+        } catch (error) {
+          console.error('❌ Error initializing from cache:', error)
+          // Continue anyway but log the error
+        }
         privacyStore.initializeForCachedUser()
       } else {
         console.log('📭 No cached data found, proceeding with basic website experience')
@@ -46,7 +77,7 @@ const routes = [
     component: () => import('../views/PaymentValidation.vue'),
     beforeEnter: async (to: RouteLocationNormalized) => {
       console.log('🚦 Route guard triggered for payment validation', to.path )
-      const giftStore = useGiftStore()
+      const giftStore = await lazyStoreAccess.getGiftStore()
       const guestToken = to.params.token as string
 
       Promise.allSettled([
@@ -73,9 +104,11 @@ const routes = [
         token: to.params.token
       })
 
-      const privacyStore = usePrivacyStore()
-      const guestStore = useGuestStore()
-      const uiStore = useUIStore()
+      const [privacyStore, guestStore, uiStore] = await Promise.all([
+        lazyStoreAccess.getPrivacyStore(),
+        lazyStoreAccess.getGuestStore(),
+        lazyStoreAccess.getUIStore()
+      ])
 
       try {
         console.log('🔑 Attempting to validate token...')
@@ -116,10 +149,14 @@ const routes = [
 
 const initialiseStoreWithToken = async (token: string) => {
   console.log('🚀 Initialising stores with token:', token)
-  const guestStore = useGuestStore()
-  const rsvpStore = useRSVPStore()
-  const goodWillStore = useGoodWillStore()
-  const giftStore = useGiftStore()
+  
+  // ✅ OPTIMIZATION: Load stores only when needed
+  const [guestStore, rsvpStore, goodWillStore, giftStore] = await Promise.all([
+    lazyStoreAccess.getGuestStore(),
+    lazyStoreAccess.getRSVPStore(),
+    lazyStoreAccess.getGoodWillStore(),
+    lazyStoreAccess.getGiftStore()
+  ])
   
   try {
     const [guestResult, ...otherResults] = await Promise.allSettled([
@@ -152,30 +189,44 @@ const initialiseStoreWithToken = async (token: string) => {
 
 const initialiseStoreFromCache = async() => {
   console.log('🚀 Initialising stores from cache')
-  const guestStore = useGuestStore()
-  const rsvpStore = useRSVPStore()
-  const goodWillStore = useGoodWillStore()
-  const giftStore = useGiftStore()
-
+  
+  // ✅ OPTIMIZATION: Load guest store first (critical), then load others only if needed
+  const guestStore = await lazyStoreAccess.getGuestStore()
+  
   try {
     // Load guest data first (most important)
     await guestStore.initialiseGuestStoreFromCache()
     
-    // Load others in parallel (less critical)
-    const results = await Promise.allSettled([
-      rsvpStore.initialiseRsvpStoreFromCache(),
-      goodWillStore.initialiseGoodWillStoreFromCache(),
-      giftStore.initialiseGiftStoreFromCache()
-    ])
-
-    const storeNames = ['rsvp', 'goodWill', 'gift']
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.warn(`❌ Error initializing ${storeNames[index]} store from cache:`, result.reason)
-      } else {
-        console.log(`✅ ${storeNames[index]} store initialized from cache`)
-      }
-    })
+    // ✅ OPTIMIZATION: Only load other stores if guest has the relevant permissions
+    const loadPromises: Promise<any>[] = []
+    const storeNames: string[] = []
+    
+    if (guestStore.guestData?.permissions?.can_rsvp) {
+      loadPromises.push(
+        lazyStoreAccess.getRSVPStore().then(store => store.initialiseRsvpStoreFromCache())
+      )
+      storeNames.push('rsvp')
+    }
+    
+    // Always load goodWill and gift stores as they're commonly used
+    loadPromises.push(
+      lazyStoreAccess.getGoodWillStore().then(store => store.initialiseGoodWillStoreFromCache()),
+      lazyStoreAccess.getGiftStore().then(store => store.initialiseGiftStoreFromCache())
+    )
+    storeNames.push('goodWill', 'gift')
+    
+    // Load relevant stores in parallel
+    if (loadPromises.length > 0) {
+      const results = await Promise.allSettled(loadPromises)
+      
+      results.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.warn(`❌ Error initializing ${storeNames[index]} store from cache:`, result.reason)
+        } else {
+          console.log(`✅ ${storeNames[index]} store initialized from cache`)
+        }
+      })
+    }
   } catch (error) {
     console.error('❌ Error initializing guest store from cache:', error)
     // Don't throw - let the app continue with fresh data
@@ -227,17 +278,21 @@ router.beforeEach(async (to) => {
     setTimeout(() => preloadRoute('gallery'), 2000)
   }
   
-  // Add loading state for longer operations
-  const uiStore = useUIStore()
+  // ✅ OPTIMIZATION: Only load UI store when actually needed
   if (to.meta?.showLoading !== false) {
+    const uiStore = await lazyStoreAccess.getUIStore()
     uiStore.setGlobalLoading(true)
   }
 })
 
-router.afterEach(() => {
-  // Clear loading state
-  const uiStore = useUIStore()
-  uiStore.setGlobalLoading(false)
+router.afterEach(async () => {
+  // ✅ OPTIMIZATION: Only clear loading if UI store was loaded
+  try {
+    const uiStore = await lazyStoreAccess.getUIStore()
+    uiStore.setGlobalLoading(false)
+  } catch {
+    // UI store not loaded yet, no need to clear loading
+  }
 })
 
 export default router
