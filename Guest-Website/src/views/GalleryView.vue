@@ -15,7 +15,7 @@
         <div 
           v-for="(item, index) in galleryStore.mediaItems" 
           :key="`gallery-${index}`"
-          class="cursor-pointer mb-6 break-inside-avoid group"
+          class="cursor-pointer mb-6 group"
           @click="openLightbox(index)"
         >
           <div class="relative overflow-hidden rounded-lg">
@@ -142,7 +142,7 @@ const setupInfiniteScroll = () => {
   const observer = new IntersectionObserver(
     (entries) => {
       const entry = entries[0]
-      if (entry.isIntersecting && galleryStore.hasNextPage && !galleryStore.loading) {
+      if (entry && entry.isIntersecting && galleryStore.hasNextPage && !galleryStore.loading) {
         loadMoreItems()
       }
     },
