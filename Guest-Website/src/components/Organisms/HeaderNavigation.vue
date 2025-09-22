@@ -5,24 +5,10 @@
       <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90">
         <button 
           @click="toggleNavigation"
-          class="logo flex justify-center items-center gap-x-8 cursor-pointer hover:opacity-80 transition-opacity"
+          class="cursor-pointer hover:opacity-80 transition-opacity"
           aria-label="Toggle Navigation Menu"
         >
-          <img
-            class="h-8 w-auto"
-            src="../../assets/vectors/leaf-branch__left.svg"
-            alt="Leaf Branch Left"
-          />
-          <img
-            class="size-[1.75rem]"
-            src="../../assets/vectors/wedding_letter-mark--black.svg"
-            alt="Chidera and Emamuzo Wedding Letter Mark"
-          />
-          <img
-            class="h-8 w-auto"
-            src="../../assets/vectors/leaf-branch__right.svg"
-            alt="Leaf Branch Right"
-          />
+          <WeddingLogo />
         </button>
       </div>
 
@@ -69,6 +55,14 @@
 </template>
 
 <script setup lang="ts">
+/* ------------------ Components ------------------- */
+import WeddingLogo from '../Atoms/WeddingLogo.vue'
+
+// ✅ RESOURCE COORDINATION: Emit when header is mounted
+const emit = defineEmits<{
+  'mounted': []
+}>()
+
 /* ------------------ Reactive Variables ------------------- */
 const showNavigation = ref(false)
 const route = useRoute()
@@ -104,6 +98,9 @@ onBeforeUnmount(() => {
 
 // Handle escape key
 onMounted(() => {
+  // ✅ Signal that header is mounted and ready
+  emit('mounted')
+  
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && showNavigation.value) {
       closeNavigation()

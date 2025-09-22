@@ -1,106 +1,56 @@
 <template>
   <main v-if="isMobile">
     <transition appear name="slide-down">
-      <HeaderNavigation />
+      <HeaderNavigation @mounted="onHeaderMounted" />
     </transition>
 
     <transition name="fade">
-      <CookieBanner v-if="showCookie"/>
+      <CookieBannerComponent v-if="showCookie" />
     </transition>
 
-    <RouterView />
+    <RouterView v-slot="{ Component }">
+      <component :is="Component" @hero-ready="onHeroReady" @preload-rsvp-modals="preloadRSVPModals" />
+    </RouterView>
     
-    <!-- ✅ OPTIMIZED: Lazy load modals with Suspense -->
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showWelcomeModal" 
-          :is="WelcomeModalComponent" 
-          :is-visible="showWelcomeModal" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showWelcomeModal" class="modal-loading" />
-      </template>
-    </Suspense>
+    <!-- ✅ PRELOADED: WelcomeModal loads immediately - no delay for first-time users -->
+    <WelcomeModalComponent 
+      v-if="showWelcomeModal" 
+      :is-visible="showWelcomeModal" 
+    />
 
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showPlusOneModal" 
-          :is="ManagePlusOneModalComponent" 
-          :is-visible="showPlusOneModal" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showPlusOneModal" class="modal-loading" />
-      </template>
-    </Suspense>
+    <!-- ✅ OPTIMIZED LAZY: Workflow modals with zero delay settings -->
 
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showRemovePlusOneModal" 
-          :is="RemovePlusOneModalComponent" 
-          :is-visible="showRemovePlusOneModal" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showRemovePlusOneModal" class="modal-loading" />
-      </template>
-    </Suspense>
+    <!-- ✅ SCROLL-TRIGGERED: RSVP modals load when user scrolls to RSVP section -->
+    <ManagePlusOneModalComponent 
+      v-if="showPlusOneModal && rsvpModalsLoaded" 
+      :is-visible="showPlusOneModal" 
+    />
 
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showUpdateRSVPModal" 
-          :is="UpdateRsvpModalComponent" 
-          :is-visible="showUpdateRSVPModal" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showUpdateRSVPModal" class="modal-loading" />
-      </template>
-    </Suspense>
+    <RemovePlusOneModalComponent 
+      v-if="showRemovePlusOneModal && rsvpModalsLoaded" 
+      :is-visible="showRemovePlusOneModal" 
+    />
 
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showGoodWillModal" 
-          :is="ManageGoodWillMessageModalComponent" 
-          :is-visible="showGoodWillModal" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showGoodWillModal" class="modal-loading" />
-      </template>
-    </Suspense>
+    <UpdateRsvpModalComponent 
+      v-if="showUpdateRSVPModal && rsvpModalsLoaded" 
+      :is-visible="showUpdateRSVPModal" 
+    />
 
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showDeleteGoodWillModal" 
-          :is="DeleteGoodWillModalComponent" 
-          :is-visible="showDeleteGoodWillModal" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showDeleteGoodWillModal" class="modal-loading" />
-      </template>
-    </Suspense>
+    <ManageGoodWillMessageModalComponent 
+      v-if="showGoodWillModal && rsvpModalsLoaded" 
+      :is-visible="showGoodWillModal" 
+    />
 
-    <Suspense>
-      <template #default>
-        <component 
-          v-if="showGiftBottomSheet" 
-          :is="GiftBottomSheetComponent" 
-          :is-visible="showGiftBottomSheet" 
-        />
-      </template>
-      <template #fallback>
-        <div v-if="showGiftBottomSheet" class="modal-loading" />
-      </template>
-    </Suspense>
+    <DeleteGoodWillModalComponent 
+      v-if="showDeleteGoodWillModal && rsvpModalsLoaded" 
+      :is-visible="showDeleteGoodWillModal" 
+    />
+
+    <component 
+      v-if="showGiftBottomSheet" 
+      :is="GiftBottomSheetComponent" 
+      :is-visible="showGiftBottomSheet" 
+    />
   </main>
   
   <main v-else class="h-dvh flex flex-col justify-center items-center p-32">
@@ -120,19 +70,55 @@
 /* -------------------- Imports ------------------ */
 import Icon from './components/Icon'
 import { getColor } from './utils/colors'
-
-// ✅ CRITICAL: Keep these components that load immediately
 import HeaderNavigation from './components/Organisms/HeaderNavigation.vue'
-import CookieBanner from './components/Molecules/CookieBanner.vue'
+import WelcomeModalComponent from './components/Templates/WelcomeModal.vue'
 
-// ✅ OPTIMIZATION: Lazy load modal components with smart preloading
-const WelcomeModalComponent = defineAsyncComponent(() => import('./components/Templates/WelcomeModal.vue'))
+// ✅ CONDITIONAL: Cookie banner only loads for token users after welcome modal
+const CookieBannerComponent = defineAsyncComponent({
+  loader: () => import('./components/Molecules/CookieBanner.vue'),
+  delay: 50, // Reduced delay for faster response
+  timeout: 3000
+})
+
+// ✅ SCROLL-TRIGGERED: RSVP modals only load when user scrolls to RSVP section
+const rsvpModalsLoaded = ref(false)
+
+// Define async components that will be loaded on demand
 const ManagePlusOneModalComponent = defineAsyncComponent(() => import('./components/Templates/ManagePlusOneModal.vue'))
 const RemovePlusOneModalComponent = defineAsyncComponent(() => import('./components/Templates/RemovePlusOneModal.vue'))
 const UpdateRsvpModalComponent = defineAsyncComponent(() => import('./components/Templates/UpdateRsvpModal.vue'))
 const ManageGoodWillMessageModalComponent = defineAsyncComponent(() => import('./components/Templates/ManageGoodWillMessageModal.vue'))
 const DeleteGoodWillModalComponent = defineAsyncComponent(() => import('./components/Templates/DeleteGoodWillModal.vue'))
-const GiftBottomSheetComponent = defineAsyncComponent(() => import('./components/Templates/GiftBottomSheet.vue'))
+
+// ✅ Simple function to preload RSVP modals when triggered by MainWebsiteView
+const preloadRSVPModals = async () => {
+  if (rsvpModalsLoaded.value) return
+  
+  console.log('🎯 Preloading RSVP section modals (including gift bottom sheet)...')
+  
+  try {
+    // Preload all RSVP-related components including gift bottom sheet
+    await Promise.all([
+      import('./components/Templates/ManagePlusOneModal.vue'),
+      import('./components/Templates/RemovePlusOneModal.vue'),
+      import('./components/Templates/UpdateRsvpModal.vue'),
+      import('./components/Templates/ManageGoodWillMessageModal.vue'),
+      import('./components/Templates/DeleteGoodWillModal.vue'),
+      import('./components/Templates/GiftBottomSheet.vue') // Gift bottom sheet is also in RSVP section
+    ])
+    
+    rsvpModalsLoaded.value = true
+    console.log('✅ RSVP section modals preloaded successfully (including gift bottom sheet)')
+  } catch (error) {
+    console.error('❌ Failed to preload RSVP modals:', error)
+  }
+}
+
+const GiftBottomSheetComponent = defineAsyncComponent({
+  loader: () => import('./components/Templates/GiftBottomSheet.vue'),
+  delay: 0,
+  timeout: 5000
+})
 
 /* ------------------ Stores ------------------ */
 const privacyStore = usePrivacyStore()
@@ -141,6 +127,14 @@ const uiStore = useUIStore()
 /* ------------------ Reactive Variables ------------------ */
 const showCookieWithDelay = ref(false)
 const isMobile = ref<boolean>(true)
+
+// ✅ RESOURCE-DRIVEN LOADING: Track when critical resources are ready
+const criticalResourcesLoaded = ref({
+  header: false,
+  hero: false,
+  fonts: false
+  // Removed images requirement to simplify - fonts and components are sufficient
+})
 
 /* ------------------ Computed Properties ------------------ */
 const showWelcomeModal = computed(() => uiStore.showWelcomeModal)
@@ -155,6 +149,13 @@ const showDeleteGoodWillModal = computed(() => uiStore.showDeleteGoodWillModal)
 const showCookie = computed(() => {
   return privacyStore.shouldShowBanner && showCookieWithDelay.value
 })
+
+/* ------------------ Simple Event-Based RSVP Modal Loading ------------------ */
+// Listen for event from MainWebsiteView when RSVP section comes into view
+const handleRSVPPreloadEvent = () => {
+  console.log('� Received RSVP preload signal from MainWebsiteView')
+  preloadRSVPModals()
+}
 
 /* ------------------ Watchers ------------------ */
 watch(showWelcomeModal, (newValue, oldValue) => {
@@ -176,36 +177,100 @@ const checkMobileSize = () => {
   isMobile.value = window.innerWidth <= 600
 }
 
-// ✅ OPTIMIZATION: Smart preloading of likely-used modals
+// ✅ RESOURCE LOADING COORDINATION: Track when critical resources are ready
+const checkAllResourcesLoaded = () => {
+  console.log('🔍 Checking resource loading status:', criticalResourcesLoaded.value)
+  const allLoaded = Object.values(criticalResourcesLoaded.value).every(loaded => loaded)
+  
+  if (allLoaded) {
+    console.log('🎯 All critical resources loaded - removing loading screen')
+    hideInitialLoadingScreen()
+  }
+}
+
+// ✅ Hide the HTML loading screen with smooth transition
+const hideInitialLoadingScreen = () => {
+  const loadingScreen = document.getElementById('initial-loading-screen')
+  console.log('Is loading screen present?', !!loadingScreen)
+
+  if (loadingScreen) {
+    console.log('🎬 Removing loading screen - hero animation will start immediately with reduced delays')
+    loadingScreen.style.transition = 'opacity 0.5s ease-out'
+    loadingScreen.style.opacity = '0'
+    setTimeout(() => {
+      loadingScreen.style.display = 'none'
+    }, 1000)
+  }
+}
+
+const onHeaderMounted = () => {
+  criticalResourcesLoaded.value.header = true
+  console.log('✅ Header component mounted')
+  checkAllResourcesLoaded()
+}
+
+const onHeroReady = () => {
+  criticalResourcesLoaded.value.hero = true
+  console.log('✅ Hero component ready for animation')
+  checkAllResourcesLoaded()
+}
+
+const onFontsReady = () => {
+  criticalResourcesLoaded.value.fonts = true
+  console.log('✅ Fonts loaded')
+  checkAllResourcesLoaded()
+}
+
+// ✅ INTELLIGENT PRELOADING: Aligned with actual user flow and timing
 const preloadCriticalModals = () => {
-  // Preload high-priority modals after app is loaded
+  const guestStore = useGuestStore()
+  
+  // Preload if user has guest data (either via token or cached)
+  if (!guestStore.accessedViaToken && !guestStore.hasCachedData) {
+    console.log('📭 User accessing without token or cached data - minimal preloading')
+    return
+  }
+  
+  const userType = guestStore.accessedViaToken ? 'token user' : 'returning guest'
+  const preloadDelay = guestStore.hasCachedData ? 100 : 250 // Faster for returning guests
+  
   setTimeout(() => {
-    console.log('🚀 Preloading critical modals...')
+    console.log(`🚀 Starting intelligent modal preloading for ${userType}...`)
     
-    // Preload welcome and RSVP modals (most likely to be used)
-    Promise.allSettled([
-      WelcomeModalComponent,
-      UpdateRsvpModalComponent
-    ]).then(() => {
-      console.log('✅ Critical modals preloaded')
-    }).catch((error) => {
-      console.warn('❌ Error preloading critical modals:', error)
-    })
+    // Phase 1: Preload welcome modal immediately since it shows at 3.5s (for token users)
+    if (guestStore.accessedViaToken) {
+      import('./components/Templates/WelcomeModal.vue')
+        .then(() => console.log('✅ Welcome modal preloaded (ready for 3.5s timer)'))
+        .catch((error) => console.warn('❌ Error preloading welcome modal:', error))
+    }
     
-    // Preload other modals after a delay
+    // Phase 2: Preload RSVP-related modals
+    setTimeout(() => {
+      if (guestStore.guestData?.permissions?.can_rsvp) {
+        Promise.allSettled([
+          import('./components/Templates/UpdateRsvpModal.vue'),
+          import('./components/Templates/ManagePlusOneModal.vue')
+        ]).then(() => {
+          console.log('✅ RSVP modals preloaded')
+        }).catch((error) => {
+          console.warn('❌ Error preloading RSVP modals:', error)
+        })
+      }
+    }, preloadDelay) // Faster timing for returning guests
+    
+    // Phase 3: Preload secondary features
     setTimeout(() => {
       Promise.allSettled([
-        ManagePlusOneModalComponent,
-        ManageGoodWillMessageModalComponent,
-        GiftBottomSheetComponent
+        import('./components/Templates/GiftBottomSheet.vue'),
+        import('./components/Templates/ManageGoodWillMessageModal.vue')
       ]).then(() => {
         console.log('✅ Secondary modals preloaded')
       }).catch((error) => {
         console.warn('❌ Error preloading secondary modals:', error)
       })
-    }, 2000)
+    }, preloadDelay * 2) // Scale with user type
     
-  }, 3000) // Wait 3 seconds after app load
+  }, preloadDelay) // Start preloading after minimal delay for returning guests
 }
 
 /* ------------------- Lifecycle Hooks --------------------- */
@@ -220,10 +285,33 @@ onMounted(() => {
   
   // ✅ Start smart preloading
   preloadCriticalModals()
+  
+  // ✅ Listen for RSVP preload signal from MainWebsiteView
+  window.addEventListener('preload-rsvp-modals', handleRSVPPreloadEvent)
+  
+  // ✅ RESOURCE LOADING: Check for fonts
+  // Check if fonts are already loaded
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      onFontsReady()
+    }).catch(() => {
+      // Fallback: assume fonts loaded after timeout
+      setTimeout(onFontsReady, 1000)
+    })
+  } else {
+    // Fallback for browsers without font loading API
+    setTimeout(onFontsReady, 500)
+  }
+  
+  // ✅ Initial check in case everything is already ready
+  setTimeout(() => {
+    checkAllResourcesLoaded()
+  }, 100)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobileSize)
+  window.removeEventListener('preload-rsvp-modals', handleRSVPPreloadEvent)
 })
 </script>
 
@@ -237,29 +325,18 @@ onUnmounted(() => {
   transform: translateY(75%);
 }
 
-/* ✅ OPTIMIZATION: Lightweight modal loading spinner */
-.modal-loading {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid #ffffff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  z-index: 9999;
-  backdrop-filter: blur(2px);
+/* ✅ SMOOTH TRANSITIONS: Focus on natural animations */
+.fade-enter-active, .fade-leave-active {
+  transition: all 0.6s cubic-bezier(.39,.39,.01,.99);
 }
 
-@keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: translateY(75%);
 }
 
 .slide-down-enter-active {
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s;
 }
 
 .slide-down-enter-from {
