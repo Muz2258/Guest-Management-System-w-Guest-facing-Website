@@ -38,7 +38,7 @@
                         class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
                         :class="{ 'h-80 w-72': index === currentIndex, 'opacity-50': index !== currentIndex }"
                         @click="navigateToThumbnail(index)"
-                        :ref="(el: HTMLElement | null) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
+                        :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
                     >
                         <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
                         <video v-else-if="item.file_type === 'video'" :src="item.s3_thumbnail_url" class="w-full h-full object-cover" muted />
@@ -75,58 +75,128 @@ const emit = defineEmits<{
 }>()
 
 // --- REFINED STATE AND REFS ---
-const containerRef = ref<HTMLElement>() // Changed from scrollContainer
+const containerRef = ref<HTMLElement>() 
 const thumbnailContainer = ref<HTMLElement>()
 const thumbnailRefs = ref<(HTMLElement | null)[]>([])
 
 // State for JS-driven swiping
 const isDragging = ref(false)
 const touchStartX = ref(0)
+const touchStartY = ref(0) // Track Y to prevent vertical scroll interference
 const currentTranslate = ref(0)
 const startTranslate = ref(0)
 const swipeThreshold = 50 // Minimum pixels for a valid swipe
+const animationId = ref(0)
+const isAnimating = ref(false)
 
-// --- REFINED SWIPE LOGIC ---
+// --- SAFARI-COMPATIBLE SWIPE LOGIC ---
 const handleTouchStart = (event: TouchEvent) => {
-    if (!containerRef.value) return
+    if (!containerRef.value || isAnimating.value || !event.touches?.[0]) return
+    
     isDragging.value = true
     touchStartX.value = event.touches[0].clientX
+    touchStartY.value = event.touches[0].clientY
 
-    // Calculate the container's starting position
+    // Calculate the container's starting position (include 16px gap)
     const itemWidth = containerRef.value.clientWidth + 16
     startTranslate.value = -props.currentIndex * itemWidth
+    currentTranslate.value = startTranslate.value
+    
+    // Cancel any ongoing animation
+    if (animationId.value) {
+        cancelAnimationFrame(animationId.value)
+    }
     
     // Disable CSS transition for instant drag effect
     containerRef.value.style.transition = 'none'
 }
 
 const handleTouchMove = (event: TouchEvent) => {
-    if (!isDragging.value || !containerRef.value) return
+    if (!isDragging.value || !containerRef.value || isAnimating.value || !event.touches?.[0]) return
+    
     const currentX = event.touches[0].clientX
+    const currentY = event.touches[0].clientY
     const deltaX = currentX - touchStartX.value
-
-    // Follow the finger
-    currentTranslate.value = startTranslate.value + deltaX
-    containerRef.value.style.transform = `translateX(${currentTranslate.value}px)`
+    const deltaY = currentY - touchStartY.value
+    
+    // Only handle horizontal swipes (prevent interference with vertical scrolling)
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        event.preventDefault() // Crucial for Safari
+        
+        // Constrain movement to valid bounds (include 16px gap)
+        const itemWidth = containerRef.value.clientWidth + 16
+        const maxTranslate = 0
+        const minTranslate = -(props.mediaItems.length - 1) * itemWidth
+        
+        currentTranslate.value = Math.max(minTranslate, Math.min(maxTranslate, startTranslate.value + deltaX))
+        
+        // Use requestAnimationFrame for smooth performance
+        animationId.value = requestAnimationFrame(() => {
+            if (containerRef.value) {
+                containerRef.value.style.transform = `translateX(${currentTranslate.value}px)`
+            }
+        })
+    }
 }
 
-const handleTouchEnd = () => {
+const handleTouchEnd = (event: TouchEvent) => {
     if (!isDragging.value || !containerRef.value) return
+    
+    // Prevent default to avoid Safari's elastic scroll
+    event.preventDefault()
+    
     isDragging.value = false
     
-    // Enable CSS transition for smooth snapping
-    containerRef.value.style.transition = 'transform 0.3s ease-out'
+    // Cancel any pending animation
+    if (animationId.value) {
+        cancelAnimationFrame(animationId.value)
+    }
 
     const deltaX = currentTranslate.value - startTranslate.value
+    
+    // Determine the target index based on swipe distance and direction
+    let targetIndex = props.currentIndex
+    
+    if (Math.abs(deltaX) > swipeThreshold) {
+        if (deltaX < 0 && props.currentIndex < props.mediaItems.length - 1) {
+            targetIndex = props.currentIndex + 1
+        } else if (deltaX > 0 && props.currentIndex > 0) {
+            targetIndex = props.currentIndex - 1
+        }
+    }
+    
+    // Animate to the target position
+    animateToIndex(targetIndex)
+}
 
-    // Check if swipe distance exceeds the threshold
-    if (deltaX < -swipeThreshold && props.currentIndex < props.mediaItems.length - 1) {
-        emit('navigate', 'next')
-    } else if (deltaX > swipeThreshold && props.currentIndex > 0) {
-        emit('navigate', 'prev')
-    } else {
-        // Not a valid swipe, snap back to the current index
-        goToSlide(props.currentIndex, 'smooth')
+// --- SAFARI-OPTIMIZED ANIMATION ---
+const animateToIndex = (index: number) => {
+    if (!containerRef.value || isAnimating.value) return
+    
+    isAnimating.value = true
+    const targetTranslate = -index * (containerRef.value.clientWidth + 16)
+    
+    // Use CSS transition for smooth animation
+    containerRef.value.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'
+    containerRef.value.style.transform = `translateX(${targetTranslate}px)`
+    
+    currentTranslate.value = targetTranslate
+    
+    // Clear animation flag after transition
+    setTimeout(() => {
+        isAnimating.value = false
+        if (containerRef.value) {
+            containerRef.value.style.transition = 'none'
+        }
+    }, 300)
+    
+    // Emit navigation event if index changed
+    if (index !== props.currentIndex) {
+        if (index > props.currentIndex) {
+            emit('navigate', 'next')
+        } else {
+            emit('navigate', 'prev')
+        }
     }
 }
 
@@ -134,13 +204,16 @@ const handleTouchEnd = () => {
 // This single function now handles all slide movements
 const goToSlide = (index: number, behavior: 'smooth' | 'instant') => {
     if (!containerRef.value) return
-    const itemWidth = containerRef.value.clientWidth + 16 // width + gap
-    const newPosition = -index * itemWidth
-
-    containerRef.value.style.transition = behavior === 'smooth' ? 'transform 0.3s ease-out' : 'none'
-    containerRef.value.style.transform = `translateX(${newPosition}px)`
-
-    currentTranslate.value = newPosition // Keep state in sync
+    
+    if (behavior === 'smooth') {
+        animateToIndex(index)
+    } else {
+        // Instant positioning (include 16px gap)
+        const targetTranslate = -index * (containerRef.value.clientWidth + 16)
+        containerRef.value.style.transition = 'none'
+        containerRef.value.style.transform = `translateX(${targetTranslate}px)`
+        currentTranslate.value = targetTranslate
+    }
 }
 
 // Center a specific thumbnail (this logic is good, no changes)
