@@ -137,7 +137,7 @@
                                 <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.webp" type="image/webp">
                                 <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
                             </picture>
-                            <span v-if="hasGift" class="text-s text-center text-brand-pri underline" @click="sendGift">Send another gift</span>
+                            <span class="text-s text-center text-brand-pri underline" @click="sendGift">Send another gift</span>
                         </div>
                     </template>
                 </Card>
