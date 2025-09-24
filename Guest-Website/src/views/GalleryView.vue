@@ -108,7 +108,6 @@
 <script setup lang="ts">
 /* ----------------------- Imports ------------------- */
 import type { MediaItem } from '@/types/event'
-import { useIntersectionObserver } from '@vueuse/core'
 import { useIconPreloader } from '../composables/useIconPreloader'
 
 /* ----------------------- Type Definitions ------------------- */
@@ -133,6 +132,7 @@ const currentPage = ref<number>(1)
 const showLightbox = ref<boolean>(false)
 const currentLightboxIndex = ref<number>(0)
 const initialImgCount = ref<number>(0)
+const infiniteObserver: Ref<IntersectionObserver | null> = ref(null)
 
 
 /* ----------------------- Computed Properties ------------------- */
@@ -274,17 +274,18 @@ watch([loadMoreTrigger, initialImagesLoaded], ([newTrigger, imagesLoaded]) => {
   if(newTrigger && imagesLoaded) {
     console.log(`[GalleryView] All initial images loaded. Setting up intersection observer with loadMoreTrigger:`, loadMoreTrigger.value)
     if (loadMoreTrigger.value) {
-      const { stop } = useIntersectionObserver(
-        loadMoreTrigger,
-        (entries) => {
-          console.log('[GalleryView] IntersectionObserver:', { entries, hasNextPage: galleryStore.hasNextPage, loading: galleryStore.loading })
-          if (entries && galleryStore.hasNextPage && !galleryStore.loading) {
+      const infiniteObserver = new IntersectionObserver((entries) => {
+        console.log('[GalleryView] IntersectionObserver entries:', entries)
+        entries.forEach(entry => {
+          if (entry.isIntersecting && galleryStore.hasNextPage && !galleryStore.loading) {
+            console.log('[GalleryView] Load more trigger intersecting, loading more items...')
             loadMoreItems()
           }
-        },
-        { threshold: 0.1, rootMargin: '100px' }
-      )
-      onUnmounted(stop)
+        })
+      }, { threshold: 0.1, rootMargin: '100px' })
+
+      infiniteObserver.observe(loadMoreTrigger.value)
+      console.log('[GalleryView] IntersectionObserver set up successfully.')
     }
   }
 })
@@ -301,6 +302,13 @@ onBeforeMount(async () => {
   useIconPreloader().preloadAllIcons().catch(err => {
     console.error('❌ Error preloading icons:', err)
   })
+})
+
+onUnmounted(() => {
+  if (infiniteObserver.value && loadMoreTrigger.value) {
+    infiniteObserver.value.unobserve(loadMoreTrigger.value)
+    console.log('[GalleryView] IntersectionObserver disconnected on unmount.')
+  }
 })
 </script>
 
