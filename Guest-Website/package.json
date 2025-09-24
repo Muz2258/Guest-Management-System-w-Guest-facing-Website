@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build:production": "vite build --mode production",
     "build:staging": "vite build",
     "build:local": "vite build"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-vue": "^0.10.1",
     "@supabase/supabase-js": "^2.57.0",
     "@vitejs/plugin-vue": "^5.0.0",
     "crypto-js": "^4.2.0",

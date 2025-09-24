@@ -587,10 +587,6 @@ watch(payFees, (newValue) => {
 watch(activeTab, (newTab) => {
   if(newTab) giftStore.clearGiftSelection()
 })
-
-onMounted(() => {
-  giftStore.fetchGiftItems()
-})
 </script>
 
 <style scoped>

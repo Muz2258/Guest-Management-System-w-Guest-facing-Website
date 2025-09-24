@@ -1,6 +1,7 @@
 <template>
-    <transition appear name="hero-animation">
+    <transition appear name="hero-animation" @enter="handleEnter" @after-enter="handleAnimationEnd" :duration="{ enter: 4500, leave: 3000 }">
         <section 
+          v-show="imageLoaded"
           class="pb-48 pt-[108px] h-svh flex flex-col justify-center items-center overflow-hidden"
         >
             <div class="mx-auto mb-48 flex flex-col justify-center items-center">
@@ -19,6 +20,7 @@
                     :src="`${s3Url}/images/base/hero-image.webp`"
                     :srcset="`${s3Url}/images/base/hero-image.webp 1x, ${s3Url}/images/@2x/hero-image@2x.webp 2x, ${s3Url}/images/@3x/hero-image@3x.webp 3x`"
                     alt="Wedding hero image"
+                    @load="handleImageLoaded"
                   />
               </picture>
             </div>
@@ -28,21 +30,30 @@
 </template>
 
 <script setup lang="ts">
+const imageLoaded = ref(false);
 const s3Url = import.meta.env.VITE_APP_S3_STATIC_URI || '';
 
 const emit = defineEmits<{
-  'hero-ready': []
+  'hero-ready': [],
+  'hero-animation-ended': []
 }>()
 
-onMounted(() => {
-  nextTick(() => {
-    emit('hero-ready')
-  })
-})
+const handleImageLoaded = () => {
+  console.log('Hero image loaded successfully')
+  imageLoaded.value = true;
+}
+
+const handleEnter = () => {
+  console.log('Hero animation started');
+  emit('hero-ready');
+}
+
+const handleAnimationEnd = () => {
+  emit('hero-animation-ended');
+}
 </script>
 
 <style scoped>
-
 .hero-animation-enter-active .image {
   transition: opacity 1.5s cubic-bezier(.81,.15,.52,.84);
 }

@@ -152,7 +152,7 @@ class SecureGuestStorage {
   /**
    * Check if guest data exists for a specific token
    */
-  checkCache(token?: string): boolean {
+  checkCache(token?: string): any {
     console.log('📦 Attempting to load guest data from cache...')
     let cachedData = null
 
@@ -161,11 +161,11 @@ class SecureGuestStorage {
     
     if (cachedData && cachedData.isValid) {
       console.log('✅ Loaded guest data from cache:', cachedData.data)
-      return true
+      return {hasCache: true, data: cachedData.data}
     }
     
     console.log('📭 No valid cached data found')
-    return false
+    return {hasCache: false, data: null}
   }
 
   /**

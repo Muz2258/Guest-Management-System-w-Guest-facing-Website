@@ -14,7 +14,6 @@
                     v-for="(item, index) in previewItems" 
                     :key="`media-${index}`"
                     class="cursor-pointer mb-6 break-inside-avoid"
-                    @click="openGalleryPage(index)"
                 >
                     <img 
                         v-if="item.file_type === 'image'"
@@ -71,16 +70,8 @@ const previewItems = computed(() => {
 })
 
 /* ------------------ Methods ------------------- */
-const openGalleryPage = (index: number) => {
-  // Navigate to gallery page with the specific image index
-  router.push({ 
-    name: 'gallery', 
-    query: { image: index.toString() } 
-  })
-}
-
 const openFullGallery = () => {
-  // Navigate to gallery page without specific image
+  galleryStore.mediaItems = []
   router.push({ name: 'gallery' })
 }
 

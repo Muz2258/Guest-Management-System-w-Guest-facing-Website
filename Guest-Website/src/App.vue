@@ -1,54 +1,49 @@
 <template>
   <main v-if="isMobile">
     <transition appear name="slide-down">
-      <HeaderNavigation @mounted="onHeaderMounted" />
+      <HeaderNavigation />
     </transition>
 
     <transition name="fade">
-      <CookieBannerComponent v-if="showCookie" />
+      <CookieBanner v-if="showCookie" />
     </transition>
 
     <RouterView v-slot="{ Component }">
-      <component :is="Component" @hero-ready="onHeroReady" @preload-rsvp-modals="preloadRSVPModals" />
+      <component :is="Component" @hero-ready="closeLoaderScreen" @hero-animation-ended="openWelcomeModal" />
     </RouterView>
     
-    <!-- ✅ PRELOADED: WelcomeModal loads immediately - no delay for first-time users -->
-    <WelcomeModalComponent 
+    <WelcomeModal 
       v-if="showWelcomeModal" 
       :is-visible="showWelcomeModal" 
     />
 
-    <!-- ✅ OPTIMIZED LAZY: Workflow modals with zero delay settings -->
-
-    <!-- ✅ SCROLL-TRIGGERED: RSVP modals load when user scrolls to RSVP section -->
-    <ManagePlusOneModalComponent 
+    <ManagePlusOneModal 
       v-if="showPlusOneModal && rsvpModalsLoaded" 
       :is-visible="showPlusOneModal" 
     />
 
-    <RemovePlusOneModalComponent 
+    <RemovePlusOneModal 
       v-if="showRemovePlusOneModal && rsvpModalsLoaded" 
       :is-visible="showRemovePlusOneModal" 
     />
 
-    <UpdateRsvpModalComponent 
+    <UpdateRsvpModal 
       v-if="showUpdateRSVPModal && rsvpModalsLoaded" 
       :is-visible="showUpdateRSVPModal" 
     />
 
-    <ManageGoodWillMessageModalComponent 
+    <ManageGoodWillMessageModal 
       v-if="showGoodWillModal && rsvpModalsLoaded" 
       :is-visible="showGoodWillModal" 
     />
 
-    <DeleteGoodWillModalComponent 
+    <DeleteGoodWillModal 
       v-if="showDeleteGoodWillModal && rsvpModalsLoaded" 
       :is-visible="showDeleteGoodWillModal" 
     />
 
-    <component 
-      v-if="showGiftBottomSheet" 
-      :is="GiftBottomSheetComponent" 
+    <GiftBottomSheet 
+      v-if="showGiftBottomSheet"
       :is-visible="showGiftBottomSheet" 
     />
   </main>
@@ -67,38 +62,61 @@
 </template>
 
 <script setup lang="ts">
+/* -------------------- Local Type Definitions ------------------ */
+interface RsvpModalComponents {
+  managePlusOneModal?: any
+  removePlusOneModal?: any
+  updateRsvpModal?: any
+  manageGoodWillMessageModal?: any
+  deleteGoodWillModal?: any
+  giftBottomSheet?: any
+}
+
+
 /* -------------------- Imports ------------------ */
 import Icon from './components/Icon'
 import { getColor } from './utils/colors'
-import HeaderNavigation from './components/Organisms/HeaderNavigation.vue'
-import WelcomeModalComponent from './components/Templates/WelcomeModal.vue'
+import { guestStorage } from './utils/guestStorage'
 
-// ✅ CONDITIONAL: Cookie banner only loads for token users after welcome modal
-const CookieBannerComponent = defineAsyncComponent({
-  loader: () => import('./components/Molecules/CookieBanner.vue'),
-  delay: 50, // Reduced delay for faster response
-  timeout: 3000
-})
 
-// ✅ SCROLL-TRIGGERED: RSVP modals only load when user scrolls to RSVP section
+/* ------------------ Stores ------------------ */
+const guestStore = useGuestStore()
+const rsvpStore = useRSVPStore()
+const privacyStore = usePrivacyStore()
+const uiStore = useUIStore()
+
+const lazyStoreAccess = {
+  async getGoodWillStore() {
+    const { useGoodWillStore } = await import('./stores/goodWill')
+    return useGoodWillStore()
+  },
+  async getGiftStore() {
+    const { useGiftStore } = await import('./stores/gift')
+    return useGiftStore()
+  }
+}
+
+
+/* ------------------ Variables and States ------------------ */
+const rsvpModalComponents = ref<RsvpModalComponents>({})
 const rsvpModalsLoaded = ref(false)
 
-// Define async components that will be loaded on demand
-const ManagePlusOneModalComponent = defineAsyncComponent(() => import('./components/Templates/ManagePlusOneModal.vue'))
-const RemovePlusOneModalComponent = defineAsyncComponent(() => import('./components/Templates/RemovePlusOneModal.vue'))
-const UpdateRsvpModalComponent = defineAsyncComponent(() => import('./components/Templates/UpdateRsvpModal.vue'))
-const ManageGoodWillMessageModalComponent = defineAsyncComponent(() => import('./components/Templates/ManageGoodWillMessageModal.vue'))
-const DeleteGoodWillModalComponent = defineAsyncComponent(() => import('./components/Templates/DeleteGoodWillModal.vue'))
 
-// ✅ Simple function to preload RSVP modals when triggered by MainWebsiteView
+/* ------------------ Components ------------------ */
 const preloadRSVPModals = async () => {
   if (rsvpModalsLoaded.value) return
   
   console.log('🎯 Preloading RSVP section modals (including gift bottom sheet)...')
   
   try {
-    // Preload all RSVP-related components including gift bottom sheet
-    await Promise.all([
+    const [
+      managePlusOneModal,
+      removePlusOneModal,
+      updateRsvpModal,
+      manageGoodWillMessageModal,
+      deleteGoodWillModal,
+      giftBottomSheet
+    ] = await Promise.all([
       import('./components/Templates/ManagePlusOneModal.vue'),
       import('./components/Templates/RemovePlusOneModal.vue'),
       import('./components/Templates/UpdateRsvpModal.vue'),
@@ -106,6 +124,15 @@ const preloadRSVPModals = async () => {
       import('./components/Templates/DeleteGoodWillModal.vue'),
       import('./components/Templates/GiftBottomSheet.vue') // Gift bottom sheet is also in RSVP section
     ])
+
+    rsvpModalComponents.value = {
+      managePlusOneModal: managePlusOneModal.default,
+      removePlusOneModal: removePlusOneModal.default,
+      updateRsvpModal: updateRsvpModal.default,
+      manageGoodWillMessageModal: manageGoodWillMessageModal.default,
+      deleteGoodWillModal: deleteGoodWillModal.default,
+      giftBottomSheet: giftBottomSheet.default
+    }
     
     rsvpModalsLoaded.value = true
     console.log('✅ RSVP section modals preloaded successfully (including gift bottom sheet)')
@@ -114,30 +141,48 @@ const preloadRSVPModals = async () => {
   }
 }
 
-const GiftBottomSheetComponent = defineAsyncComponent({
-  loader: () => import('./components/Templates/GiftBottomSheet.vue'),
+const ManagePlusOneModal = defineAsyncComponent({
+  loader: rsvpModalComponents.value.managePlusOneModal || (() => import('./components/Templates/ManagePlusOneModal.vue')),
   delay: 0,
-  timeout: 5000
 })
 
-/* ------------------ Stores ------------------ */
-const privacyStore = usePrivacyStore()
-const uiStore = useUIStore()
+const RemovePlusOneModal = defineAsyncComponent({
+  loader: rsvpModalComponents.value.removePlusOneModal || (() => import('./components/Templates/RemovePlusOneModal.vue')),
+  delay: 0,
+})
+
+const UpdateRsvpModal = defineAsyncComponent({
+  loader: rsvpModalComponents.value.updateRsvpModal || (() => import('./components/Templates/UpdateRsvpModal.vue')),
+  delay: 0,
+})
+
+const ManageGoodWillMessageModal = defineAsyncComponent({
+  loader: rsvpModalComponents.value.manageGoodWillMessageModal || (() => import('./components/Templates/ManageGoodWillMessageModal.vue')),
+  delay: 0,
+})
+
+const DeleteGoodWillModal = defineAsyncComponent({
+  loader: rsvpModalComponents.value.deleteGoodWillModal || (() => import('./components/Templates/DeleteGoodWillModal.vue')),
+  delay: 0,
+})
+
+const GiftBottomSheet = defineAsyncComponent({
+  loader: rsvpModalComponents.value.giftBottomSheet || (() => import('./components/Templates/GiftBottomSheet.vue')),
+  delay: 0,
+})
+
+const CookieBanner = defineAsyncComponent({
+  loader: () => import('./components/Molecules/CookieBanner.vue'),
+  delay: 50,
+  timeout: 3000
+})
 
 /* ------------------ Reactive Variables ------------------ */
 const showCookieWithDelay = ref(false)
 const isMobile = ref<boolean>(true)
 
-// ✅ RESOURCE-DRIVEN LOADING: Track when critical resources are ready
-const criticalResourcesLoaded = ref({
-  header: false,
-  hero: false,
-  fonts: false
-  // Removed images requirement to simplify - fonts and components are sufficient
-})
-
 /* ------------------ Computed Properties ------------------ */
-const showWelcomeModal = computed(() => uiStore.showWelcomeModal)
+const showWelcomeModal = computed(() => uiStore.showWelcomeModal && !guestStore.hasCachedData)
 const showGiftBottomSheet = computed(() => uiStore.showGiftBottomSheet)
 const showPlusOneModal = computed(() => uiStore.showPlusOneModal)
 const showRemovePlusOneModal = computed(() => uiStore.showRemovePlusOneModal)
@@ -145,173 +190,192 @@ const showGoodWillModal = computed(() => uiStore.showGoodWillModal)
 const showUpdateRSVPModal = computed(() => uiStore.showUpdateRSVPModal)
 const showDeleteGoodWillModal = computed(() => uiStore.showDeleteGoodWillModal)
 
-// Cookie banner should show with delay after welcome modal closes
 const showCookie = computed(() => {
   return privacyStore.shouldShowBanner && showCookieWithDelay.value
 })
 
-/* ------------------ Simple Event-Based RSVP Modal Loading ------------------ */
-// Listen for event from MainWebsiteView when RSVP section comes into view
-const handleRSVPPreloadEvent = () => {
+
+/* ------------------- Methods --------------------- */
+const openWelcomeModal = () => {
+  console.log('🎯 Hero animation ended. Opening welcome modal')
+  uiStore.showHideWelcomeModal(true)
+}
+
+const closeLoaderScreen = () => {
+  console.log('🎯 Hero ready - closing loader screen')
+  const loaderScreen = document.getElementById('initial-loader')
+
+  console.log('loaderScreen:', loaderScreen)
+  loaderScreen?.classList.add('fade-out')
+
   console.log('� Received RSVP preload signal from MainWebsiteView')
   preloadRSVPModals()
 }
 
-/* ------------------ Watchers ------------------ */
-watch(showWelcomeModal, (newValue, oldValue) => {
-  if (oldValue && !newValue && privacyStore.shouldShowBanner) {
-    setTimeout(() => {
-      showCookieWithDelay.value = true
-    }, 1500)
-  }
-}, { immediate: false })
-
-watch(() => privacyStore.shouldShowBanner, (newValue) => {
-  if (!newValue) {
-    showCookieWithDelay.value = false
-  }
-})
-
-/* ------------------- Functions --------------------- */
 const checkMobileSize = () => {
   isMobile.value = window.innerWidth <= 600
 }
 
-// ✅ RESOURCE LOADING COORDINATION: Track when critical resources are ready
-const checkAllResourcesLoaded = () => {
-  console.log('🔍 Checking resource loading status:', criticalResourcesLoaded.value)
-  const allLoaded = Object.values(criticalResourcesLoaded.value).every(loaded => loaded)
-  
-  if (allLoaded) {
-    console.log('🎯 All critical resources loaded - removing loading screen')
-    hideInitialLoadingScreen()
-  }
-}
+const withRetry = async (fn: () => Promise<void>, retries = 3, delay = 1000): Promise<void> => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await fn()
+      return
+    } catch (error) {
+      console.warn(`Attempt ${attempt} failed:`, error)
 
-// ✅ Hide the HTML loading screen with smooth transition
-const hideInitialLoadingScreen = () => {
-  const loadingScreen = document.getElementById('initial-loading-screen')
-  console.log('Is loading screen present?', !!loadingScreen)
-
-  if (loadingScreen) {
-    console.log('🎬 Removing loading screen - hero animation will start immediately with reduced delays')
-    loadingScreen.style.transition = 'opacity 0.5s ease-out'
-    loadingScreen.style.opacity = '0'
-    setTimeout(() => {
-      loadingScreen.style.display = 'none'
-    }, 1000)
-  }
-}
-
-const onHeaderMounted = () => {
-  criticalResourcesLoaded.value.header = true
-  console.log('✅ Header component mounted')
-  checkAllResourcesLoaded()
-}
-
-const onHeroReady = () => {
-  criticalResourcesLoaded.value.hero = true
-  console.log('✅ Hero component ready for animation')
-  checkAllResourcesLoaded()
-}
-
-const onFontsReady = () => {
-  criticalResourcesLoaded.value.fonts = true
-  console.log('✅ Fonts loaded')
-  checkAllResourcesLoaded()
-}
-
-// ✅ INTELLIGENT PRELOADING: Aligned with actual user flow and timing
-const preloadCriticalModals = () => {
-  const guestStore = useGuestStore()
-  
-  // Preload if user has guest data (either via token or cached)
-  if (!guestStore.accessedViaToken && !guestStore.hasCachedData) {
-    console.log('📭 User accessing without token or cached data - minimal preloading')
-    return
-  }
-  
-  const userType = guestStore.accessedViaToken ? 'token user' : 'returning guest'
-  const preloadDelay = guestStore.hasCachedData ? 100 : 250 // Faster for returning guests
-  
-  setTimeout(() => {
-    console.log(`🚀 Starting intelligent modal preloading for ${userType}...`)
-    
-    // Phase 1: Preload welcome modal immediately since it shows at 3.5s (for token users)
-    if (guestStore.accessedViaToken) {
-      import('./components/Templates/WelcomeModal.vue')
-        .then(() => console.log('✅ Welcome modal preloaded (ready for 3.5s timer)'))
-        .catch((error) => console.warn('❌ Error preloading welcome modal:', error))
-    }
-    
-    // Phase 2: Preload RSVP-related modals
-    setTimeout(() => {
-      if (guestStore.guestData?.permissions?.can_rsvp) {
-        Promise.allSettled([
-          import('./components/Templates/UpdateRsvpModal.vue'),
-          import('./components/Templates/ManagePlusOneModal.vue')
-        ]).then(() => {
-          console.log('✅ RSVP modals preloaded')
-        }).catch((error) => {
-          console.warn('❌ Error preloading RSVP modals:', error)
-        })
+      if (attempt === retries) {
+        throw error
       }
-    }, preloadDelay) // Faster timing for returning guests
-    
-    // Phase 3: Preload secondary features
-    setTimeout(() => {
-      Promise.allSettled([
-        import('./components/Templates/GiftBottomSheet.vue'),
-        import('./components/Templates/ManageGoodWillMessageModal.vue')
-      ]).then(() => {
-        console.log('✅ Secondary modals preloaded')
-      }).catch((error) => {
-        console.warn('❌ Error preloading secondary modals:', error)
-      })
-    }, preloadDelay * 2) // Scale with user type
-    
-  }, preloadDelay) // Start preloading after minimal delay for returning guests
+
+      console.log(`Retrying in ${delay}ms...`)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
 }
+
+const initialiseCriticalDataFromCache = (cachedData: any) => {
+  console.log('🚀 Initialising critical stores with cached data')
+
+  if(cachedData?.guestData?.guestInfo) {
+    console.log('✅ Found valid cached guest data, initializing store with cached data')
+    guestStore.guestData = cachedData.guestData.guestInfo
+    guestStore.hasCachedData = true
+    guestStore.loading = false
+    guestStorage.refreshExpiry()
+  }
+
+  if(cachedData?.guestData?.guestRsvp) {
+    console.log('✅ Found valid cached RSVP data, initializing store with cached data')
+    rsvpStore.rsvpData = cachedData.guestData.guestRsvp
+    rsvpStore.loadingInit = false
+    guestStorage.refreshExpiry()
+  }
+
+  console.log('⚡ Critical data initialized, returning control to route guard')
+}
+
+const initialiseNonCriticalDataFromCache = async(cachedData: any) => {
+  console.log('🚀 Initialising non-critical stores from cache')
+  const initialiseInBackground = []
+
+  if(cachedData?.guestData?.guestMessage) {
+    const goodWillPromise = withRetry(async () => {
+      try {
+        console.log('✅ Found valid cached Good Will message data, initializing store from cache')
+        const goodWillStore = await lazyStoreAccess.getGoodWillStore()
+        goodWillStore.goodWillMessage = cachedData.guestData.guestMessage
+        goodWillStore.loading = false
+        guestStorage.refreshExpiry()
+      } catch (error) {
+        console.error('❌ Error initializing Good Will store from cache:', error)
+      }
+    }, 3, 500)
+
+    initialiseInBackground.push(goodWillPromise)
+  }
+
+  if(cachedData?.guestData?.guestGift) {
+    const giftPromise = withRetry(async () => {
+      try {
+        console.log('✅ Found valid cached Gift data, initializing store from cache')
+        const giftStore = await lazyStoreAccess.getGiftStore()
+        giftStore.gifts = cachedData.guestData.guestGift
+        giftStore.loading = false
+        guestStorage.refreshExpiry()
+      } catch (error) {
+        console.error('❌ Error initializing Gift store from cache:', error)
+      }
+    }, 3, 500)
+
+    initialiseInBackground.push(giftPromise)
+  }
+
+  if(initialiseInBackground.length > 0) {
+    await Promise.allSettled(initialiseInBackground)
+      .then(() => console.log('🎯 Background store initializations completed'))
+  }
+}
+
+const initialiseStoreWithToken = async (token: string) => {
+  console.log('🚀 Initialising stores with token:', token)
+  
+  const [goodWillStore, giftStore] = await Promise.all([
+    lazyStoreAccess.getGoodWillStore(),
+    lazyStoreAccess.getGiftStore()
+  ])
+  
+  try {
+    const [guestResult, ...otherResults] = await Promise.allSettled([
+      guestStore.fetchGuestByToken(token, true),
+      rsvpStore.fetchRSVPData(token, true),
+      goodWillStore.fetchGoodWillMessage(token, true),
+      giftStore.fetchGuestGifts(token)
+    ])
+
+    if (guestResult.status === 'rejected') {
+      throw guestResult.reason
+    }
+
+    const storeNames = ['guest', 'rsvp', 'goodWill', 'gift']
+    ;[guestResult, ...otherResults].forEach((result, index) => {
+      if (result.status === 'rejected') {
+        console.warn(`❌ Error initializing ${storeNames[index]} store:`, result.reason)
+      } else {
+        console.log(`✅ ${storeNames[index]} store initialized successfully`)
+      }
+    })
+
+  } catch (error) {
+    console.error('❌ Critical error during store initialization:', error)
+    throw error
+  }
+}
+
+
+/* ------------------ Watchers ------------------ */
+watch(showWelcomeModal, (newValue, oldValue) => {
+  if (oldValue && !newValue && privacyStore.shouldShowBanner) {
+    showCookieWithDelay.value = true
+  }
+}, { immediate: false })
+
 
 /* ------------------- Lifecycle Hooks --------------------- */
+onBeforeMount(async () => {
+  console.log('Checking for cached data...')
+  const result = guestStorage.checkCache()
+
+  if (result.hasCache) {
+    initialiseCriticalDataFromCache(result.data)
+    initialiseNonCriticalDataFromCache(result.data)
+    privacyStore.initializeForCachedUser()
+    guestStore.hasCachedData = true
+  } else {
+    console.log('📭 No valid cached data found. Fetching from database')
+    const urlParam = window.location.pathname.split('/').pop() || ''
+    const guestToken = typeof urlParam === 'string' && /^[a-f0-9]{64}$/.test(urlParam) && urlParam ? urlParam : ''
+
+    if(!guestToken) {
+      console.error('❌ No valid token present')
+    }
+
+    await initialiseStoreWithToken(guestToken)
+    privacyStore.initializeNotice(guestToken)
+  }
+})
+
 onMounted(() => {
   checkMobileSize()
   window.addEventListener('resize', checkMobileSize)
   
-  // If welcome modal is not showing and privacy banner should show, show it immediately
   if (!showWelcomeModal.value && privacyStore.shouldShowBanner) {
     showCookieWithDelay.value = true
   }
-  
-  // ✅ Start smart preloading
-  preloadCriticalModals()
-  
-  // ✅ Listen for RSVP preload signal from MainWebsiteView
-  window.addEventListener('preload-rsvp-modals', handleRSVPPreloadEvent)
-  
-  // ✅ RESOURCE LOADING: Check for fonts
-  // Check if fonts are already loaded
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => {
-      onFontsReady()
-    }).catch(() => {
-      // Fallback: assume fonts loaded after timeout
-      setTimeout(onFontsReady, 1000)
-    })
-  } else {
-    // Fallback for browsers without font loading API
-    setTimeout(onFontsReady, 500)
-  }
-  
-  // ✅ Initial check in case everything is already ready
-  setTimeout(() => {
-    checkAllResourcesLoaded()
-  }, 100)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobileSize)
-  window.removeEventListener('preload-rsvp-modals', handleRSVPPreloadEvent)
 })
 </script>
 

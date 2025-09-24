@@ -2,17 +2,17 @@
     <div class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-between">
         <div class="flex items-center justify-end w-full px-24 py-16">
             <button @click="$emit('close')" class="px-12 py-12 bg-neutrals-neu-0 hover:bg-neutrals-neu-35 rounded-full flex items-center justify-center z-10 cursor-pointer">
-                <Icon name="close" :size="12" :color="getColor('neutral.neu_100')" />
+                <Icon name="close" :size="12" :color="getColor('brand.sec_light_100')" />
             </button>
         </div>
 
         <div class="relative w-full max-w-5xl grow mx-24 overflow-hidden" @click.stop>
             <div 
-                class="flex h-full" 
+                class="flex h-full touch-action-pan-x select-none" 
                 ref="containerRef"
-                @touchstart="handleTouchStart"
-                @touchmove="handleTouchMove"
-                @touchend="handleTouchEnd"
+                @touchstart.passive="handleTouchStart"
+                @touchmove.prevent="handleTouchMove"
+                @touchend.passive="handleTouchEnd"
             >
                 <div 
                     v-for="(item, index) in mediaItems"
@@ -27,9 +27,6 @@
         </div>
 
         <div class="flex flex-col gap-24 items-center py-16 w-full">
-            <!-- <div v-if="mediaItems[currentIndex]?.filename" class="bg-black/50 text-white px-16 py-8 rounded-md text-s max-w-md text-center">
-                {{ mediaItems[currentIndex].filename }}
-            </div> -->
             <div class="w-full">
                 <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
                     <div 
@@ -46,14 +43,6 @@
                 </div>
             </div>
         </div>
-
-        <button @click="navigateToIndex('prev')" :disabled="currentIndex === 0" :class="{ 'opacity-25 pointer-events-none': currentIndex === 0 }" class="absolute left-24 top-1/2 -translate-y-1/2 items-center justify-center size-48 bg-neutrals-neu-0 hover:bg-neutrals-neu-35 rounded-full md:flex hidden cursor-pointer">
-            <Icon name="arrow-head-left" :size="24" :color="getColor('neutral.neu_100')" />
-        </button>
-        
-        <button @click="navigateToIndex('next')" :disabled="currentIndex === mediaItems.length - 1" :class="{ 'opacity-25 pointer-events-none': currentIndex === mediaItems.length - 1 }" class="absolute right-24 top-1/2 -translate-y-1/2 items-center justify-center size-48 bg-neutrals-neu-0 hover:bg-neutrals-neu-35 rounded-full md:flex hidden cursor-pointer">
-            <Icon name="arrow-head-right" :size="24" :color="getColor('neutral.neu_100')" />
-        </button>
     </div>
 </template>
 
@@ -61,6 +50,8 @@
 import Icon from '../Icon'
 import { getColor } from '../../utils/colors';
 import type { MediaItem } from '../../types/event'
+import { useIconPreloader } from '../../composables/useIconPreloader'
+import { on } from 'events';
 
  
 interface Props {
@@ -91,11 +82,15 @@ const isAnimating = ref(false)
 
 // --- SAFARI-COMPATIBLE SWIPE LOGIC ---
 const handleTouchStart = (event: TouchEvent) => {
-    if (!containerRef.value || isAnimating.value || !event.touches?.[0]) return
+    if (!containerRef.value || isAnimating.value) return
+    if (!event.touches || event.touches.length !== 1) return
+    
+    const touch = event.touches[0]
+    if (!touch) return
     
     isDragging.value = true
-    touchStartX.value = event.touches[0].clientX
-    touchStartY.value = event.touches[0].clientY
+    touchStartX.value = touch.clientX
+    touchStartY.value = touch.clientY
 
     // Calculate the container's starting position (include 16px gap)
     const itemWidth = containerRef.value.clientWidth + 16
@@ -122,6 +117,7 @@ const handleTouchMove = (event: TouchEvent) => {
     // Only handle horizontal swipes (prevent interference with vertical scrolling)
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
         event.preventDefault() // Crucial for Safari
+        event.stopPropagation()
         
         // Constrain movement to valid bounds (include 16px gap)
         const itemWidth = containerRef.value.clientWidth + 16
@@ -144,6 +140,7 @@ const handleTouchEnd = (event: TouchEvent) => {
     
     // Prevent default to avoid Safari's elastic scroll
     event.preventDefault()
+    event.stopPropagation()
     
     isDragging.value = false
     
@@ -231,38 +228,23 @@ const navigateToThumbnail = (index: number) => {
     emit('goTo', index)
 }
 
-// Navigate via arrow buttons
-const navigateToIndex = (direction: 'prev' | 'next') => {
-    emit('navigate', direction)
-}
-
 // --- WATCHER AND LIFECYCLE HOOKS ---
 watch(() => props.currentIndex, (newIndex) => {
     goToSlide(newIndex, 'smooth')
     scrollThumbnailToCenter(newIndex)
 })
 
-const handleKeydown = (e: KeyboardEvent) => {
-    // This logic is good, no changes needed
-    switch (e.key) {
-        case 'Escape': emit('close'); break
-        case 'ArrowLeft': if (props.currentIndex > 0) navigateToIndex('prev'); break
-        case 'ArrowRight': if (props.currentIndex < props.mediaItems.length - 1) navigateToIndex('next'); break
-    }
-}
-
 onMounted(() => {
-    document.addEventListener('keydown', handleKeydown)
-    document.body.style.overflow = 'hidden'
-    nextTick(() => {
-        // Initial position set instantly
-        goToSlide(props.currentIndex, 'instant')
-        scrollThumbnailToCenter(props.currentIndex)
-    })
+  document.body.style.overflow = 'hidden'
+
+  nextTick(() => {
+      // Initial position set instantly
+      goToSlide(props.currentIndex, 'instant')
+      scrollThumbnailToCenter(props.currentIndex)
+  })
 })
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleKeydown)
     document.body.style.overflow = ''
 })
 </script>
@@ -290,13 +272,6 @@ onUnmounted(() => {
 .thumbnail-container {
     scroll-behavior: smooth;
     scroll-snap-type: x proximity;
-}
-
-/* Touch handling optimizations */
-.touch-pan-x {
-    touch-action: pan-x;
-    -webkit-user-select: none;
-    user-select: none;
 }
 
 /* Navigation button responsive visibility */
