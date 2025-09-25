@@ -45,7 +45,9 @@ const handleImageLoaded = () => {
 
 const handleEnter = () => {
   console.log('Hero animation started');
-  emit('hero-ready');
+  if(imageLoaded.value) {
+    emit('hero-ready')
+  }
 }
 
 const handleAnimationEnd = () => {
