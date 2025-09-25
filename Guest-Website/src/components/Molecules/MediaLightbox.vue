@@ -78,14 +78,14 @@ const thumbnailContainer = ref<HTMLElement | null>(null)
 const thumbnailRefs = ref<(HTMLElement | null)[]>([])
 
 // State for JS-driven swiping
-const isDragging = ref(false)
+// const isDragging = ref(false)
 const currentTranslate = ref(0)
-const startTranslate = ref(0)
-const swipeThreshold = 30 // Minimum pixels for a valid swipe
-const animationId = ref(0)
+// const startTranslate = ref(0)
+// const swipeThreshold = 30
+// const animationId = ref(0)
 const isAnimating = ref(false)
 
-const { lengthX, lengthY } = useSwipe(containerRef, {
+/* const { lengthX, lengthY } = useSwipe(containerRef, {
   passive: false,
   onSwipeStart: (e) => {
     e.preventDefault()
@@ -155,7 +155,7 @@ const { lengthX, lengthY } = useSwipe(containerRef, {
     }
   },
   threshold: swipeThreshold
-})
+}) */
 
 const animateToIndex = (index: number) => {
   if (!containerRef.value || isAnimating.value) return
