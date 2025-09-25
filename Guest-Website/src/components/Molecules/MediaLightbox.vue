@@ -8,11 +8,8 @@
 
         <div class="relative w-full max-w-5xl grow mx-24 overflow-hidden" @click.stop>
             <div 
-                class="flex h-full touch-action-pan-x select-none" 
+                class="flex h-full touch-none" 
                 ref="containerRef"
-                @touchstart.passive="handleTouchStart"
-                @touchmove.prevent="handleTouchMove"
-                @touchend.passive="handleTouchEnd"
             >
                 <div 
                     v-for="(item, index) in mediaItems"
@@ -26,14 +23,14 @@
             </div>
         </div>
 
-        <div class="flex flex-col gap-24 items-center py-16 w-full">
+        <div class="flex flex-col gap-24 items-center pt-16 pb-32 w-full">
             <div class="w-full">
                 <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
                     <div 
                         v-for="(item, index) in mediaItems" 
                         :key="`lightbox-thumb-${index}`"
                         class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
-                        :class="{ 'h-80 w-72': index === currentIndex, 'opacity-50': index !== currentIndex }"
+                        :class="{ 'h-80 w-72': index === newCurrentIndex, 'opacity-50': index !== newCurrentIndex }"
                         @click="navigateToThumbnail(index)"
                         :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
                     >
@@ -50,14 +47,17 @@
 import Icon from '../Icon'
 import { getColor } from '../../utils/colors';
 import type { MediaItem } from '../../types/event'
-import { useIconPreloader } from '../../composables/useIconPreloader'
-import { on } from 'events';
+import { useSwipe } from '@vueuse/core';
+import VConsole from 'vconsole'
 
- 
+const vConsole = new VConsole()
+
 interface Props {
     mediaItems: MediaItem[]
     currentIndex: number
 }
+
+
 const props = defineProps<Props>()
 const emit = defineEmits<{
     close: []
@@ -72,15 +72,111 @@ const thumbnailRefs = ref<(HTMLElement | null)[]>([])
 
 // State for JS-driven swiping
 const isDragging = ref(false)
-const touchStartX = ref(0)
-const touchStartY = ref(0) // Track Y to prevent vertical scroll interference
 const currentTranslate = ref(0)
 const startTranslate = ref(0)
-const swipeThreshold = 50 // Minimum pixels for a valid swipe
+const swipeThreshold = 30 // Minimum pixels for a valid swipe
 const animationId = ref(0)
 const isAnimating = ref(false)
+const newCurrentIndex = ref<number>(props.currentIndex)
 
-// --- SAFARI-COMPATIBLE SWIPE LOGIC ---
+const { lengthX, lengthY } = useSwipe(containerRef, {
+  passive: false,
+  onSwipeStart: (e) => {
+    if (!containerRef.value || isAnimating.value) return
+    console.log('starting swipe')
+
+    e.preventDefault()
+
+    isDragging.value = true
+    const itemWidth = containerRef.value.clientWidth + 16
+    startTranslate.value = -newCurrentIndex.value * itemWidth
+    currentTranslate.value = startTranslate.value
+
+    if (animationId.value) {
+        cancelAnimationFrame(animationId.value)
+    }
+    
+    containerRef.value.style.transition = 'none'
+  },
+  onSwipe: (e) => {
+    if (!isDragging.value || !containerRef.value || isAnimating.value) return
+    console.log('swiping...', lengthX.value)
+
+    e.preventDefault()
+    
+    if(Math.abs(lengthX.value) > Math.abs(lengthY.value)) {
+      const itemWidth = containerRef.value.clientWidth + 16
+      const maxTranslate = 0
+      const minTranslate = -(props.mediaItems.length - 1) * itemWidth
+      
+      currentTranslate.value = Math.max(minTranslate, Math.min(maxTranslate, startTranslate.value - lengthX.value))
+      
+      animationId.value = requestAnimationFrame(() => {
+        if (containerRef.value) {
+            containerRef.value.style.transform = `translateX(${currentTranslate.value}px)`
+        }
+      })
+    }
+  },
+  onSwipeEnd: (e) => {
+    if (!isDragging.value || !containerRef.value) return
+    console.log('ending swipe...')
+
+    e.preventDefault()
+
+    isDragging.value = false
+
+    if (animationId.value) {
+        cancelAnimationFrame(animationId.value)
+    }
+    
+    let targetIndex = newCurrentIndex.value
+
+    if (Math.abs(lengthX.value) > swipeThreshold && Math.abs(lengthX.value) > Math.abs(lengthY.value)) {
+      if(lengthX.value > 0 && newCurrentIndex.value < props.mediaItems.length - 1) {
+          targetIndex = newCurrentIndex.value + 1
+          console.log('currentIndex:', newCurrentIndex.value, '->', targetIndex)
+      } else if(lengthX.value < 0 && newCurrentIndex.value > 0) {
+          targetIndex = newCurrentIndex.value - 1
+          console.log('currentIndex:', newCurrentIndex.value, '->', targetIndex)
+      }
+    }
+    
+    animateToIndex(targetIndex)
+    scrollThumbnailToCenter(targetIndex)
+    newCurrentIndex.value = targetIndex
+  },
+  threshold: swipeThreshold
+})
+
+const animateToIndex = (index: number) => {
+  if (!containerRef.value || isAnimating.value) return
+  
+  isAnimating.value = true
+  const targetTranslate = -index * (containerRef.value.clientWidth + 16)
+  
+  containerRef.value.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'
+  containerRef.value.style.transform = `translateX(${targetTranslate}px)`
+  
+  currentTranslate.value = targetTranslate
+  
+  setTimeout(() => {
+      isAnimating.value = false
+      if (containerRef.value) {
+          containerRef.value.style.transition = 'none'
+      }
+  }, 300)
+  
+  if (index !== props.currentIndex) {
+    if (index > props.currentIndex) {
+        emit('navigate', 'next')
+    } else {
+        emit('navigate', 'prev')
+    }
+  }
+}
+
+/* // --- SAFARI-COMPATIBLE SWIPE LOGIC ---
 const handleTouchStart = (event: TouchEvent) => {
     if (!containerRef.value || isAnimating.value) return
     if (!event.touches || event.touches.length !== 1) return
@@ -107,32 +203,32 @@ const handleTouchStart = (event: TouchEvent) => {
 }
 
 const handleTouchMove = (event: TouchEvent) => {
-    if (!isDragging.value || !containerRef.value || isAnimating.value || !event.touches?.[0]) return
+  if (!isDragging.value || !containerRef.value || isAnimating.value || !event.touches?.[0]) return
+  
+  const currentX = event.touches[0].clientX
+  const currentY = event.touches[0].clientY
+  const deltaX = currentX - touchStartX.value
+  const deltaY = currentY - touchStartY.value
+  
+  // Only handle horizontal swipes (prevent interference with vertical scrolling)
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    event.preventDefault() // Crucial for Safari
+    event.stopPropagation()
     
-    const currentX = event.touches[0].clientX
-    const currentY = event.touches[0].clientY
-    const deltaX = currentX - touchStartX.value
-    const deltaY = currentY - touchStartY.value
+    // Constrain movement to valid bounds (include 16px gap)
+    const itemWidth = containerRef.value.clientWidth + 16
+    const maxTranslate = 0
+    const minTranslate = -(props.mediaItems.length - 1) * itemWidth
     
-    // Only handle horizontal swipes (prevent interference with vertical scrolling)
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        event.preventDefault() // Crucial for Safari
-        event.stopPropagation()
-        
-        // Constrain movement to valid bounds (include 16px gap)
-        const itemWidth = containerRef.value.clientWidth + 16
-        const maxTranslate = 0
-        const minTranslate = -(props.mediaItems.length - 1) * itemWidth
-        
-        currentTranslate.value = Math.max(minTranslate, Math.min(maxTranslate, startTranslate.value + deltaX))
-        
-        // Use requestAnimationFrame for smooth performance
-        animationId.value = requestAnimationFrame(() => {
-            if (containerRef.value) {
-                containerRef.value.style.transform = `translateX(${currentTranslate.value}px)`
-            }
-        })
-    }
+    currentTranslate.value = Math.max(minTranslate, Math.min(maxTranslate, startTranslate.value + deltaX))
+    
+    // Use requestAnimationFrame for smooth performance
+    animationId.value = requestAnimationFrame(() => {
+      if (containerRef.value) {
+          containerRef.value.style.transform = `translateX(${currentTranslate.value}px)`
+      }
+    })
+  }
 }
 
 const handleTouchEnd = (event: TouchEvent) => {
@@ -195,7 +291,7 @@ const animateToIndex = (index: number) => {
             emit('navigate', 'prev')
         }
     }
-}
+} */
 
 // --- REFINED NAVIGATION ---
 // This single function now handles all slide movements

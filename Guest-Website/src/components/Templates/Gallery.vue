@@ -71,12 +71,13 @@ const previewItems = computed(() => {
 
 /* ------------------ Methods ------------------- */
 const openFullGallery = () => {
-  galleryStore.mediaItems = []
   router.push({ name: 'gallery' })
 }
 
 onMounted(() => {
-  galleryStore.fetchMediaItems()
+  if(galleryStore.mediaItems.length === 0) {
+    galleryStore.fetchMediaItems()
+  }
 })
 </script>
 

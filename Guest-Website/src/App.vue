@@ -77,6 +77,9 @@ interface RsvpModalComponents {
 import Icon from './components/Icon'
 import { getColor } from './utils/colors'
 import { guestStorage } from './utils/guestStorage'
+import VConsole from 'vconsole'
+
+const vConsole = new VConsole()
 
 
 /* ------------------ Stores ------------------ */
