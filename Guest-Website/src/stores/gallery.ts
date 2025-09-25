@@ -1,14 +1,14 @@
-import type { MediaItem } from "@/types/event";
+import type { MediaItems } from "@/types/event";
 
 export const useGalleryStore = defineStore('gallery', () => {
   // States
-  const mediaItems = ref<MediaItem[]>([])
+  const mediaItems = ref<MediaItems>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const totalCount = ref(0)
   const hasNextPage = ref(true)
 
-  const fetchMediaItems = async (page: number = 1, limit: number = 20) => {
+  const fetchMediaItems = async (page: number = 1, limit: number = 12) => {
     try {
       loading.value = true
       error.value = null
@@ -38,14 +38,10 @@ export const useGalleryStore = defineStore('gallery', () => {
       }
       
       // If this is the first page, replace the array; otherwise, append
-      if (page === 1) {
-        mediaItems.value = res || []
-      } else {
-        mediaItems.value.push(...(res || []))
-      }
+      mediaItems.value.push(res || [])
       
       // Update hasNextPage based on the response
-      hasNextPage.value = (res?.length || 0) === limit && mediaItems.value.length < totalCount.value
+      hasNextPage.value = (res?.length || 0) === limit && mediaItems.value.flat().length < totalCount.value
       
     } catch (err) {
       console.error('Failed to fetch media items:', err)
@@ -66,7 +62,9 @@ export const useGalleryStore = defineStore('gallery', () => {
   // Method to get limited items for preview (used in main gallery component)
   const getPreviewItems = (limit: number = 6) => {
     return mediaItems.value
-      .filter(item => item.file_type === 'image')
+      .flat()
+      .filter(item => item.created_at)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, limit)
   }
 

@@ -41,3 +41,7 @@ export interface MediaItem {
   is_featured: boolean
   created_at: string
 }
+
+export type MediaItems = Array<MediaItem[]>
+
+
