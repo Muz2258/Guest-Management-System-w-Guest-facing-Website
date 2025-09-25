@@ -53,16 +53,12 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior(to) {
     if (to.meta?.scrollBehavior) {
       return {
         top: 0,
         behavior: to.meta.scrollBehavior as ScrollBehavior // 'auto' | 'smooth'
       }
-    }
-    
-    if (savedPosition) {
-      return savedPosition
     }
     return { top: 0 }
   }

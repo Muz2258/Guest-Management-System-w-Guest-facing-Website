@@ -193,7 +193,7 @@ const onImageLoad = (event: Event, item: MediaItem) => {
   }
 }
 
-const onImageError = (event: Event, item: MediaItem) => {
+const onImageError = (item: MediaItem) => {
   const itemWithLayout = item as MediaItemWithLayout
   const itemInStore = galleryStore.mediaItems.flat()[itemWithLayout._originalIndex] as MediaItemWithLayout | undefined
 

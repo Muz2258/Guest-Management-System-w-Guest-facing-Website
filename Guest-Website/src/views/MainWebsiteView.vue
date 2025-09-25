@@ -65,11 +65,11 @@ const mountSectionsIncrementally = async () => {
 }
 
 const handleHeroReady = async () => {
-  heroMounted.value = true
   console.log('🎯 Hero ready - starting incremental section mounting')
   
   emit('hero-ready')
   
+  heroMounted.value = true
   await mountSectionsIncrementally()
   console.log('🎉 All sections mounted')
 }
