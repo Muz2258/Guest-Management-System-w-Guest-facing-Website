@@ -9,7 +9,7 @@
 
     <style>
       #initial-loader {
-        display: none;
+        display: flex;
         justify-content: center;
         align-items: center;
         position: fixed;
@@ -145,12 +145,8 @@
         </g>
       </svg>
     </div>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-    <!-- <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script> -->
     <script>
-      // var vConsole = new window.VConsole();
-      const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+      const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html' || /^[a-f0-9]{64}$/.test(window.location.pathname.slice(1));
       const loaderScreen = document.getElementById('initial-loader');
 
       loaderScreen.addEventListener('animationend', () => {
@@ -165,5 +161,7 @@
         loaderScreen.style.display = 'none';
       }
     </script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

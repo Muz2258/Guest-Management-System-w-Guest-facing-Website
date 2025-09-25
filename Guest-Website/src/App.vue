@@ -180,6 +180,7 @@ const CookieBanner = defineAsyncComponent({
 /* ------------------ Reactive Variables ------------------ */
 const showCookieWithDelay = ref(false)
 const isMobile = ref<boolean>(true)
+const tempToken = ref<string | null>(null)
 
 /* ------------------ Computed Properties ------------------ */
 const showWelcomeModal = computed(() => uiStore.showWelcomeModal && !guestStore.hasCachedData)
@@ -197,7 +198,11 @@ const showCookie = computed(() => {
 
 /* ------------------- Methods --------------------- */
 const openWelcomeModal = () => {
-  console.log('🎯 Hero animation ended. Opening welcome modal')
+  console.log('🎯 Hero animation ended. Checking if welcome modal should be shown')
+  if(!tempToken.value || guestStore.hasCachedData) {
+    console.log('✅ Guest either has cached data or is not visiting with token. Skipping welcome modal')
+    return
+  }
   uiStore.showHideWelcomeModal(true)
 }
 
@@ -342,6 +347,21 @@ watch(showWelcomeModal, (newValue, oldValue) => {
 
 /* ------------------- Lifecycle Hooks --------------------- */
 onBeforeMount(async () => {
+  console.log('⌛ Checking url for token')
+  const urlParam = window.location.pathname.split('/').pop() || ''
+  tempToken.value = typeof urlParam === 'string' && /^[a-f0-9]{64}$/.test(urlParam) && urlParam ? urlParam : null
+
+  if(!tempToken.value) {
+    console.error('❌ No valid token found in URL. Guest visiting without token cannot access data.')
+  } else {
+    console.log('✅ Found valid token in URL')
+  }
+})
+
+onMounted(async () => {
+  checkMobileSize()
+  window.addEventListener('resize', checkMobileSize)
+
   console.log('Checking for cached data...')
   const result = guestStorage.checkCache()
 
@@ -349,27 +369,18 @@ onBeforeMount(async () => {
     initialiseCriticalDataFromCache(result.data)
     initialiseNonCriticalDataFromCache(result.data)
     privacyStore.initializeForCachedUser()
+
+    console.log('✅ Cached data loaded successfully')
     guestStore.hasCachedData = true
   } else {
     console.log('📭 No valid cached data found. Fetching from database')
-    const urlParam = window.location.pathname.split('/').pop() || ''
-    const guestToken = typeof urlParam === 'string' && /^[a-f0-9]{64}$/.test(urlParam) && urlParam ? urlParam : ''
-
-    if(!guestToken) {
-      console.error('❌ No valid token present')
+    if(!tempToken.value) {
+      console.error('❌ No valid token present. Guest visiting without token cannot access data.')
+      return
     }
 
-    await initialiseStoreWithToken(guestToken)
-    privacyStore.initializeNotice(guestToken)
-  }
-})
-
-onMounted(() => {
-  checkMobileSize()
-  window.addEventListener('resize', checkMobileSize)
-  
-  if (!showWelcomeModal.value && privacyStore.shouldShowBanner) {
-    showCookieWithDelay.value = true
+    await initialiseStoreWithToken(tempToken.value)
+    privacyStore.initializeNotice(tempToken.value)
   }
 })
 
