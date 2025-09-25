@@ -21,7 +21,12 @@ const guestStore = useGuestStore()
 
 /* ------------------ Computed Properties ------------------ */
 const guestName = computed(() => {
-  return guestStore.guestData?.guest?.first_name || 'Honoured Guest'
+  const firstName = guestStore.guestData?.guest?.first_name || 'Honoured Guest'
+  const lastName = guestStore.guestData?.guest?.last_name || 'Honoured Guest'
+  if (guestStore.guestData?.permissions.is_couple) {
+    return `Mr & Mrs ${lastName}`
+  }
+  return firstName
 })
 
 

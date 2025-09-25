@@ -152,8 +152,18 @@ const mediaItemsWithLayout = computed<MediaItemsWithLayout>(() => {
 
 
 /* ---------------------- Methods ---------------------- */
-const populateColumns = async () => {
-  const newItems = mediaItemsWithLayout.value[currentPageCount.value - 1]?.flat() || []
+const populateColumns = async (strategy: 'fresh' | 'append') => {
+  let newItems: MediaItemWithLayout[]
+  if(strategy === 'fresh') {
+    console.log('💻 Freshly populating columns from scratch...')
+    columnsArray.value = [[], []]
+    columnItemsCount.value = [0, 0]
+    newItems = mediaItemsWithLayout.value.flat()
+  } else {
+    console.log('💻 Appending new items to existing columns...')
+    newItems = mediaItemsWithLayout.value[currentPageCount.value - 1]?.flat() || []
+  }
+  
 
   newItems.forEach((item) => {
     const smallestIndex = columnItemsCount.value[0] <= columnItemsCount.value[1] ? 0 : 1
@@ -218,7 +228,7 @@ const loadMoreItems = async () => {
     currentPageCount.value++
     console.log(`[loadMoreItems] Loading more items. Page:`, currentPageCount.value)
     await galleryStore.fetchMediaItems(currentPageCount.value, 12)
-    await populateColumns()
+    await populateColumns('append')
     lightBoxMediaItems.value = mediaItemsWithLayout.value.flat()
     console.log(`[loadMoreItems] Loaded page ${currentPageCount.value}. Total items:`, galleryStore.mediaItems[currentPageCount.value - 1]?.length)
   } catch (error) {
@@ -263,8 +273,6 @@ const initializeInfiniteObserver = () => {
 
 /* ------------------- Lifecycle Hooks ------------------- */
 onBeforeMount(async () => {
-  console.log('🟡 GalleryView preparing to mount...')
-
   console.log('🔃 Preloading icons...')
   useIconPreloader().preloadAllIcons()
     .catch(err => {
@@ -285,7 +293,8 @@ onMounted(async () => {
   }
 
   if(mediaItemsWithLayout.value.length > 0){
-    await populateColumns()
+    console.log('💻 Populating columns with layout data...', mediaItemsWithLayout.value)
+    await populateColumns('fresh')
     initializeInfiniteObserver()
     lightBoxMediaItems.value = mediaItemsWithLayout.value.flat()
   }
