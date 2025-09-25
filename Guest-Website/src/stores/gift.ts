@@ -354,6 +354,31 @@ export const useGiftStore = defineStore('gift', () => {
     guestStorage.saveGuestData(token, { guestGift: gifts.value })
   }
 
+  const removeGuestGift = async (token: string, ref: string) => {
+    console.log('Removing guest gift with ref:', ref)
+    if(!token || !ref) {
+      console.error('token and reference is required to remove gift from database')
+      return
+    }
+
+    try {
+      const { data: res, error: err } = await supabase
+        .rpc('guest_remove_gift', {
+          auth_token: token,
+          item_reference: ref
+        })
+
+      if (err) {
+        console.error('Supabase RPC error:', err)
+        throw err
+      }
+
+      console.log('Gift removed from database successfully:', res)
+    } catch (err) {
+      console.error('Error removing gift:', err)
+    }
+  }
+
   return {
     // States
     gifts,
@@ -383,6 +408,7 @@ export const useGiftStore = defineStore('gift', () => {
     setSelectedGiftItem,
     clearGiftSelection,
     setIsPayingFees,
-    setGiftingMode
+    setGiftingMode,
+    removeGuestGift
   }
 })
