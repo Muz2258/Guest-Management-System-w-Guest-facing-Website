@@ -37,9 +37,19 @@ const routes = [
       console.log('🚦 Route guard triggered for payment validation', to.path )
       const giftStore = await lazyStoreAccess.getGiftStore()
       const guestToken = to.params.token as string
+
+      if(to.query && to.query.action === 'cancel' && to.query.reference) {
+        console.log('Payment was cancelled for reference:', to.query.reference)
+        const reference = to.query.reference as string
+
+        console.log('Removing guest gift associated with cancelled payment')
+        await giftStore.removeGuestGift(guestToken, reference)
+
+        console.log('Redirecting back to main website after cancellation')
+        return { name: 'main-website', replace: true }
+      }
       
       await giftStore.fetchGuestGifts(guestToken)
-
       return true
     }
   },
