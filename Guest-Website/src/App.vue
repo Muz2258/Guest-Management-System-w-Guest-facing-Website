@@ -77,9 +77,6 @@ interface RsvpModalComponents {
 import Icon from './components/Icon'
 import { getColor } from './utils/colors'
 import { guestStorage } from './utils/guestStorage'
-import VConsole from 'vconsole'
-
-const vConsole = new VConsole()
 
 
 /* ------------------ Stores ------------------ */
@@ -208,10 +205,9 @@ const closeLoaderScreen = () => {
   console.log('🎯 Hero ready - closing loader screen')
   const loaderScreen = document.getElementById('initial-loader')
 
-  console.log('loaderScreen:', loaderScreen)
   loaderScreen?.classList.add('fade-out')
 
-  console.log('� Received RSVP preload signal from MainWebsiteView')
+  console.log('Loader screen closed.')
   preloadRSVPModals()
 }
 

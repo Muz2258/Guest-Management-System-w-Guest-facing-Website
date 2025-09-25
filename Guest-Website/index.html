@@ -50,16 +50,13 @@
       }
 
       .fade-out {
-        animation: fadeOut 0.5s ease-in forwards;
+        animation: fadeOut 0.5s ease-out forwards;
       }
 
       @keyframes fadeOut {
-        95% {
+        to {
           opacity: 0;
           visibility: hidden;
-        }
-        100% {
-          display: none;
         }
       }
       @keyframes scale-full {
@@ -148,17 +145,25 @@
         </g>
       </svg>
     </div>
-    <script type="module">
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+    <script>
+      var vConsole = new window.VConsole();
       const isHomePage = window.location.pathname === '/' || window.location.pathname === '/index.html';
       const loaderScreen = document.getElementById('initial-loader');
 
-      if (isHomePage) {
+      loaderScreen.addEventListener('animationend', () => {
+        if (loaderScreen.classList.contains('fade-out')) {
+          loaderScreen.style.display = 'none';
+        }
+      }, {once: true});
+
+      if (isHomePage && loaderScreen && !loaderScreen.classList.contains('fade-out')) {
         loaderScreen.style.display = 'flex';
       } else {
         loaderScreen.style.display = 'none';
       }
     </script>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

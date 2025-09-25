@@ -95,7 +95,8 @@
     <MediaLightbox 
       v-if="showLightbox"
       :media-items="lightBoxMediaItems"
-      :current-index="currentLightboxIndex"
+      v-model:current-index="currentLightboxIndex"
+      @navigate="handleNavigation"
       @close="closeLightbox"
       @goTo="(index: number) => currentLightboxIndex = index"
     />
@@ -188,6 +189,14 @@ const onImageError = (event: Event, item: MediaItem) => {
 
   if (itemInStore) {
     itemInStore.aspectRatio = 1 
+  }
+}
+
+const handleNavigation = (direction: 'prev' | 'next') => {
+  if (direction === 'prev' && currentLightboxIndex.value > 0) {
+    currentLightboxIndex.value--
+  } else if (direction === 'next' && currentLightboxIndex.value < lightBoxMediaItems.value.length - 1) {
+    currentLightboxIndex.value++
   }
 }
 
