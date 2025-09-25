@@ -74,7 +74,6 @@ const emit = defineEmits<{
 
 // --- REFINED STATE AND REFS ---
 const containerRef = ref<HTMLElement | null>(null)
-const swipeTargetRef = ref<HTMLElement | null>(null)
 const thumbnailContainer = ref<HTMLElement | null>(null)
 const thumbnailRefs = ref<(HTMLElement | null)[]>([])
 
