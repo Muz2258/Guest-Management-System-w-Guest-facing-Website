@@ -183,7 +183,7 @@ const isMobile = ref<boolean>(true)
 const tempToken = ref<string | null>(null)
 
 /* ------------------ Computed Properties ------------------ */
-const showWelcomeModal = computed(() => uiStore.showWelcomeModal && !guestStore.hasCachedData)
+const showWelcomeModal = computed(() => uiStore.showWelcomeModal && !guestStore.hasCachedData && privacyStore.shouldShowBanner)
 const showGiftBottomSheet = computed(() => uiStore.showGiftBottomSheet)
 const showPlusOneModal = computed(() => uiStore.showPlusOneModal)
 const showRemovePlusOneModal = computed(() => uiStore.showRemovePlusOneModal)
