@@ -77,7 +77,7 @@ const props = defineProps<MediaItemProps>()
 // Emits
 const emit = defineEmits<{
   'image-load': [event: Event, item: MediaItem]
-  'image-error': [event: Event, item: MediaItem]
+  'image-error': [item: MediaItem]
 }>()
 
 // Reactive state
@@ -90,10 +90,10 @@ const handleImageLoad = (event: Event): void => {
   emit('image-load', event, props.item)
 }
 
-const handleImageError = (event: Event): void => {
+const handleImageError = (): void => {
   hasError.value = true
   isLoaded.value = true // Prevent skeleton from showing
-  emit('image-error', event, props.item)
+  emit('image-error', props.item)
 }
 
 const handleVideoLoad = (): void => {

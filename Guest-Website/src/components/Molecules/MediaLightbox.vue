@@ -56,7 +56,7 @@
 import Icon from '../Icon'
 import { getColor } from '../../utils/colors';
 import type { MediaItem } from '../../types/event'
-import { useSwipe } from '@vueuse/core';
+// import { useSwipe } from '@vueuse/core';
 
 interface Props {
     mediaItems: MediaItem[]
