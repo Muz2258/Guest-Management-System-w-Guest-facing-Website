@@ -99,6 +99,7 @@
       @navigate="handleNavigation"
       @close="closeLightbox"
       @goTo="(index: number) => currentLightboxIndex = index"
+      @load-more="loadMoreItems"
     />
   </main>
 </template>
@@ -113,17 +114,18 @@ import { useIconPreloader } from '../composables/useIconPreloader'
 interface MediaItemWithLayout extends MediaItem {
   _originalIndex: number
   aspectRatio?: number
+  shouldAutoplay?: boolean
 }
 
 type MediaItemsWithLayout = Array<MediaItemWithLayout[]>
 
 /* ----------------------- Stores ------------------- */
 const galleryStore = useGalleryStore()
+const route = useRoute()
 
 
 /* ----------------------- Reactive State ------------------- */
 const loadMoreTrigger: Ref<HTMLElement | null> = ref(null)
-const currentPageCount = ref<number>(1)
 const columnsArray = ref<MediaItemWithLayout[][]>([[], []])
 const columnItemsCount: Ref<[number, number]> = ref([0, 0])
 
@@ -134,6 +136,8 @@ const lightBoxMediaItems = ref<MediaItemWithLayout[]>([])
 
 
 /* ----------------------- Computed Properties ------------------- */
+const currentPageCount = computed(() => galleryStore.currentPage)
+
 const mediaItemsWithLayout = computed<MediaItemsWithLayout>(() => {
   console.log('💻 Computing media items with layout...')
   const galleryItems = galleryStore.mediaItems
@@ -211,6 +215,7 @@ const handleNavigation = (direction: 'prev' | 'next') => {
 }
 
 const openLightbox = (index: number) => {
+  console.log(`🎯 Opening lightbox at index ${index}`)
   currentLightboxIndex.value = index
   showLightbox.value = true
 }
@@ -225,22 +230,22 @@ const loadMoreItems = async () => {
     return
   }
   try {
-    currentPageCount.value++
-    console.log(`[loadMoreItems] Loading more items. Page:`, currentPageCount.value)
-    await galleryStore.fetchMediaItems(currentPageCount.value, 12)
+    galleryStore.currentPage++
+    console.log(`[loadMoreItems] Loading more items. Page:`, galleryStore.currentPage)
+    await galleryStore.fetchMediaItems(galleryStore.currentPage)
     await populateColumns('append')
     lightBoxMediaItems.value = mediaItemsWithLayout.value.flat()
-    console.log(`[loadMoreItems] Loaded page ${currentPageCount.value}. Total items:`, galleryStore.mediaItems[currentPageCount.value - 1]?.length)
+    console.log(`[loadMoreItems] Loaded page ${galleryStore.currentPage}. Total items:`, galleryStore.mediaItems[galleryStore.currentPage - 1]?.length)
   } catch (error) {
     console.error('[loadMoreItems] Failed to load more items:', error)
-    currentPageCount.value--
+    galleryStore.currentPage--
   }
 }
 
 const retryLoad = async () => {
   console.log(`[retryLoad] Retrying gallery load...`)
   galleryStore.resetStore()
-  currentPageCount.value = 1
+  galleryStore.currentPage = 1
   await galleryStore.fetchMediaItems(1, 12)
   console.log(`[retryLoad] Reloaded gallery page 1. Total items:`, galleryStore.mediaItems.length)
 }
@@ -285,11 +290,9 @@ onMounted(async () => {
   if (galleryStore.mediaItems.length === 0) {
     console.log('⛔ No mediaItems, fetching page 1')
     await galleryStore.fetchMediaItems(1, 12)
-    currentPageCount.value = galleryStore.mediaItems.length
     console.log('🆕 Successfully fetched initial mediaItems')
   }else {
-    console.log('✅ mediaItems already loaded:', galleryStore.mediaItems.length)
-    currentPageCount.value = galleryStore.mediaItems.length
+    console.log('✅ mediaItems already loaded:', galleryStore.currentPage)
   }
 
   if(mediaItemsWithLayout.value.length > 0){
@@ -298,6 +301,24 @@ onMounted(async () => {
     initializeInfiniteObserver()
     lightBoxMediaItems.value = mediaItemsWithLayout.value.flat()
   }
+
+  // Check for image index in query params to open lightbox
+  const imageID = route.query.image as string
+
+  console.log('🎯 Checking for image index in query params:', imageID)
+  if(!imageID) return
+
+  const mediaItem = mediaItemsWithLayout.value.flat().find(item => item.id === imageID)
+  if(!mediaItem) {
+    console.warn(`⚠️ No media item found with ID: ${imageID}`)
+    return
+  }
+  console.log(`🎯 Opening lightbox at index from query param: ${mediaItem._originalIndex}`)
+  nextTick(() => {
+    setTimeout(() => {
+      openLightbox(mediaItem._originalIndex)
+    }, 500)
+  })
 })
 
 onUnmounted(() => {

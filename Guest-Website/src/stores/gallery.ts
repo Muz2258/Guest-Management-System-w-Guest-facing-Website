@@ -7,41 +7,31 @@ export const useGalleryStore = defineStore('gallery', () => {
   const error = ref<string | null>(null)
   const totalCount = ref(0)
   const hasNextPage = ref(true)
+  const currentPage = ref(1)
 
   const fetchMediaItems = async (page: number = 1, limit: number = 12) => {
     try {
       loading.value = true
       error.value = null
       
-      const offset = (page - 1) * limit
-      
-      // First, get the total count
-      if (page === 1) {
-        const { count } = await supabase
-          .from('gallery_media')
-          .select('*', { count: 'exact', head: true })
-        
-        totalCount.value = count || 0
-      }
-      
       // Then fetch the paginated data
       const { data: res, error: err } = await supabase
-        .from('gallery_media')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+        .rpc('guest_get_media_items', {
+          max_qty: limit,
+          page_number: page
+        })
       
       if (err) {
         console.error('Error fetching media:', err)
         error.value = 'Failed to load media items.'
         return
       }
+
+      totalCount.value = res.total_count
+      hasNextPage.value = res.has_more
+      currentPage.value = res.current_page
       
-      // If this is the first page, replace the array; otherwise, append
-      mediaItems.value.push(res || [])
-      
-      // Update hasNextPage based on the response
-      hasNextPage.value = (res?.length || 0) === limit && mediaItems.value.flat().length < totalCount.value
+      mediaItems.value.push(res.items || [])
       
     } catch (err) {
       console.error('Failed to fetch media items:', err)
@@ -74,6 +64,7 @@ export const useGalleryStore = defineStore('gallery', () => {
     error,
     totalCount,
     hasNextPage,
+    currentPage,
     fetchMediaItems,
     resetStore,
     getPreviewItems
