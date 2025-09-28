@@ -2,6 +2,7 @@ import { useIconPreloader } from "@/composables/useIconPreloader"
 
 export default defineComponent({
   name: 'Icon',
+
   props: {
     name: { type: String, required: true },
     size: { type: [String, Number], default: 24 },
@@ -20,22 +21,33 @@ export default defineComponent({
       const rawSvg = getIcon(props.name)
       if (!rawSvg) return ''
 
-      let processed = rawSvg
-        .replace(/width="[^"]*"/g, '')
-        .replace(/height="[^"]*"/g, '')
-        .replace(/stroke="[^"]*"/g, `stroke="${props.color}"`)
-        .replace(/<svg/, '<svg width="100%" height="100%"')
+      const parser = new DOMParser()
+      const parsedSvg = parser.parseFromString(rawSvg, 'image/svg+xml')
+      const svgEl = parsedSvg.querySelector('svg')
+      const svgPathEl = parsedSvg.querySelectorAll('path')
 
-      if (props.strokeWidth !== null) {
-        processed = processed
-          .replace(/stroke-width="[^"]*"/g, `stroke-width="${props.strokeWidth}"`)
-        
-        if (!processed.includes('stroke-width')) {
-          processed = processed.replace('<svg', `<svg stroke-width="${props.strokeWidth}"`)
-        }
+      svgEl?.setAttribute('width', '100%')
+      svgEl?.setAttribute('height', '100%')
+
+      const hasFill = Array.from(svgPathEl).some(path => path.hasAttribute('fill'))
+      const hasStroke = Array.from(svgPathEl).some(path => path.hasAttribute('stroke'))
+
+      if(hasFill) {
+        svgPathEl.forEach(path => {
+          path.setAttribute('fill', props.color)
+        })
       }
 
-      return processed
+      if(hasStroke) {
+        svgPathEl.forEach(path => {
+          path.setAttribute('stroke', props.color)
+          if (props.strokeWidth !== null) {
+            path.setAttribute('stroke-width', String(props.strokeWidth))
+          }
+        })
+      }
+
+      return svgEl?.outerHTML || ''
     })
 
     return () => h('span', {
