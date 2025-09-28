@@ -44,23 +44,24 @@
           class="w-full object-cover transition-all duration-300 group-hover:scale-105"
           muted
           playsinline
+          @play="handlePlay"
+          @pause="handlePause"
           @loadedmetadata="handleVideoLoad"
           @error="handleVideoError"
         />
-        <div class="absolute inset-0 bg-black/20 flex items-center justify-center transition-all duration-300 group-hover:bg-black/10">
-          <div class="w-16 h-16 bg-white/80 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300 group-hover:scale-110">
-            <svg class="w-8 h-8 text-brand-pri ml-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          </div>
+        <div class="absolute bottom-12 left-12 bg-neutrals-neu-0/50 flex items-center justify-center gap-8 p-6 rounded-lg border border-neutrals-neu-46/50">
+          <Icon name="video-solid" :size="16" :color="getColor('neutral.neu_100')" />
+          <span class="text-neutrals-neu-100 text-s">{{ item.caption }}</span>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts" name="MediaItem">
+<script setup lang="ts">
 import type { MediaItem } from '@/types/event'
+import { getColor } from '@/utils/colors'
+import Icon from '@/components/Icon'
 
 // Types for runtime-enhanced media items
 interface MediaItemWithAspectRatio extends MediaItem {
@@ -78,6 +79,8 @@ const props = defineProps<MediaItemProps>()
 const emit = defineEmits<{
   'image-load': [event: Event, item: MediaItem]
   'image-error': [item: MediaItem]
+  'video-play': [item: MediaItem]
+  'video-pause': [item: MediaItem]
 }>()
 
 // Reactive state
@@ -96,13 +99,21 @@ const handleImageError = (): void => {
   emit('image-error', props.item)
 }
 
-const handleVideoLoad = (): void => {
+const handleVideoLoad = () => {
   isLoaded.value = true
 }
 
 const handleVideoError = (): void => {
   hasError.value = true
   isLoaded.value = true
+}
+
+const handlePlay = () => {
+  emit('video-play', props.item)
+}
+
+const handlePause = () => {
+  emit('video-pause', props.item)
 }
 
 const commonAspectRatios: string[] = [
