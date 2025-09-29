@@ -4,15 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build:check": "vue-tsc && vite build",
-    "build": "vite build",
-    "preview": "vite preview",
-    "analyze": "vite build --mode analyze"
+    "dev": "vite --host",
+    "build:production": "vite build --mode production",
+    "build:staging": "vite build --mode staging",
+    "build:local": "vite build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
     "@vitejs/plugin-vue": "^5.0.0",
+    "@vueuse/core": "^13.9.0",
     "crypto-js": "^4.2.0",
     "pinia": "^2.3.1",
     "vite": "^5.4.0",
@@ -30,6 +30,7 @@
     "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^5.9.2",
     "tailwindcss": "^4.1.13",
+    "terser": "^5.44.0",
     "typescript": "^5.2.2",
     "unplugin-auto-import": "^20.1.0",
     "unplugin-vue-components": "^29.0.0",

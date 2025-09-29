@@ -2,28 +2,17 @@
   <!-- Sticky Header -->
   <transition appear name="slide-down">
     <header class="fixed top-0 w-screen z-50" :class="{'h-svh': showNavigation}">
-      <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90">
+      <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90 relative">
         <button 
           @click="toggleNavigation"
-          class="logo flex justify-center items-center gap-x-8 cursor-pointer hover:opacity-80 transition-opacity"
+          class="cursor-pointer hover:opacity-80 transition-opacity"
           aria-label="Toggle Navigation Menu"
         >
-          <img
-            class="h-8 w-auto"
-            src="../../assets/vectors/leaf-branch__left.svg"
-            alt="Leaf Branch Left"
-          />
-          <img
-            class="size-[1.75rem]"
-            src="../../assets/vectors/wedding_letter-mark--black.svg"
-            alt="Chidera and Emamuzo Wedding Letter Mark"
-          />
-          <img
-            class="h-8 w-auto"
-            src="../../assets/vectors/leaf-branch__right.svg"
-            alt="Leaf Branch Right"
-          />
+          <WeddingLogo />
         </button>
+        <div class="absolute -bottom-[13px] flex justify-center items-center p-8 rounded-full bg-neutrals-neu-100 z-10 border border-neutrals-neu-90" @click="toggleNavigation">
+          <Icon :name="showNavigation ? 'arrow-head-up' : 'arrow-head-down'" :color="getColor('neutral.neu_0')" :size="10" />
+        </div>
       </div>
 
       <Transition name="navigation">
@@ -69,6 +58,14 @@
 </template>
 
 <script setup lang="ts">
+/* ------------------ Components ------------------- */
+import Icon from '../Icon';
+import { getColor } from '@/utils/colors';
+
+const emit = defineEmits<{
+  'mounted': []
+}>()
+
 /* ------------------ Reactive Variables ------------------- */
 const showNavigation = ref(false)
 const route = useRoute()
@@ -85,25 +82,23 @@ const closeNavigation = () => {
 }
 
 const navigateAndClose = () => {
-  // Small delay to allow router transition to start
   setTimeout(() => {
     closeNavigation()
   }, 100)
 }
 
 /* ------------------ Lifecycle ------------------- */
-// Close navigation when route changes
 watch(() => route.path, () => {
   closeNavigation()
 })
 
-// Cleanup body overflow on unmount
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
 })
 
-// Handle escape key
 onMounted(() => {
+  emit('mounted')
+  
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key === 'Escape' && showNavigation.value) {
       closeNavigation()

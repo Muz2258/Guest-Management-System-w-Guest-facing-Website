@@ -1,37 +1,38 @@
 <template>
-  <main v-if="isMobile" class="page-wrapper">
-    <Hero />
-    <RSVP v-if="hasToken" id="rsvp" />
-    <EventDetails v-if="hasToken && isRsvpGuest" id="details" />
-    <LoveStory />
-    <Gallery id="gallery" />
-  </main>
-  <main v-else class="h-dvh flex flex-col justify-center items-center p-32">
-    <div class="flex items-center space-x-16 mb-32">
-      <div><Icon name="no-landscape" :color="getColor('denotive.denote_red')" :size="24"/></div>
-      <div><Icon name="phone" :color="getColor('brand.accent')" :size="32"/></div>
-      <div><Icon name="no-laptops" :color="getColor('denotive.denote_red')" :size="24"/></div>
-    </div>
-    <h1 class="text-heading-lg text-neutrals-neu-0 text-center mb-16">Phones in portrait Only</h1>
-    <p class="text-s text-neutrals-neu-35 text-center max-w-[50%]">
-      Sorry! This site works best on mobile phones in portrait mode. Please open your invitation link on your phone.
-    </p>
+  <main class="page-wrapper">
+    <Hero @hero-ready="handleHeroReady" @hero-animation-ended="handleAnimationEnded" />
+    
+    <template v-if="heroMounted">
+      <RSVP v-if="hasToken && mountedSections.rsvp" id="rsvp" />
+      <EventDetails v-if="hasToken && isRsvpGuest && mountedSections.eventDetails" id="details" />
+      <LoveStory v-if="mountedSections.loveStory" />
+      <Gallery v-if="mountedSections.gallery" id="gallery" />
+    </template>
   </main>
 </template>
 
 <script setup lang="ts">
-/* -------------------- Imports ------------------ */
-import Icon from '../components/Icon'
-import { getColor } from '../utils/colors'
-
+import { useIconPreloader } from '../composables/useIconPreloader'
 
 /* ------------------ Stores ------------------ */
 const guestStore = useGuestStore()
 
 
-/* ------------------ Reactive Variables ------------------ */
-const isMobile = ref<boolean>(true)
+/* ------------------ Props and Emitters ------------------- */
+const emit = defineEmits<{
+  'hero-ready': [],
+  'hero-animation-ended': []
+}>()
 
+
+/* ------------------ Variables and States ------------------ */
+const heroMounted = ref(false)
+const mountedSections = ref({
+  rsvp: false,
+  eventDetails: false,
+  loveStory: false,
+  gallery: false
+})
 
 /* ------------------ Computed Properties ------------------ */
 const hasToken = computed(() => {
@@ -42,20 +43,46 @@ const isRsvpGuest = computed(() => {
   return guestStore.guestData?.permissions.can_rsvp
 })
 
-
-/* ------------------- Functions --------------------- */
-const checkMobileSize = () => {
-  isMobile.value = window.innerWidth <= 600
+/* ------------------ Methods ------------------ */
+const mountSectionsIncrementally = async () => {
+  console.log('🚀 Starting incremental section mounting')
+  
+  await nextTick()
+  mountedSections.value.rsvp = true
+  console.log('✅ RSVP section mounted')
+  
+  await new Promise(resolve => requestAnimationFrame(resolve))
+  mountedSections.value.eventDetails = true
+  console.log('✅ EventDetails section mounted')
+  
+  await new Promise(resolve => requestAnimationFrame(resolve))
+  mountedSections.value.loveStory = true
+  console.log('✅ LoveStory section mounted')
+  
+  await new Promise(resolve => requestAnimationFrame(resolve))
+  mountedSections.value.gallery = true
+  console.log('✅ Gallery section mounted')
 }
 
+const handleHeroReady = async () => {
+  console.log('🎯 Hero ready - starting incremental section mounting')
+  
+  emit('hero-ready')
+  
+  heroMounted.value = true
+  await mountSectionsIncrementally()
+  console.log('🎉 All sections mounted')
+}
 
-/* ------------------- Lifecycle Hooks --------------------- */
-onMounted(() => {
-  checkMobileSize()
-  window.addEventListener('resize', checkMobileSize)
-})
+const handleAnimationEnded = () => {
+  console.log('🎉 Hero animation ended')
+  emit('hero-animation-ended')
+}
 
-onUnmounted(() => {
-  window.removeEventListener('resize', checkMobileSize)
+onBeforeMount(() => {
+  console.log('🔃 Preloading icons...')
+  useIconPreloader().preloadAllIcons().catch(err => {
+    console.error('❌ Error preloading icons:', err)
+  })
 })
 </script>

@@ -1,211 +1,327 @@
 <template>
-    <div class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-between">
-        <div class="flex items-center justify-end w-full px-24 py-16">
-            <button @click="$emit('close')" class="px-12 py-12 bg-neutrals-neu-0 hover:bg-neutrals-neu-35 rounded-full flex items-center justify-center z-10 cursor-pointer">
-                <Icon name="close" :size="12" :color="getColor('neutral.neu_100')" />
-            </button>
-        </div>
-
-        <div class="relative w-full max-w-5xl grow mx-24 overflow-hidden" @click.stop>
-            <div 
-                class="flex h-full" 
-                ref="containerRef"
-                @touchstart="handleTouchStart"
-                @touchmove="handleTouchMove"
-                @touchend="handleTouchEnd"
-            >
-                <div 
-                    v-for="(item, index) in mediaItems"
-                    :key="`lightbox-main-${index}`"
-                    class="flex-shrink-0 w-full flex items-center justify-center"
-                    style="margin-right: 16px;" 
-                >
-                    <img v-if="item.file_type === 'image'" :src="item.s3_web_url" :alt="item.filename" class="max-w-full max-h-full object-contain select-none" draggable="false" />
-                    <video v-else-if="item.file_type === 'video'" :src="item.s3_web_url" class="max-w-full max-h-full object-contain" controls :autoplay="index === currentIndex" muted />
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-col gap-24 items-center py-16 w-full">
-            <!-- <div v-if="mediaItems[currentIndex]?.filename" class="bg-black/50 text-white px-16 py-8 rounded-md text-s max-w-md text-center">
-                {{ mediaItems[currentIndex].filename }}
-            </div> -->
-            <div class="w-full">
-                <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
-                    <div 
-                        v-for="(item, index) in mediaItems" 
-                        :key="`lightbox-thumb-${index}`"
-                        class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
-                        :class="{ 'h-80 w-72': index === currentIndex, 'opacity-50': index !== currentIndex }"
-                        @click="navigateToThumbnail(index)"
-                        :ref="(el: HTMLElement | null) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
-                    >
-                        <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
-                        <video v-else-if="item.file_type === 'video'" :src="item.s3_thumbnail_url" class="w-full h-full object-cover" muted />
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <button @click="navigateToIndex('prev')" :disabled="currentIndex === 0" :class="{ 'opacity-25 pointer-events-none': currentIndex === 0 }" class="absolute left-24 top-1/2 -translate-y-1/2 items-center justify-center size-48 bg-neutrals-neu-0 hover:bg-neutrals-neu-35 rounded-full md:flex hidden cursor-pointer">
-            <Icon name="arrow-head-left" :size="24" :color="getColor('neutral.neu_100')" />
-        </button>
-        
-        <button @click="navigateToIndex('next')" :disabled="currentIndex === mediaItems.length - 1" :class="{ 'opacity-25 pointer-events-none': currentIndex === mediaItems.length - 1 }" class="absolute right-24 top-1/2 -translate-y-1/2 items-center justify-center size-48 bg-neutrals-neu-0 hover:bg-neutrals-neu-35 rounded-full md:flex hidden cursor-pointer">
-            <Icon name="arrow-head-right" :size="24" :color="getColor('neutral.neu_100')" />
-        </button>
+  <div class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-between">
+    <div v-if="!hideUI" class="absolute top-0 left-0 right-0 flex items-center justify-end px-24 py-16 z-100 bg-neutrals-neu-0/25">
+      <button @click="$emit('close')" class="px-12 py-12 bg-neutrals-neu-0/50 rounded-full flex items-center justify-center">
+        <Icon name="close" :size="12" :color="getColor('brand.sec_light_100')" />
+      </button>
     </div>
+
+    <div class="relative w-full grow overflow-hidden" @click="toggleUI" >
+      <div ref="containerRef" class="h-full flex space-x-8">
+        <div 
+          v-for="(item, index) in mediaItems"
+          :key="`lightbox-main-${index}`"
+          class="flex-shrink-0 w-full h-full"
+          style="margin-right: 16px;" 
+        >
+          <div v-if="item.file_type === 'image'" class="relative w-full h-full">
+            <!-- <div v-if="index === currentIndex && !isMediaLoaded" class="flex justify-center py-24">
+              <div class="animate-spin rounded-full size-32 border-b-2 border-neutrals-neu-100"></div>
+            </div> -->
+            <img 
+              :src="item.s3_web_url" 
+              :alt="item.filename"
+              class="w-full h-full object-contain select-none" 
+              draggable="false" 
+            />
+          </div>
+
+          <div v-else-if="item.file_type === 'video'" class="relative w-full h-full">
+            <!-- <div v-if="index === currentIndex && !isMediaLoaded" class="flex justify-center py-24">
+              <div class="animate-spin rounded-full size-32 border-b-2 border-neutrals-neu-100"></div>
+            </div> -->
+            <video 
+              :ref="el => setVideoRefS(el, index)" 
+              class="w-full h-full object-contain" 
+              muted 
+              :src="item.s3_web_url" 
+              :autoplay="index === currentIndex"
+              playsinline
+              @play="handlePlay(index)"
+              @pause="handlePause(index)"
+              @timeupdate="handleTimeUpdate(index, $event)"
+              @loadedmetadata="handleVideoLoad(index)"
+            />
+
+            <div v-if="!hideUI" class="absolute bottom-[8rem] left-0 right-0 flex items-center justify-center gap-12 z-100">
+              <div class="flex items-center justify-center gap-12 p-12 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="togglePlay(index)">
+                <Icon :name="videoTimes[index]?.isPlaying ? 'pause-solid' : 'play-solid'" :color="getColor('neutral.neu_100')" :size="16" />
+                <span class="text-neutrals-neu-100 text-s">
+                  {{ videoTimes[index]?.currentTime }} / {{ videoTimes[index]?.duration }}
+                </span>
+              </div>
+              <div class="flex items-center justify-center p-12 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="toggleMute(index)">
+                <Icon :name="videoTimes[index]?.isMuted ? 'mute-solid' : 'unmute-solid'" :color="getColor('neutral.neu_100')" :size="16" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button v-if="currentIndex !== 0 && !hideUI" class="absolute left-16 top-1/2 transform -translate-y-1/2 p-12 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full"  @click.stop="$emit('navigate', 'prev')" >
+      <Icon name="arrow-head-left" :size="16" :color="getColor('neutral.neu_100')" />
+    </button>
+
+    <button v-if="currentIndex !== mediaItems.length - 1 && !hideUI" class="absolute right-16 top-1/2 transform -translate-y-1/2 p-12 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="$emit('navigate', 'next')">
+      <Icon name="arrow-head-right" :size="16" :color="getColor('neutral.neu_100')" />
+    </button>
+
+    <div v-if="!hideUI" class="absolute bottom-0 left-0 right-0 flex flex-col gap-24 items-center py-16 bg-neutrals-neu-0/25">
+      <div class="w-full">
+        <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
+          <div 
+            v-for="(item, index) in mediaItems" 
+            :key="`lightbox-thumb-${index}`"
+            class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
+            :class="{ 'h-80 w-72': index === currentIndex, 'opacity-50': index !== currentIndex }"
+            @click="navigateToThumbnail(index)"
+            :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
+          >
+            <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
+            <video v-else-if="item.file_type === 'video'" :src="item.s3_thumbnail_url" class="w-full h-full object-cover" muted />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 import Icon from '../Icon'
 import { getColor } from '../../utils/colors';
 import type { MediaItem } from '../../types/event'
+import type { ComponentPublicInstance } from 'vue';
 
- 
 interface Props {
     mediaItems: MediaItem[]
     currentIndex: number
 }
+
+const galleryStore = useGalleryStore()
+
 const props = defineProps<Props>()
 const emit = defineEmits<{
     close: []
     navigate: [direction: 'prev' | 'next']
     goTo: [index: number]
+    'update:currentIndex': [index: number]
+    'load-more': []
 }>()
 
 // --- REFINED STATE AND REFS ---
-const containerRef = ref<HTMLElement>() // Changed from scrollContainer
-const thumbnailContainer = ref<HTMLElement>()
+const containerRef = ref<HTMLElement | null>(null)
+const thumbnailContainer = ref<HTMLElement | null>(null)
 const thumbnailRefs = ref<(HTMLElement | null)[]>([])
+const videoRefs = ref<Record<number, HTMLVideoElement | null>>({})
+const videoTimes = ref<Record<any, any>>({})
 
-// State for JS-driven swiping
-const isDragging = ref(false)
-const touchStartX = ref(0)
 const currentTranslate = ref(0)
-const startTranslate = ref(0)
-const swipeThreshold = 50 // Minimum pixels for a valid swipe
+const isAnimating = ref(false)
+const hideUI = ref(false)
 
-// --- REFINED SWIPE LOGIC ---
-const handleTouchStart = (event: TouchEvent) => {
-    if (!containerRef.value) return
-    isDragging.value = true
-    touchStartX.value = event.touches[0].clientX
-
-    // Calculate the container's starting position
-    const itemWidth = containerRef.value.clientWidth + 16
-    startTranslate.value = -props.currentIndex * itemWidth
-    
-    // Disable CSS transition for instant drag effect
-    containerRef.value.style.transition = 'none'
+const setVideoRefS = (el: Element | ComponentPublicInstance | null, index: number) => {
+  if (el) {
+    videoRefs.value[index] = el as HTMLVideoElement
+  }
 }
 
-const handleTouchMove = (event: TouchEvent) => {
-    if (!isDragging.value || !containerRef.value) return
-    const currentX = event.touches[0].clientX
-    const deltaX = currentX - touchStartX.value
-
-    // Follow the finger
-    currentTranslate.value = startTranslate.value + deltaX
-    containerRef.value.style.transform = `translateX(${currentTranslate.value}px)`
+const handleVideoLoad = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    videoTimes.value[index] = {
+      duration: formatTime(video.duration),
+      currentTime: formatTime(0),
+      isMuted: true,
+      isPlaying: false
+    }
+  }
 }
 
-const handleTouchEnd = () => {
-    if (!isDragging.value || !containerRef.value) return
-    isDragging.value = false
-    
-    // Enable CSS transition for smooth snapping
-    containerRef.value.style.transition = 'transform 0.3s ease-out'
+const handleTimeUpdate = (index: number, event: Event) => {
+  const video = event.target as HTMLVideoElement
+  if(video && index === props.currentIndex) {
+    videoTimes.value[index].currentTime = formatTime(video.currentTime)
+  }
+}
 
-    const deltaX = currentTranslate.value - startTranslate.value
-
-    // Check if swipe distance exceeds the threshold
-    if (deltaX < -swipeThreshold && props.currentIndex < props.mediaItems.length - 1) {
-        emit('navigate', 'next')
-    } else if (deltaX > swipeThreshold && props.currentIndex > 0) {
-        emit('navigate', 'prev')
+const togglePlay = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    if(video.paused) {
+      video.play()
+      videoTimes.value[index].isPlaying = true
     } else {
-        // Not a valid swipe, snap back to the current index
-        goToSlide(props.currentIndex, 'smooth')
+      video.pause()
+      videoTimes.value[index].isPlaying = false
     }
+  }
 }
 
-// --- REFINED NAVIGATION ---
-// This single function now handles all slide movements
+const toggleMute = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    if(video.muted) {
+      video.muted = false
+      videoTimes.value[index].isMuted = false
+    }else {
+      video.muted = true
+      videoTimes.value[index].isMuted = true
+    }
+  }
+}
+
+const handlePlay = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    videoTimes.value[index].isPlaying = true
+  }
+}
+
+const handlePause = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    videoTimes.value[index].isPlaying = false
+  }
+}
+
+const animateToIndex = (index: number) => {
+  if (!containerRef.value || isAnimating.value) return
+  
+  const targetTranslate = -index * (containerRef.value.clientWidth + 16)
+
+  console.log(containerRef.value.clientWidth)
+
+  isAnimating.value = true
+  
+  containerRef.value.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'
+  containerRef.value.style.transform = `translateX(${targetTranslate}px)`
+  
+  currentTranslate.value = targetTranslate
+  
+  setTimeout(() => {
+    isAnimating.value = false
+    if (containerRef.value) {
+      containerRef.value.style.transition = 'none'
+    }
+  }, 300)
+  
+  if (index !== props.currentIndex) {
+    if (index > props.currentIndex) {
+      emit('navigate', 'next')
+    } else {
+      emit('navigate', 'prev')
+    }
+  }
+}
+
+
 const goToSlide = (index: number, behavior: 'smooth' | 'instant') => {
-    if (!containerRef.value) return
-    const itemWidth = containerRef.value.clientWidth + 16 // width + gap
-    const newPosition = -index * itemWidth
-
-    containerRef.value.style.transition = behavior === 'smooth' ? 'transform 0.3s ease-out' : 'none'
-    containerRef.value.style.transform = `translateX(${newPosition}px)`
-
-    currentTranslate.value = newPosition // Keep state in sync
+  if (!containerRef.value) return
+  
+  if (behavior === 'smooth') {
+      animateToIndex(index)
+  } else {
+    const targetTranslate = -index * (containerRef.value.clientWidth + 16)
+    containerRef.value.style.transition = 'none'
+    containerRef.value.style.transform = `translateX(${targetTranslate}px)`
+    currentTranslate.value = targetTranslate
+  }
 }
 
-// Center a specific thumbnail (this logic is good, no changes)
-const scrollThumbnailToCenter = (index: number) => {
-    if (thumbnailContainer.value && thumbnailRefs.value[index]) {
-        const container = thumbnailContainer.value
-        const thumbnail = thumbnailRefs.value[index]
-        const scrollLeft = thumbnail.offsetLeft - (container.clientWidth / 2) + (thumbnail.clientWidth / 2)
-        container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
-    }
+const scrollThumbnailToCenter = (index: number, behavior: 'smooth' | 'instant') => {
+  if (thumbnailContainer.value && thumbnailRefs.value[index]) {
+    const container = thumbnailContainer.value
+    const thumbnail = thumbnailRefs.value[index]
+    const scrollLeft = thumbnail.offsetLeft - (container.clientWidth / 2) + (thumbnail.clientWidth / 2)
+    container.scrollTo({ left: scrollLeft, behavior: behavior })
+  }
 }
 
-// Navigate via thumbnail click
 const navigateToThumbnail = (index: number) => {
     emit('goTo', index)
 }
 
-// Navigate via arrow buttons
-const navigateToIndex = (direction: 'prev' | 'next') => {
-    emit('navigate', direction)
+const formatTime = (seconds: number) => {
+  seconds = Math.floor(seconds);
+
+  // const hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  const pad = (num: number) => num.toString().padStart(2, '0');
+
+  return `${pad(minutes)}:${pad(remainingSeconds)}`;
 }
 
-// --- WATCHER AND LIFECYCLE HOOKS ---
-watch(() => props.currentIndex, (newIndex) => {
-    goToSlide(newIndex, 'smooth')
-    scrollThumbnailToCenter(newIndex)
+const toggleUI = () => {
+  hideUI.value = !hideUI.value
+}
+
+watch(() => props.currentIndex, async (newIndex, oldIndex) => {
+  goToSlide(newIndex, 'smooth')
+  scrollThumbnailToCenter(newIndex, 'smooth')
+
+  if(newIndex !== oldIndex) {
+    const oldVideo = videoRefs.value[oldIndex]
+    if(oldVideo) {
+      oldVideo.pause()
+      oldVideo.muted = true
+      oldVideo.currentTime = 0
+      videoTimes.value[oldIndex].currentTime = formatTime(0)
+      videoTimes.value[oldIndex].isPlaying = false
+      videoTimes.value[oldIndex].isMuted = true
+    }
+
+    const newVideo = videoRefs.value[newIndex]
+    if(newVideo) {
+      newVideo.play()
+      videoTimes.value[newIndex].isPlaying = true
+    }
+  }
+
+  if (newIndex >= ((props.mediaItems.length - 1) / galleryStore.currentPage) / 2 && newIndex > oldIndex) {
+    emit('load-more')
+  }
 })
 
-const handleKeydown = (e: KeyboardEvent) => {
-    // This logic is good, no changes needed
-    switch (e.key) {
-        case 'Escape': emit('close'); break
-        case 'ArrowLeft': if (props.currentIndex > 0) navigateToIndex('prev'); break
-        case 'ArrowRight': if (props.currentIndex < props.mediaItems.length - 1) navigateToIndex('next'); break
-    }
-}
+watch(() => hideUI.value, newVal => {
+  if(newVal === false) {
+    nextTick(() => {
+      scrollThumbnailToCenter(props.currentIndex, 'instant')
+    })
+  }
+})
 
 onMounted(() => {
-    document.addEventListener('keydown', handleKeydown)
-    document.body.style.overflow = 'hidden'
-    nextTick(() => {
-        // Initial position set instantly
-        goToSlide(props.currentIndex, 'instant')
-        scrollThumbnailToCenter(props.currentIndex)
-    })
+  document.body.style.overflow = 'hidden'
+
+  nextTick(() => {
+    goToSlide(props.currentIndex, 'instant')
+    scrollThumbnailToCenter(props.currentIndex, 'instant')
+  })
 })
 
 onUnmounted(() => {
-    document.removeEventListener('keydown', handleKeydown)
-    document.body.style.overflow = ''
+  document.body.style.overflow = ''
 })
 </script>
 
 <style scoped>
-/* Ensure smooth transitions */
+.swiper-animating {
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
 .transition-colors {
     transition-property: background-color;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms; /* Balanced timing for smooth color transitions */
+    transition-duration: 150ms;
 }
 
 .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
-    /* Optimize scroll performance */
     overscroll-behavior-x: contain;
 }
 
@@ -213,20 +329,11 @@ onUnmounted(() => {
     display: none;
 }
 
-/* Thumbnail container specific styling */
 .thumbnail-container {
     scroll-behavior: smooth;
     scroll-snap-type: x proximity;
 }
 
-/* Touch handling optimizations */
-.touch-pan-x {
-    touch-action: pan-x;
-    -webkit-user-select: none;
-    user-select: none;
-}
-
-/* Navigation button responsive visibility */
 .nav-button {
     display: flex;
     width: 48px;
@@ -235,9 +342,7 @@ onUnmounted(() => {
     border-radius: 9999px;
     align-items: center;
     justify-content: center;
-    transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1); /* Balanced hover timing */
     border: none;
-    cursor: pointer;
 }
 
 .nav-button:hover:not(:disabled) {
@@ -249,13 +354,11 @@ onUnmounted(() => {
     cursor: not-allowed;
 }
 
-/* Prevent image dragging on touch devices */
 img {
     -webkit-user-drag: none;
     -webkit-touch-callout: none;
 }
 
-/* Smooth momentum scrolling */
 .transition-transform {
     transition-property: transform;
 }
