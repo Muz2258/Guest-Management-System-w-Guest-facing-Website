@@ -179,7 +179,8 @@ export const useGiftStore = defineStore('gift', () => {
     error.value = null
 
     try {
-      const initResponse = await fetch('https://mxgdroyymeepbrgecgwu.supabase.co/functions/v1/initialize-payment', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const initResponse = await fetch(`${supabaseUrl}/functions/v1/initialize-payment`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${details.guest_token}`,
