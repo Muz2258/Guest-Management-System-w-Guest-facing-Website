@@ -14,22 +14,22 @@ interface StoredGuestData {
 }
 
 class SecureGuestStorage {
-  private readonly STORAGE_KEY = 'wedding_guest_data'
-  private readonly SECRET_KEY = 'wedding_guest_secure_key_2024' // In production, this should be from env
+  private readonly storageKey = import.meta.env.VITE_APP_PRIVACY_STORAGE_KEY
+  private readonly secreteKey = import.meta.env.VITE_APP_PRIVACY_SECRETE_KEY
   private readonly TTL = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
 
   /**
    * Encrypt data using AES encryption
    */
   private encrypt(data: string): string {
-    return CryptoJS.AES.encrypt(data, this.SECRET_KEY).toString()
+    return CryptoJS.AES.encrypt(data, this.secreteKey).toString()
   }
 
   /**
    * Decrypt data using AES decryption
    */
   private decrypt(encryptedData: string): string {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, this.SECRET_KEY)
+    const bytes = CryptoJS.AES.decrypt(encryptedData, this.secreteKey)
     return bytes.toString(CryptoJS.enc.Utf8)
   }
 
@@ -70,7 +70,7 @@ class SecureGuestStorage {
       const jsonString = JSON.stringify(storedData)
       const encryptedData = this.encrypt(jsonString)
 
-      localStorage.setItem(this.STORAGE_KEY, encryptedData)
+      localStorage.setItem(this.storageKey, encryptedData)
       console.log('✅ Guest data securely saved to storage:', mergedData)
     }, 'save-guest-data', ErrorType.STORAGE)
 
@@ -84,7 +84,7 @@ class SecureGuestStorage {
    */
   getGuestData(token?: string): { data: any; isValid: boolean } | null {
     const result = handleSync(() => {
-      const encryptedData = localStorage.getItem(this.STORAGE_KEY)
+      const encryptedData = localStorage.getItem(this.storageKey)
       
       if (!encryptedData) {
         console.log('📭 No stored guest data found')
@@ -141,7 +141,7 @@ class SecureGuestStorage {
       const jsonString = JSON.stringify(update)
       const encryptedData = this.encrypt(jsonString)
 
-      localStorage.setItem(this.STORAGE_KEY, encryptedData)
+      localStorage.setItem(this.storageKey, encryptedData)
       console.log('✅ cookiesSeen flag updated in storage')
       return true
     }, 'mark-cookies-seen', ErrorType.STORAGE)
@@ -152,7 +152,7 @@ class SecureGuestStorage {
   /**
    * Check if guest data exists for a specific token
    */
-  checkCache(token?: string): boolean {
+  checkCache(token?: string): any {
     console.log('📦 Attempting to load guest data from cache...')
     let cachedData = null
 
@@ -161,11 +161,11 @@ class SecureGuestStorage {
     
     if (cachedData && cachedData.isValid) {
       console.log('✅ Loaded guest data from cache:', cachedData.data)
-      return true
+      return {hasCache: true, data: cachedData.data}
     }
     
     console.log('📭 No valid cached data found')
-    return false
+    return {hasCache: false, data: null}
   }
 
   /**
@@ -181,7 +181,7 @@ class SecureGuestStorage {
    */
   clearGuestData(): void {
     const result = handleSync(() => {
-      localStorage.removeItem(this.STORAGE_KEY)
+      localStorage.removeItem(this.storageKey)
       console.log('🧹 Cleared stored guest data')
     }, 'clear-guest-data', ErrorType.STORAGE)
 
@@ -195,7 +195,7 @@ class SecureGuestStorage {
    */
   getTimeUntilExpiry(): number | null {
     const result = handleSync(() => {
-      const encryptedData = localStorage.getItem(this.STORAGE_KEY)
+      const encryptedData = localStorage.getItem(this.storageKey)
       if (!encryptedData) return null
 
       const decryptedData = this.decrypt(encryptedData)
@@ -212,7 +212,7 @@ class SecureGuestStorage {
    */
   refreshExpiry(): void {
     const result = handleSync(() => {
-      const encryptedData = localStorage.getItem(this.STORAGE_KEY)
+      const encryptedData = localStorage.getItem(this.storageKey)
       if (!encryptedData) return
 
       const decryptedData = this.decrypt(encryptedData)
@@ -224,7 +224,7 @@ class SecureGuestStorage {
       const jsonString = JSON.stringify(storedData)
       const newEncryptedData = this.encrypt(jsonString)
       
-      localStorage.setItem(this.STORAGE_KEY, newEncryptedData)
+      localStorage.setItem(this.storageKey, newEncryptedData)
       
       console.log('🔄 Refreshed guest data expiry')
     }, 'refresh-expiry', ErrorType.STORAGE)

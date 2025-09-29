@@ -179,7 +179,8 @@ export const useGiftStore = defineStore('gift', () => {
     error.value = null
 
     try {
-      const initResponse = await fetch('https://mxgdroyymeepbrgecgwu.supabase.co/functions/v1/initialize-payment', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const initResponse = await fetch(`${supabaseUrl}/functions/v1/initialize-payment`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${details.guest_token}`,
@@ -230,7 +231,7 @@ export const useGiftStore = defineStore('gift', () => {
     console.log('Processing gift:', newGift)
     loading.value = true
 
-    const paystackPublicKey = process.env.VITE_PAYSTACK_PUBLIC_KEY
+    const paystackPublicKey = import.meta.env.VITE_APP_PAYSTACK_PUBLIC_KEY
 
     if(!paystackPublicKey) {
       error.value = 'Payment gateway is not configured properly.'
@@ -354,6 +355,31 @@ export const useGiftStore = defineStore('gift', () => {
     guestStorage.saveGuestData(token, { guestGift: gifts.value })
   }
 
+  const removeGuestGift = async (token: string, ref: string) => {
+    console.log('Removing guest gift with ref:', ref)
+    if(!token || !ref) {
+      console.error('token and reference is required to remove gift from database')
+      return
+    }
+
+    try {
+      const { data: res, error: err } = await supabase
+        .rpc('guest_remove_gift', {
+          auth_token: token,
+          item_reference: ref
+        })
+
+      if (err) {
+        console.error('Supabase RPC error:', err)
+        throw err
+      }
+
+      console.log('Gift removed from database successfully:', res)
+    } catch (err) {
+      console.error('Error removing gift:', err)
+    }
+  }
+
   return {
     // States
     gifts,
@@ -383,6 +409,7 @@ export const useGiftStore = defineStore('gift', () => {
     setSelectedGiftItem,
     clearGiftSelection,
     setIsPayingFees,
-    setGiftingMode
+    setGiftingMode,
+    removeGuestGift
   }
 })

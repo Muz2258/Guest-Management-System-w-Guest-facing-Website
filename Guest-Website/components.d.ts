@@ -14,6 +14,7 @@ declare module 'vue' {
     Card: typeof import('./src/components/Atoms/Card.vue')['default']
     CheckBox: typeof import('./src/components/Atoms/CheckBox.vue')['default']
     CookieBanner: typeof import('./src/components/Molecules/CookieBanner.vue')['default']
+    DecorativeBranches: typeof import('./src/components/Atoms/DecorativeBranches.vue')['default']
     DeleteGoodWillModal: typeof import('./src/components/Templates/DeleteGoodWillModal.vue')['default']
     DetailsInfo: typeof import('./src/components/Molecules/DetailsInfo.vue')['default']
     EventDetails: typeof import('./src/components/Templates/EventDetails.vue')['default']
@@ -24,6 +25,7 @@ declare module 'vue' {
     GiftItemsList: typeof import('./src/components/Organisms/GiftItemsList.vue')['default']
     HeaderNavigation: typeof import('./src/components/Organisms/HeaderNavigation.vue')['default']
     Hero: typeof import('./src/components/Templates/Hero.vue')['default']
+    InitialLoader: typeof import('./src/components/Molecules/InitialLoader.vue')['default']
     Input: typeof import('./src/components/Atoms/Input.vue')['default']
     Loader: typeof import('./src/components/Atoms/loader.vue')['default']
     LoaderItemsList: typeof import('./src/components/Atoms/LoaderItemsList.vue')['default']
@@ -31,6 +33,7 @@ declare module 'vue' {
     MainWebsiteView: typeof import('./src/views/MainWebsiteView.vue')['default']
     ManageGoodWillMessageModal: typeof import('./src/components/Templates/ManageGoodWillMessageModal.vue')['default']
     ManagePlusOneModal: typeof import('./src/components/Templates/ManagePlusOneModal.vue')['default']
+    MediaItem: typeof import('./src/components/Organisms/MediaItem.vue')['default']
     MediaLightbox: typeof import('./src/components/Molecules/MediaLightbox.vue')['default']
     Modal: typeof import('./src/components/Atoms/Modal.vue')['default']
     PaymentValidation: typeof import('./src/views/PaymentValidation.vue')['default']
@@ -43,6 +46,7 @@ declare module 'vue' {
     ToggleButton: typeof import('./src/components/Atoms/ToggleButton.vue')['default']
     ToggleSwitch: typeof import('./src/components/Atoms/ToggleSwitch.vue')['default']
     UpdateRsvpModal: typeof import('./src/components/Templates/UpdateRsvpModal.vue')['default']
+    WeddingLogo: typeof import('./src/components/Atoms/WeddingLogo.vue')['default']
     WelcomeModal: typeof import('./src/components/Templates/WelcomeModal.vue')['default']
   }
 }

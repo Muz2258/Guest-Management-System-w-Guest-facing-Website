@@ -1,183 +1,77 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
-import { useGuestStore } from '../stores/guest'
-import { useRSVPStore } from '../stores/rsvp'
-import { useUIStore } from '../stores/ui'
-import { useGoodWillStore } from '../stores/goodWill'
-import { usePrivacyStore } from '../stores/privacy'
-import { useGiftStore } from '../stores/gift'
-import { guestStorage } from '../utils/guestStorage'
-import MainWebsiteView from '../views/MainWebsiteView.vue'
-import GalleryView from '../views/GalleryView.vue'
-import PrivacyPolicy from '../views/PrivacyPolicy.vue'
-import PaymentValidation from '../views/PaymentValidation.vue'
+
+const lazyStoreAccess = {
+  async getGiftStore() {
+    const { useGiftStore } = await import('../stores/gift')
+    return useGiftStore()
+  }
+}
 
 const routes = [
   {
-    path: '/',
+    path: '/:token?',
     name: 'main-website',
-    component: MainWebsiteView,
-    beforeEnter: async () => {
-      const guestStore = useGuestStore()
-      const privacyStore = usePrivacyStore()
-
-      if(guestStore.accessedViaToken){
-        console.log('ℹ️ Navigated here from token-handler, skipping cached data check')
-        return
-      }
-      
-      // Try to load any valid cached guest data
-      console.log('🏠 Accessing main website without token, checking for cached data...')
-      const hasCachedData = guestStorage.checkCache()
-      
-      if (hasCachedData) {
-        console.log('✅ Found cached data, initialising store from cache')
-        await initialiseStoreFromCache()
-        // For cached users, don't show the banner (they've been here before)
-        privacyStore.initializeForCachedUser()
-      } else {
-        console.log('📭 No cached data found, proceeding with basic website experience')
-        // For completely new users without tokens, don't show banner either
-        privacyStore.initializeForCachedUser()
+    component: () => import('../views/MainWebsiteView.vue'),
+    beforeEnter: (to: RouteLocationNormalized) => {
+      if(to.params.token) {
+        return {
+          name: 'main-website',
+          replace: true
+        }
+      }else {
+        return true
       }
     }
   },
   {
     path: '/gallery',
     name: 'gallery',
-    component: GalleryView
+    component: () => import('../views/GalleryView.vue'),
+    meta: { scrollBehavior: 'instant'}
   },
   {
     path: '/payment-validation/:token',
     name: 'payment-validation',
-    component: PaymentValidation,
+    component: () => import('../views/PaymentValidation.vue'),
     beforeEnter: async (to: RouteLocationNormalized) => {
       console.log('🚦 Route guard triggered for payment validation', to.path )
-      const giftStore = useGiftStore()
+      const giftStore = await lazyStoreAccess.getGiftStore()
       const guestToken = to.params.token as string
 
-      await giftStore.fetchGuestGifts(guestToken)
-      await initialiseStoreFromCache()
+      if(to.query && to.query.action === 'cancel' && to.query.reference) {
+        console.log('Payment was cancelled for reference:', to.query.reference)
+        const reference = to.query.reference as string
 
+        console.log('Removing guest gift associated with cancelled payment')
+        await giftStore.removeGuestGift(guestToken, reference)
+
+        console.log('Redirecting back to main website after cancellation')
+        return { name: 'main-website', replace: true }
+      }
+      
+      await giftStore.fetchGuestGifts(guestToken)
       return true
     }
   },
   {
     path: '/privacy-policy',
     name: 'privacy-policy',
-    component: PrivacyPolicy
-  },
-  {
-    path: '/:token',
-    name: 'token-handler',
-    component: MainWebsiteView,
-    props: true,
-    beforeEnter: async (to: RouteLocationNormalized) => {
-      console.log('🚦 Route guard triggered for token handling', {
-        path: to.path,
-        token: to.params.token
-      })
-
-      const privacyStore = usePrivacyStore()
-      const guestStore = useGuestStore()
-      const uiStore = useUIStore()
-      
-      try {
-        console.log('🔑 Attempting to validate token...')
-        // await guestStore.fetchGuestByToken(to.params.token as string)
-        await initialiseStoreWithToken(to.params.token as string)
-        console.log('✅ Token validation successful')
-
-        //Navigate to the 'main-website' view
-        console.log('🧭 Navigating to main-website view')
-        guestStore.accessedViaToken = true
-        await router.push({ name: 'main-website' })
-        
-        // Use nextTick to ensure navigation is complete before showing modal
-        if(guestStore.hasCachedData){
-          // uiStore.showCookie = false
-          uiStore.hideAllModals()
-          uiStore.hideAllBottomSheets()
-        }else {
-          console.log('🎉 Showing personalized welcome modal for:', guestStore.guestData?.guest.first_name)
-          // uiStore.showCookie = true
-          setTimeout(() => {
-            uiStore.showHideWelcomeModal(true)
-            privacyStore.initializeNotice(to.params.token as string)
-            // Note: Data notice will be shown via banner component if not yet acknowledged
-          }, 4500)
-        }
-      } catch (e) {
-        console.error('❌ Token validation failed:', e)
-        guestStore.setError(e instanceof Error ? e.message : 'Invalid invitation link')
-        console.log('🔄 Redirecting to guest identifier')
-        return { name: 'guest-identifier' }
-      }
-    }
+    component: () => import('../views/PrivacyPolicy.vue')
   }
 ]
-
-const initialiseStoreWithToken = async (token: string) => {
-  console.log('🚀 Initialising stores with token:', token)
-  const guestStore = useGuestStore()
-  const rsvpStore = useRSVPStore()
-  const goodWillStore = useGoodWillStore()
-  const giftStore = useGiftStore()
-  
-  const results = await Promise.allSettled([
-    guestStore.fetchGuestByToken(token),
-    rsvpStore.fetchRSVPData(token),
-    goodWillStore.fetchGoodWillMessage(token),
-    giftStore.fetchGuestGifts(token)
-  ])
-
-  results.forEach((result, index) => {
-    const stores = [guestStore, rsvpStore, goodWillStore, giftStore]
-    if (result.status === 'rejected') {
-      console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
-    } else {
-      console.log(`✅ Store ${index} initialized successfully`)
-    }
-  })
-}
-
-const initialiseStoreFromCache = async() => {
-  console.log('🚀 Initialising stores from cache')
-  const guestStore = useGuestStore()
-  const rsvpStore = useRSVPStore()
-  const goodWillStore = useGoodWillStore()
-  const giftStore = useGiftStore()
-
-  const results = await Promise.allSettled([
-    guestStore.initialiseGuestStoreFromCache(),
-    rsvpStore.initialiseRsvpStoreFromCache(),
-    goodWillStore.initialiseGoodWillStoreFromCache(),
-    giftStore.initialiseGiftStoreFromCache()
-  ])
-
-  results.forEach((result, index) => {
-    const stores = [guestStore, rsvpStore, goodWillStore, giftStore]
-    if (result.status === 'rejected') {
-      console.warn(`❌ Error initializing store ${stores[index]}:`, result.reason)
-    } else {
-      console.log(`✅ ${stores[index]} initialized successfully`)
-    }
-  })
-}
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior(to) {
-    if (to.hash) {
+    if (to.meta?.scrollBehavior) {
       return {
-        el: to.hash,
-        behavior: 'smooth',
-      };
-    } else {
-      // Always scroll to the top of the page on a new route
-      return { top: 0, behavior: 'smooth' };
+        top: 0,
+        behavior: to.meta.scrollBehavior as ScrollBehavior // 'auto' | 'smooth'
+      }
     }
-  },
+    return { top: 0 }
+  }
 })
 
 export default router
