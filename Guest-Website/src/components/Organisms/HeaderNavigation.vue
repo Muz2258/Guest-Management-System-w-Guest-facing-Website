@@ -2,7 +2,7 @@
   <!-- Sticky Header -->
   <transition appear name="slide-down">
     <header class="fixed top-0 w-screen z-50" :class="{'h-svh': showNavigation}">
-      <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90">
+      <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90 relative">
         <button 
           @click="toggleNavigation"
           class="cursor-pointer hover:opacity-80 transition-opacity"
@@ -10,6 +10,9 @@
         >
           <WeddingLogo />
         </button>
+        <div class="absolute -bottom-[13px] flex justify-center items-center p-8 rounded-full bg-neutrals-neu-100 z-10 border border-neutrals-neu-90" @click="toggleNavigation">
+          <Icon :name="showNavigation ? 'arrow-head-up' : 'arrow-head-down'" :color="getColor('neutral.neu_0')" :size="10" />
+        </div>
       </div>
 
       <Transition name="navigation">
@@ -56,9 +59,9 @@
 
 <script setup lang="ts">
 /* ------------------ Components ------------------- */
-import WeddingLogo from '../Atoms/WeddingLogo.vue'
+import Icon from '../Icon';
+import { getColor } from '@/utils/colors';
 
-// ✅ RESOURCE COORDINATION: Emit when header is mounted
 const emit = defineEmits<{
   'mounted': []
 }>()
@@ -79,26 +82,21 @@ const closeNavigation = () => {
 }
 
 const navigateAndClose = () => {
-  // Small delay to allow router transition to start
   setTimeout(() => {
     closeNavigation()
   }, 100)
 }
 
 /* ------------------ Lifecycle ------------------- */
-// Close navigation when route changes
 watch(() => route.path, () => {
   closeNavigation()
 })
 
-// Cleanup body overflow on unmount
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
 })
 
-// Handle escape key
 onMounted(() => {
-  // ✅ Signal that header is mounted and ready
   emit('mounted')
   
   const handleEscape = (e: KeyboardEvent) => {

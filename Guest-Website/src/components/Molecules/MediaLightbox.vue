@@ -229,12 +229,12 @@ const goToSlide = (index: number, behavior: 'smooth' | 'instant') => {
   }
 }
 
-const scrollThumbnailToCenter = (index: number) => {
+const scrollThumbnailToCenter = (index: number, behavior: 'smooth' | 'instant') => {
   if (thumbnailContainer.value && thumbnailRefs.value[index]) {
     const container = thumbnailContainer.value
     const thumbnail = thumbnailRefs.value[index]
     const scrollLeft = thumbnail.offsetLeft - (container.clientWidth / 2) + (thumbnail.clientWidth / 2)
-    container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    container.scrollTo({ left: scrollLeft, behavior: behavior })
   }
 }
 
@@ -261,7 +261,7 @@ const toggleUI = () => {
 
 watch(() => props.currentIndex, async (newIndex, oldIndex) => {
   goToSlide(newIndex, 'smooth')
-  scrollThumbnailToCenter(newIndex)
+  scrollThumbnailToCenter(newIndex, 'smooth')
 
   if(newIndex !== oldIndex) {
     const oldVideo = videoRefs.value[oldIndex]
@@ -289,7 +289,7 @@ watch(() => props.currentIndex, async (newIndex, oldIndex) => {
 watch(() => hideUI.value, newVal => {
   if(newVal === false) {
     nextTick(() => {
-      scrollThumbnailToCenter(props.currentIndex)
+      scrollThumbnailToCenter(props.currentIndex, 'instant')
     })
   }
 })
@@ -299,7 +299,7 @@ onMounted(() => {
 
   nextTick(() => {
     goToSlide(props.currentIndex, 'instant')
-    scrollThumbnailToCenter(props.currentIndex)
+    scrollThumbnailToCenter(props.currentIndex, 'instant')
   })
 })
 

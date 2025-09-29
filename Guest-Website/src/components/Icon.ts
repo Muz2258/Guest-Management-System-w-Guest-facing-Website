@@ -47,7 +47,7 @@ export default defineComponent({
         })
       }
 
-      return svgEl?.outerHTML || ''
+      return svgEl?.outerHTML
     })
 
     return () => h('span', {
