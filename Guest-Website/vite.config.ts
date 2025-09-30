@@ -62,9 +62,10 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       minify: 'terser',
-      terserOptions,
+      // terserOptions,
       chunkSizeWarningLimit: 1000,
       sourcemap: true,
+      // assetsInlineLimit: 4096,
       cssCodeSplit: true,
       cssMinify: true
     },
