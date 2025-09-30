@@ -2,9 +2,9 @@
   <!-- Sticky Header -->
   <transition appear name="slide-down">
     <header class="fixed top-0 w-screen z-50" :class="{'h-svh': showNavigation}">
-      <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90 relative">
+      <div class="flex justify-center items-center py-16 px-24 bg-neutrals-neu-100/90 backdrop-blur-sm border-b border-neutrals-neu-90 relative" @click="toggleNavigation" role="button" aria-expanded="showNavigation" aria-controls="navigation-menu" tabindex="0">
         <WeddingLogo />
-        <div class="absolute -bottom-[13px] flex justify-center items-center p-8 rounded-full bg-neutrals-neu-100 z-10 border border-neutrals-neu-90" aria-label="Toggle navigation menu" @click="toggleNavigation">
+        <div class="absolute -bottom-[13px] flex justify-center items-center p-8 rounded-full bg-neutrals-neu-100 z-10 border border-neutrals-neu-90" aria-label="Toggle navigation menu">
           <Icon :name="showNavigation ? 'arrow-head-up' : 'arrow-head-down'" :color="getColor('neutral.neu_0')" :size="10" />
         </div>
       </div>
