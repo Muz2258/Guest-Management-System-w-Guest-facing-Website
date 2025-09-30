@@ -61,11 +61,11 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       minify: 'terser',
-      // terserOptions,
-      chunkSizeWarningLimit: 1000,
+      terserOptions,
+      // chunkSizeWarningLimit: 1000,
       sourcemap: true,
       // assetsInlineLimit: 4096,
-      cssCodeSplit: true,
+      // cssCodeSplit: true,
       cssMinify: true
     },
     optimizeDeps: {
