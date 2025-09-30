@@ -66,13 +66,14 @@ export const useGalleryStore = defineStore('gallery', () => {
       return
     }
     try {
-      currentPage.value = mediaItems.value[-1]?.length === pageLimit.value ? currentPage.value + 1 : currentPage.value
+      console.log(`mediaItems for ${currentPage.value} before loading more:`, mediaItems.value[mediaItems.value.length -1]?.length)
+      currentPage.value = hasNextPage.value && mediaItems.value[mediaItems.value.length -1]?.length === pageLimit.value ? currentPage.value + 1 : currentPage.value
       console.log(`[loadMoreItems] Loading more items. Page:`, currentPage.value)
       await fetchMediaItems(currentPage.value)
       console.log(`[loadMoreItems] Loaded page ${currentPage.value}. Total items:`, mediaItems.value[currentPage.value - 1]?.length)
     } catch (error) {
       console.error('[loadMoreItems] Failed to load more items:', error)
-      currentPage.value = mediaItems.value[-1]?.length === pageLimit.value ? currentPage.value - 1 : currentPage.value
+      currentPage.value = mediaItems.value[mediaItems.value.length -1]?.length === pageLimit.value ? currentPage.value - 1 : currentPage.value
     }
   }
 
