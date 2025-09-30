@@ -6,7 +6,7 @@
       </button>
     </div>
 
-    <div class="relative w-full grow overflow-hidden" @click="toggleUI" >
+    <div class="relative w-full h-full overflow-hidden" @click="toggleUI" >
       <div ref="containerRef" class="h-full flex space-x-8">
         <div 
           v-for="(item, index) in mediaItems"
@@ -64,19 +64,19 @@
         </div>
       </div>
       <div class="w-full bg-neutrals-neu-0/25 py-16">
-        <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
+        <div class="flex gap-4 items-center w-full h-[4rem] px-[calc(50%-24px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
           <div 
             v-for="(item, index) in mediaItems" 
             :key="`lightbox-thumb-${index}`"
-            class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
-            :class="{ 'h-80 w-72': index === currentIndex}"
+            class="h-[3rem] w-[2rem] shrink-0 cursor-pointer transition-all duration-250 ease-out"
+            :class="{ 'h-[4rem] w-[3.5rem]': index === currentIndex}"
             @click="currentIndex = index"
             :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
           >
             <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
-            <div v-else-if="item.file_type === 'video'" class="relative w-full h-full">
+            <div v-else-if="item.file_type === 'video'" class="relative w-full h-full after:block after:absolute after:top-0 after:left-0 after:size-full after:bg-neutrals-neu-0/50 after:z-10">
               <img  :src="item.s3_thumbnail_url" class="w-full h-full object-cover" />
-              <Icon name="video-solid" :size="24" :color="getColor('neutral.neu_100')" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+              <Icon name="video-solid" :size="24" :color="getColor('neutral.neu_100')" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-100" />
             </div>
           </div>
         </div>

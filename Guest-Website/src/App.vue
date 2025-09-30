@@ -182,6 +182,7 @@ const CookieBanner = defineAsyncComponent({
 const showCookieWithDelay = ref(false)
 const isMobile = ref<boolean>(true)
 const tempToken = ref<string | null>(null)
+const showHeader = ref<boolean>(true)
 
 /* ------------------ Computed Properties ------------------ */
 const showWelcomeModal = computed(() => uiStore.showWelcomeModal && !guestStore.hasCachedData && privacyStore.shouldShowBanner)
@@ -194,10 +195,6 @@ const showDeleteGoodWillModal = computed(() => uiStore.showDeleteGoodWillModal)
 
 const showCookie = computed(() => {
   return privacyStore.shouldShowBanner && showCookieWithDelay.value
-})
-
-const showHeader = computed(() => {
-  return route.name !== 'media-viewer' && isMobile.value
 })
 
 
@@ -349,6 +346,11 @@ watch(showWelcomeModal, (newValue, oldValue) => {
   }
 }, { immediate: false })
 
+watch(route, (newRoute) => {
+  const isMediaViewer = window.location.pathname.includes('media')
+  showHeader.value = newRoute.name !== 'media-viewer' && !isMediaViewer
+})
+
 
 /* ------------------- Lifecycle Hooks --------------------- */
 onBeforeMount(async () => {
@@ -366,6 +368,9 @@ onBeforeMount(async () => {
 onMounted(async () => {
   checkMobileSize()
   window.addEventListener('resize', checkMobileSize)
+
+  const isMediaViewer = window.location.pathname.includes('media')
+  showHeader.value = route.name !== 'media-viewer' && !isMediaViewer
 
   console.log('Checking for cached data...')
   const result = guestStorage.checkCache()
