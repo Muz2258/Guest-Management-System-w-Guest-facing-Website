@@ -12,6 +12,7 @@ declare module 'vue' {
     Button: typeof import('./src/components/Atoms/Button.vue')['default']
     CacheStatus: typeof import('./src/components/Dev/CacheStatus.vue')['default']
     Card: typeof import('./src/components/Atoms/Card.vue')['default']
+    CardStory: typeof import('./src/components/Atoms/CardStory.vue')['default']
     CheckBox: typeof import('./src/components/Atoms/CheckBox.vue')['default']
     CookieBanner: typeof import('./src/components/Molecules/CookieBanner.vue')['default']
     DecorativeBranches: typeof import('./src/components/Atoms/DecorativeBranches.vue')['default']
