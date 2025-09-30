@@ -9,7 +9,7 @@
                 <h1 class="groom text-title text-neutrals-neu-0">Emamuzo</h1>
                 <h1 class="and absolute size-[3rem] flex items-center justify-center top-auto right-auto bg-brand-pri text-neutrals-neu-100 text-[1.75rem] rounded-full mt-12">&</h1>
             </div>
-            <div  class="img-container mx-auto mb-24 max-w-[75%] grow relative before:content-[var(--name)] before:absolute before:bottom-0 before:left-[-20px] before:[writing-mode:sideways-lr] before:[-webkit-writing-mode:sideways-lr] before:text-xs before:text-neutrals-neu-35 before:[text-orientation:mixed] before:block after:content-[var(--hashtag)] after:absolute after:top-0 after:right-[-20px] after:text-xs after:text-neutrals-neu-35 after:[text-orientation:mixed] after:[writing-mode:sideways-rl] after:[-webkit-writing-mode:sideways-rl] after:block" id="main-hero-image">
+            <div  class="img-container mx-auto mb-24 max-w-[75%] grow relative" id="main-hero-image">
               <picture>
                   <source 
                     :srcset="`${s3Url}/images/base/hero-image.webp 1x, ${s3Url}/images/@2x/hero-image@2x.webp 2x, ${s3Url}/images/@3x/hero-image@3x.webp 3x`" 
@@ -56,6 +56,29 @@ const handleAnimationEnd = () => {
 </script>
 
 <style scoped>
+.img-container::before, .img-container::after {
+  display: block;
+  position: absolute;
+  font-size: 0.75rem;
+  color: #595959;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.img-container::before {
+  content: 'Cheema \'25';
+  bottom: 24px;
+  left: -44px;
+  transform: rotate(-90deg) translateX(0);
+}
+
+.img-container::after {
+  content: '#BuiltToLast';
+  top: 26px;
+  right: -46px;
+  transform: rotate(90deg) translateX(0);
+}
+
 .hero-animation-enter-active .image {
   transition: opacity 1.5s cubic-bezier(.81,.15,.52,.84);
 }
@@ -92,12 +115,12 @@ const handleAnimationEnd = () => {
 }
 
 .hero-animation-enter-from .img-container::after {
-  transform: translateY(80%);
+  transform: rotate(90deg) translateX(80%);
   opacity: 0;
 }
 
 .hero-animation-enter-from .img-container::before {
-  transform: translateY(-80%);
+  transform: rotate(-90deg) translateX(80%);
   opacity: 0;
 }
 
