@@ -11,7 +11,6 @@ const customResolvers = {
   '@/utils/guestStorage.ts': ['guestStorage']
 }
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
 
