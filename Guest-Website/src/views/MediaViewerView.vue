@@ -6,7 +6,7 @@
       </button>
     </div>
 
-    <div class="relative w-full grow overflow-hidden" @click="toggleUI" >
+    <div class="relative w-full h-full overflow-hidden" @click="toggleUI" >
       <div ref="containerRef" class="h-full flex space-x-8">
         <div 
           v-for="(item, index) in mediaItems"
