@@ -35,6 +35,7 @@ declare module 'vue' {
     ManagePlusOneModal: typeof import('./src/components/Templates/ManagePlusOneModal.vue')['default']
     MediaItem: typeof import('./src/components/Organisms/MediaItem.vue')['default']
     MediaLightbox: typeof import('./src/components/Molecules/MediaLightbox.vue')['default']
+    MediaViewerView: typeof import('./src/views/MediaViewerView.vue')['default']
     Modal: typeof import('./src/components/Atoms/Modal.vue')['default']
     PaymentValidation: typeof import('./src/views/PaymentValidation.vue')['default']
     PrivacyPolicy: typeof import('./src/views/PrivacyPolicy.vue')['default']

@@ -1,7 +1,7 @@
 <template>
   <main v-if="isMobile">
     <transition appear name="slide-down">
-      <HeaderNavigation />
+      <HeaderNavigation v-if="showHeader" />
     </transition>
 
     <transition name="fade">
@@ -84,6 +84,7 @@ const guestStore = useGuestStore()
 const rsvpStore = useRSVPStore()
 const privacyStore = usePrivacyStore()
 const uiStore = useUIStore()
+const route = useRoute()
 
 const lazyStoreAccess = {
   async getGoodWillStore() {
@@ -177,10 +178,12 @@ const CookieBanner = defineAsyncComponent({
   timeout: 3000
 })
 
+
 /* ------------------ Reactive Variables ------------------ */
 const showCookieWithDelay = ref(false)
 const isMobile = ref<boolean>(true)
 const tempToken = ref<string | null>(null)
+const showHeader = ref<boolean>(true)
 
 /* ------------------ Computed Properties ------------------ */
 const showWelcomeModal = computed(() => uiStore.showWelcomeModal && !guestStore.hasCachedData && privacyStore.shouldShowBanner)
@@ -344,6 +347,11 @@ watch(showWelcomeModal, (newValue, oldValue) => {
   }
 }, { immediate: false })
 
+watch(route, (newRoute) => {
+  const isMediaViewer = window.location.pathname.includes('media')
+  showHeader.value = newRoute.name !== 'media-viewer' && !isMediaViewer
+})
+
 
 /* ------------------- Lifecycle Hooks --------------------- */
 onBeforeMount(async () => {
@@ -361,6 +369,9 @@ onBeforeMount(async () => {
 onMounted(async () => {
   checkMobileSize()
   window.addEventListener('resize', checkMobileSize)
+
+  const isMediaViewer = window.location.pathname.includes('media')
+  showHeader.value = route.name !== 'media-viewer' && !isMediaViewer
 
   console.log('Checking for cached data...')
   const result = guestStorage.checkCache()
@@ -410,7 +421,7 @@ onUnmounted(() => {
 }
 
 .slide-down-enter-active {
-  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s;
 }
 
 .slide-down-enter-from {

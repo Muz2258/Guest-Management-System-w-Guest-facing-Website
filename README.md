@@ -1,12 +1,12 @@
-# Wedding Guest Management System - Admin App
-
-This is the administrative interface for the wedding guest management system. Built with Vue.js 3, TypeScript, and Element Plus, it provides a comprehensive dashboard for managing wedding guests, RSVPs, and event details.
+# Wedding Guest Management System
+This is a mono-repo comprising of an Admin app project and a guest-facing webstie project.
 
 ## Project Structure
 
 ```
 Code/
 ├── Admin-app/     # Vue.js admin interface with Element Plus
+├── Guest-Website/ # Vue.js public website with Tailwind CSS
 └── package.json   # Root workspace configuration
 ```
 
@@ -32,6 +32,11 @@ npm run dev
   - Vue.js 3
   - TypeScript
   - Element Plus
+  
+- Guest Website:
+  - Vue.js 3
+  - TypeScript
+  - Tailwind CSS
   - Pinia (State Management)
   - Vue Router
   - Vite (Build Tool)
@@ -43,11 +48,19 @@ npm run dev
 - User authentication and authorization
 - Real-time data updates
 - Responsive design for desktop and tablet
+- Guest RSVP management with plus-one options
+- Event details and schedule display
+- Interactive gallery with infinite scroll
+- Gift registry with contribution options
+- Goodwill message system
+- Mobile-first responsive design
+- Cookie banner and privacy compliance
 
 ## Development
 
 For detailed development instructions, see:
 - [Admin App README](./Admin-app/README.md)
+- [Guest Website README](./Guest-Website/README.md)
 
 ## License
 
