@@ -3,12 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
+    "Admin-app",
     "Guest-Website"
   ],
   "scripts": {
-    "dev": "npm run dev -w Guest-Website",
-    "build": "npm run build -w Guest-Website",
-    "analyze": "npm run analyze -w Guest-Website"
+    "dev:admin": "cd Admin-app && npm run dev",
+    "dev:guest": "cd Guest-Website && npm run dev",
+    "build:admin": "cd Admin-app && npm run build",
+    "build:guest": "cd Guest-Website && npm run build",
+    "preview:admin": "cd Admin-app && npm run preview",
+    "preview:guest": "cd Guest-Website && npm run preview",
+    "type-check:admin": "cd Admin-app && npm run type-check",
+    "type-check:guest": "cd Guest-Website && npm run type-check",
+    "analyze:admin": "cd Admin-app && npm run analyze",
+    "analyze:guest": "cd Guest-Website && npm run analyze"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.2"

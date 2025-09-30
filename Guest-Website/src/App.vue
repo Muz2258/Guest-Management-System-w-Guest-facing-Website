@@ -178,6 +178,7 @@ const CookieBanner = defineAsyncComponent({
   timeout: 3000
 })
 
+
 /* ------------------ Reactive Variables ------------------ */
 const showCookieWithDelay = ref(false)
 const isMobile = ref<boolean>(true)
