@@ -15,15 +15,29 @@
           style="margin-right: 16px;" 
         >
           <div v-if="item.file_type === 'image'" class="relative w-full h-full">
+            <div class="absolute inset-0 flex items-center justify-center bg-neutrals-neu-0/50" v-if="mediaStates[index]?.file_type === 'image' && !mediaStates[index]?.isLoaded">
+              <div class="relative size-32 flex items-center justify-center">
+                <span class="absolute inset-0 rounded-full border-4 border-neutrals-neu-100 opacity-40"></span>
+                <span class="absolute inset-0 rounded-full border-4 border-t-brand-sec_light_100 border-r-transparent border-b-transparent border-l-transparent animate-spin"></span>
+              </div>
+            </div>
             <img 
               :src="item.s3_web_url" 
               :alt="item.filename"
+              :ref="el => imageRefs[index] = el as HTMLImageElement"
               class="w-full h-full object-contain select-none" 
               draggable="false" 
+              @load="hideLoader('image', index)"
             />
           </div>
 
           <div v-else-if="item.file_type === 'video'" class="relative w-full h-full">
+            <div class="absolute inset-0 flex items-center justify-center bg-neutrals-neu-0/50" v-if="mediaStates[index]?.file_type === 'video' && !mediaStates[index]?.isLoaded">
+              <div class="relative size-32 flex items-center justify-center">
+                <span class="absolute inset-0 rounded-full border-4 border-neutrals-neu-100 opacity-40"></span>
+                <span class="absolute inset-0 rounded-full border-4 border-t-brand-sec_light_100 border-r-transparent border-b-transparent border-l-transparent animate-spin"></span>
+              </div>
+            </div>
             <video 
               :ref="el => videoRefs[index] = el as HTMLVideoElement" 
               class="w-full h-full object-contain" 
@@ -31,6 +45,7 @@
               :src="item.s3_web_url" 
               :autoplay="index === currentIndex"
               playsinline
+              @canplaythrough="hideLoader('video', index)"
               @play="handlePlay(index)"
               @pause="handlePause(index)"
               @timeupdate="handleTimeUpdate(index, $event)"
@@ -41,15 +56,15 @@
       </div>
     </div>
 
-    <button v-if="currentIndex !== 0 && !hideUI" class="absolute left-16 top-1/2 transform -translate-y-1/2 p-8 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="navigateMedia('prev')" >
+    <button v-if="currentIndex !== 0 && !hideUI" class="absolute left-16 top-1/2 transform -translate-y-1/2 p-12 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="navigateMedia('prev')" >
       <Icon name="arrow-head-left" :size="16" :color="getColor('neutral.neu_100')" />
     </button>
 
-    <button v-if="currentIndex !== mediaItems.length - 1 && !hideUI" class="absolute right-16 top-1/2 transform -translate-y-1/2 p-8 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="navigateMedia('next')">
+    <button v-if="currentIndex !== mediaItems.length - 1 && !hideUI" class="absolute right-16 top-1/2 transform -translate-y-1/2 p-12 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="navigateMedia('next')">
       <Icon name="arrow-head-right" :size="16" :color="getColor('neutral.neu_100')" />
     </button>
 
-    <div v-if="!hideUI" class="absolute bottom-0 left-0 right-0 flex flex-col gap-24 items-center py-16">
+    <div v-if="!hideUI" class="absolute bottom-0 left-0 right-0 flex flex-col gap-24 items-center">
       <div v-if="!hideUI && mediaItems[currentIndex]?.file_type === 'video'" class="flex items-center justify-center gap-12 z-100">
         <div class="flex items-center justify-center gap-8 py-8 px-12 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="togglePlay(currentIndex)">
           <Icon :name="videoTimes[currentIndex]?.isPlaying ? 'pause-solid' : 'play-solid'" :color="getColor('neutral.neu_100')" :size="16" />
@@ -98,8 +113,10 @@ const router = useRouter()
 const containerRef = ref<HTMLElement | null>(null)
 const thumbnailContainer = ref<HTMLElement | null>(null)
 const thumbnailRefs = ref<(HTMLElement | null)[]>([])
+const imageRefs = ref<Record<number, HTMLImageElement>>({})
 const videoRefs = ref<Record<number, HTMLVideoElement | null>>({})
 const videoTimes = ref<Record<any, any>>({})
+const mediaStates = ref<Record<number, any>>({})
 
 const currentIndex = ref<number>(0)
 const currentTranslate = ref(0)
@@ -111,6 +128,13 @@ const mediaItems = computed<MediaItem[]>(() => {
   return items
 })
 
+const initializeMediaStates = () => {
+  mediaStates.value = mediaItems.value.map(item => ({
+    isLoaded: false,
+    file_type: item.file_type
+  }))
+}
+
 const goBack = () => {
   router.push({
     name: 'gallery',
@@ -120,6 +144,22 @@ const goBack = () => {
 const navigateMedia = (direction: string) => {
   if(direction === 'next') currentIndex.value++
   if(direction === 'prev') currentIndex.value--
+}
+
+const hideLoader = (type: string, index: number) => {
+  if(type === 'image') {
+    const img = imageRefs.value[index]
+    if(img && img.complete && img.naturalHeight !== 0) {
+      mediaStates.value[index].isLoaded = true
+    }
+  }
+
+  if(type === 'video') {
+    const video = videoRefs.value[index]
+    if(video && video.readyState >= 3) {
+      mediaStates.value[index].isLoaded = true
+    }
+  }
 }
 
 const handleVideoLoad = (index: number) => {
@@ -138,6 +178,20 @@ const handleTimeUpdate = (index: number, event: Event) => {
   const video = event.target as HTMLVideoElement
   if(video && index === currentIndex.value) {
     videoTimes.value[index].currentTime = formatTime(video.currentTime)
+  }
+}
+
+const handlePlay = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    videoTimes.value[index].isPlaying = true
+  }
+}
+
+const handlePause = (index: number) => {
+  const video = videoRefs.value[index]
+  if(video) {
+    videoTimes.value[index].isPlaying = false
   }
 }
 
@@ -164,20 +218,6 @@ const toggleMute = (index: number) => {
       video.muted = true
       videoTimes.value[index].isMuted = true
     }
-  }
-}
-
-const handlePlay = (index: number) => {
-  const video = videoRefs.value[index]
-  if(video) {
-    videoTimes.value[index].isPlaying = true
-  }
-}
-
-const handlePause = (index: number) => {
-  const video = videoRefs.value[index]
-  if(video) {
-    videoTimes.value[index].isPlaying = false
   }
 }
 
@@ -271,7 +311,7 @@ watch(() => currentIndex.value, async (newIndex, oldIndex) => {
     }
   }
 
-  if (newIndex >= ((mediaItems.value.length - 1) / galleryStore.currentPage) / 2 && newIndex > oldIndex) {
+  if ((newIndex + 5) >= mediaItems.value.length && galleryStore.hasNextPage && !galleryStore.loading) {
     galleryStore.loadMoreItems()
   }
 })
@@ -281,6 +321,22 @@ watch(() => hideUI.value, newVal => {
     nextTick(() => {
       scrollThumbnailToCenter(currentIndex.value, 'instant')
     })
+  }
+})
+
+watch(() => mediaItems.value, (newItems, oldItems) => {
+  if(!oldItems) {
+    initializeMediaStates()
+  }else {
+    const newMedia = newItems.slice(oldItems.length)
+    if(newMedia.length > 0) {
+      newMedia.forEach((item, index) => {
+        mediaStates.value[oldItems.length + index] = {
+          isLoaded: false,
+          file_type: item.file_type
+        }
+      })
+    }
   }
 })
 
@@ -315,6 +371,7 @@ onMounted(async () => {
   
     goToSlide(currentIndex.value, 'instant')
     scrollThumbnailToCenter(currentIndex.value, 'instant')
+    initializeMediaStates()
   })
 })
 
