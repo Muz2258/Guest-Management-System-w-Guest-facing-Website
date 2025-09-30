@@ -20,34 +20,6 @@
             :item="item"
           />
         </div>
-          <!-- <div 
-              v-for="(item, index) in previewItems" 
-              :key="`media-${index}`"
-              class="cursor-pointer mb-6 break-inside-avoid"
-              @click="openGalleryPage(item.id)"
-          >
-              <img 
-                  v-if="item.file_type === 'image'"
-                  :src="item.s3_preview_url" 
-                  :alt="item.filename"
-                  class="w-full object-contain hover:opacity-90 transition-opacity rounded-lg"
-                  loading="lazy"
-              />
-              <div 
-                  v-else-if="item.file_type === 'video'"
-                  class="relative overflow-hidden hover:opacity-90 transition-opacity rounded-lg"
-              >
-                <video 
-                  :src="item.s3_preview_url"
-                  class="w-full object-contain"
-                  muted
-                  playsinline
-                />
-                <div class="absolute bottom-0 left-0 right-0 flex items-center justify-center">
-                  <Icon name="video-solid" :color="getColor('neutral.neu_76')" :size="48" />
-                </div>
-              </div>
-          </div> -->
       </div>
       
       <!-- View All Button -->
@@ -79,8 +51,8 @@ const previewItems = computed(() => {
 /* ------------------ Methods ------------------- */
 const openGalleryPage = (id: string) => {
   router.push({ 
-    name: 'gallery', 
-    query: { image: id } 
+    name: 'media-viewer', 
+    params: { imageID: id } 
   })
 }
 

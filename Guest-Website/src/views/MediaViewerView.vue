@@ -1,8 +1,8 @@
 <template>
-  <div class="fixed inset-0 bg-black/90 z-[9999] flex flex-col items-center justify-between">
-    <div v-if="!hideUI" class="absolute top-0 left-0 right-0 flex items-center justify-end px-24 py-16 z-100 bg-neutrals-neu-0/25">
-      <button @click="$emit('close')" class="px-12 py-12 bg-neutrals-neu-0/50 rounded-full flex items-center justify-center">
-        <Icon name="close" :size="12" :color="getColor('brand.sec_light_100')" />
+  <div class="relative bg-neutrals-neu-0 h-dvh flex items-center justify-center">
+    <div v-if="!hideUI" class="absolute top-0 left-0 right-0 flex items-center justify-start px-16 pb-16 pt-32 z-100 bg-neutrals-neu-0/25">
+      <button @click="goBack" class="p-8 bg-neutrals-neu-0/50 rounded-full flex items-center justify-center">
+        <Icon name="arrow-head-left" :size="16" :color="getColor('brand.sec_light_100')" />
       </button>
     </div>
 
@@ -15,9 +15,6 @@
           style="margin-right: 16px;" 
         >
           <div v-if="item.file_type === 'image'" class="relative w-full h-full">
-            <!-- <div v-if="index === currentIndex && !isMediaLoaded" class="flex justify-center py-24">
-              <div class="animate-spin rounded-full size-32 border-b-2 border-neutrals-neu-100"></div>
-            </div> -->
             <img 
               :src="item.s3_web_url" 
               :alt="item.filename"
@@ -27,11 +24,8 @@
           </div>
 
           <div v-else-if="item.file_type === 'video'" class="relative w-full h-full">
-            <!-- <div v-if="index === currentIndex && !isMediaLoaded" class="flex justify-center py-24">
-              <div class="animate-spin rounded-full size-32 border-b-2 border-neutrals-neu-100"></div>
-            </div> -->
             <video 
-              :ref="el => setVideoRefS(el, index)" 
+              :ref="el => videoRefs[index] = el as HTMLVideoElement" 
               class="w-full h-full object-contain" 
               muted 
               :src="item.s3_web_url" 
@@ -42,44 +36,48 @@
               @timeupdate="handleTimeUpdate(index, $event)"
               @loadedmetadata="handleVideoLoad(index)"
             />
-
-            <div v-if="!hideUI" class="absolute bottom-[8rem] left-0 right-0 flex items-center justify-center gap-12 z-100">
-              <div class="flex items-center justify-center gap-12 p-12 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="togglePlay(index)">
-                <Icon :name="videoTimes[index]?.isPlaying ? 'pause-solid' : 'play-solid'" :color="getColor('neutral.neu_100')" :size="16" />
-                <span class="text-neutrals-neu-100 text-s">
-                  {{ videoTimes[index]?.currentTime }} / {{ videoTimes[index]?.duration }}
-                </span>
-              </div>
-              <div class="flex items-center justify-center p-12 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="toggleMute(index)">
-                <Icon :name="videoTimes[index]?.isMuted ? 'mute-solid' : 'unmute-solid'" :color="getColor('neutral.neu_100')" :size="16" />
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <button v-if="currentIndex !== 0 && !hideUI" class="absolute left-16 top-1/2 transform -translate-y-1/2 p-12 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full"  @click.stop="$emit('navigate', 'prev')" >
+    <button v-if="currentIndex !== 0 && !hideUI" class="absolute left-16 top-1/2 transform -translate-y-1/2 p-8 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="navigateMedia('prev')" >
       <Icon name="arrow-head-left" :size="16" :color="getColor('neutral.neu_100')" />
     </button>
 
-    <button v-if="currentIndex !== mediaItems.length - 1 && !hideUI" class="absolute right-16 top-1/2 transform -translate-y-1/2 p-12 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="$emit('navigate', 'next')">
+    <button v-if="currentIndex !== mediaItems.length - 1 && !hideUI" class="absolute right-16 top-1/2 transform -translate-y-1/2 p-8 flex items-center justify-center bg-neutrals-neu-0/50 rounded-full" @click.stop="navigateMedia('next')">
       <Icon name="arrow-head-right" :size="16" :color="getColor('neutral.neu_100')" />
     </button>
 
-    <div v-if="!hideUI" class="absolute bottom-0 left-0 right-0 flex flex-col gap-24 items-center py-16 bg-neutrals-neu-0/25">
-      <div class="w-full">
+    <div v-if="!hideUI" class="absolute bottom-0 left-0 right-0 flex flex-col gap-24 items-center py-16">
+      <div v-if="!hideUI && mediaItems[currentIndex]?.file_type === 'video'" class="flex items-center justify-center gap-12 z-100">
+        <div class="flex items-center justify-center gap-8 py-8 px-12 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="togglePlay(currentIndex)">
+          <Icon :name="videoTimes[currentIndex]?.isPlaying ? 'pause-solid' : 'play-solid'" :color="getColor('neutral.neu_100')" :size="16" />
+          <p class="flex gap-4 items-center justify-center text-neutrals-neu-100 text-s">
+            <span>{{ videoTimes[currentIndex]?.currentTime }}</span>
+            <span> / </span>
+            <span class="opacity-65">{{ videoTimes[currentIndex]?.duration }}</span>
+          </p>
+        </div>
+        <div class="flex items-center justify-center p-8 bg-neutrals-neu-0/50 rounded-full border border-neutrals-neu-46/30" @click.stop="toggleMute(currentIndex)">
+          <Icon :name="videoTimes[currentIndex]?.isMuted ? 'mute-solid' : 'unmute-solid'" :color="getColor('neutral.neu_100')" :size="16" />
+        </div>
+      </div>
+      <div class="w-full bg-neutrals-neu-0/25 py-16">
         <div class="flex gap-4 items-center w-full h-80 px-[calc(50%-28px)] ml-auto overflow-x-auto overflow-y-visible scrollbar-hide" ref="thumbnailContainer">
           <div 
             v-for="(item, index) in mediaItems" 
             :key="`lightbox-thumb-${index}`"
             class="w-56 h-56 shrink-0 cursor-pointer transition-all duration-250 ease-out"
-            :class="{ 'h-80 w-72': index === currentIndex, 'opacity-50': index !== currentIndex }"
-            @click="navigateToThumbnail(index)"
+            :class="{ 'h-80 w-72': index === currentIndex}"
+            @click="currentIndex = index"
             :ref="(el) => { if (el) thumbnailRefs[index] = el as HTMLElement }"
           >
             <img v-if="item.file_type === 'image'" :src="item.s3_thumbnail_url" :alt="item.filename" class="w-full h-full object-cover" />
-            <video v-else-if="item.file_type === 'video'" :src="item.s3_thumbnail_url" class="w-full h-full object-cover" muted />
+            <div v-else-if="item.file_type === 'video'" class="relative w-full h-full">
+              <img  :src="item.s3_thumbnail_url" class="w-full h-full object-cover" />
+              <Icon name="video-solid" :size="24" :color="getColor('neutral.neu_100')" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+            </div>
           </div>
         </div>
       </div>
@@ -88,26 +86,13 @@
 </template>
 
 <script setup lang="ts">
-import Icon from '../Icon'
-import { getColor } from '../../utils/colors';
-import type { MediaItem } from '../../types/event'
-import type { ComponentPublicInstance } from 'vue';
-
-interface Props {
-    mediaItems: MediaItem[]
-    currentIndex: number
-}
+import Icon from '../components/Icon'
+import { getColor } from '../utils/colors';
+import type { MediaItem } from '../types/event'
 
 const galleryStore = useGalleryStore()
-
-const props = defineProps<Props>()
-const emit = defineEmits<{
-    close: []
-    navigate: [direction: 'prev' | 'next']
-    goTo: [index: number]
-    'update:currentIndex': [index: number]
-    'load-more': []
-}>()
+const route = useRoute()
+const router = useRouter()
 
 // --- REFINED STATE AND REFS ---
 const containerRef = ref<HTMLElement | null>(null)
@@ -116,14 +101,25 @@ const thumbnailRefs = ref<(HTMLElement | null)[]>([])
 const videoRefs = ref<Record<number, HTMLVideoElement | null>>({})
 const videoTimes = ref<Record<any, any>>({})
 
+const currentIndex = ref<number>(0)
 const currentTranslate = ref(0)
 const isAnimating = ref(false)
 const hideUI = ref(false)
 
-const setVideoRefS = (el: Element | ComponentPublicInstance | null, index: number) => {
-  if (el) {
-    videoRefs.value[index] = el as HTMLVideoElement
-  }
+const mediaItems = computed<MediaItem[]>(() => {
+  const items = galleryStore.mediaItems.flat()
+  return items
+})
+
+const goBack = () => {
+  router.push({
+    name: 'gallery',
+  })
+}
+
+const navigateMedia = (direction: string) => {
+  if(direction === 'next') currentIndex.value++
+  if(direction === 'prev') currentIndex.value--
 }
 
 const handleVideoLoad = (index: number) => {
@@ -140,7 +136,7 @@ const handleVideoLoad = (index: number) => {
 
 const handleTimeUpdate = (index: number, event: Event) => {
   const video = event.target as HTMLVideoElement
-  if(video && index === props.currentIndex) {
+  if(video && index === currentIndex.value) {
     videoTimes.value[index].currentTime = formatTime(video.currentTime)
   }
 }
@@ -190,8 +186,6 @@ const animateToIndex = (index: number) => {
   
   const targetTranslate = -index * (containerRef.value.clientWidth + 16)
 
-  console.log(containerRef.value.clientWidth)
-
   isAnimating.value = true
   
   containerRef.value.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'
@@ -206,11 +200,11 @@ const animateToIndex = (index: number) => {
     }
   }, 300)
   
-  if (index !== props.currentIndex) {
-    if (index > props.currentIndex) {
-      emit('navigate', 'next')
+  if (index !== currentIndex.value) {
+    if (index > currentIndex.value) {
+      navigateMedia('next')
     } else {
-      emit('navigate', 'prev')
+      navigateMedia('prev')
     }
   }
 }
@@ -238,10 +232,6 @@ const scrollThumbnailToCenter = (index: number, behavior: 'smooth' | 'instant') 
   }
 }
 
-const navigateToThumbnail = (index: number) => {
-    emit('goTo', index)
-}
-
 const formatTime = (seconds: number) => {
   seconds = Math.floor(seconds);
 
@@ -259,7 +249,7 @@ const toggleUI = () => {
   hideUI.value = !hideUI.value
 }
 
-watch(() => props.currentIndex, async (newIndex, oldIndex) => {
+watch(() => currentIndex.value, async (newIndex, oldIndex) => {
   goToSlide(newIndex, 'smooth')
   scrollThumbnailToCenter(newIndex, 'smooth')
 
@@ -281,25 +271,50 @@ watch(() => props.currentIndex, async (newIndex, oldIndex) => {
     }
   }
 
-  if (newIndex >= ((props.mediaItems.length - 1) / galleryStore.currentPage) / 2 && newIndex > oldIndex) {
-    emit('load-more')
+  if (newIndex >= ((mediaItems.value.length - 1) / galleryStore.currentPage) / 2 && newIndex > oldIndex) {
+    galleryStore.loadMoreItems()
   }
 })
 
 watch(() => hideUI.value, newVal => {
   if(newVal === false) {
     nextTick(() => {
-      scrollThumbnailToCenter(props.currentIndex, 'instant')
+      scrollThumbnailToCenter(currentIndex.value, 'instant')
     })
   }
 })
 
-onMounted(() => {
-  document.body.style.overflow = 'hidden'
+onMounted(async () => {
+  console.log('checking for media items in store')
+  if(galleryStore.mediaItems.length === 0) {
+    console.log('fetching media items for media viewer')
+    await galleryStore.fetchMediaItems()
+    console.log('fetched media items:', galleryStore.mediaItems)
+  }
 
   nextTick(() => {
-    goToSlide(props.currentIndex, 'instant')
-    scrollThumbnailToCenter(props.currentIndex, 'instant')
+    const imageID = route.params.imageID as string
+
+    console.log('🎯 Checking for image ID in route params:', imageID)
+    if(!imageID) return
+
+    const mediaItem = mediaItems.value.find(item => item.id === imageID)
+    if(!mediaItem) {
+      console.warn(`⚠️ No media item found with ID: ${imageID}`)
+      return
+    }
+
+    currentIndex.value = mediaItems.value.indexOf(mediaItem)
+    if(currentIndex.value === -1) {
+      console.warn(`⚠️ Media item with ID: ${imageID} not found in media items array`)
+      return
+    }
+
+    console.log(`🎯 Opening Media Viewer at index from query param: ${currentIndex.value}`)
+  
+  
+    goToSlide(currentIndex.value, 'instant')
+    scrollThumbnailToCenter(currentIndex.value, 'instant')
   })
 })
 

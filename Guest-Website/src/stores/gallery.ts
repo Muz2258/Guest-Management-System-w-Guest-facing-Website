@@ -9,7 +9,9 @@ export const useGalleryStore = defineStore('gallery', () => {
   const hasNextPage = ref(true)
   const currentPage = ref(1)
 
-  const fetchMediaItems = async (page: number = 1, limit: number = 12) => {
+  const pageLimit = ref<number>(12) 
+
+  const fetchMediaItems = async (page: number = 1, limit: number = pageLimit.value) => {
     try {
       loading.value = true
       error.value = null
@@ -58,13 +60,33 @@ export const useGalleryStore = defineStore('gallery', () => {
       .slice(0, limit)
   }
 
+  const loadMoreItems = async () => {
+    if (loading.value || !hasNextPage.value || mediaItems.value[-1]?.length === pageLimit.value) {
+      console.log(`[loadMoreItems] Skipped: loading=${loading.value}, hasNextPage=${hasNextPage.value}`)
+      return
+    }
+    try {
+      currentPage.value = mediaItems.value[-1]?.length === pageLimit.value ? currentPage.value + 1 : currentPage.value
+      console.log(`[loadMoreItems] Loading more items. Page:`, currentPage.value)
+      await fetchMediaItems(currentPage.value)
+      console.log(`[loadMoreItems] Loaded page ${currentPage.value}. Total items:`, mediaItems.value[currentPage.value - 1]?.length)
+    } catch (error) {
+      console.error('[loadMoreItems] Failed to load more items:', error)
+      currentPage.value = mediaItems.value[-1]?.length === pageLimit.value ? currentPage.value - 1 : currentPage.value
+    }
+  }
+
   return {
+    // States
     mediaItems,
     loading,
     error,
     totalCount,
     hasNextPage,
     currentPage,
+
+    // Methods
+    loadMoreItems,
     fetchMediaItems,
     resetStore,
     getPreviewItems
