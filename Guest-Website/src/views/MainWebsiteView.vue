@@ -12,11 +12,6 @@
 </template>
 
 <script setup lang="ts">
-<<<<<<< HEAD
-import { useIconPreloader } from '../composables/useIconPreloader'
-
-=======
->>>>>>> guest-website-staging
 /* ------------------ Stores ------------------ */
 const guestStore = useGuestStore()
 
@@ -81,14 +76,4 @@ const handleAnimationEnded = () => {
   console.log('🎉 Hero animation ended')
   emit('hero-animation-ended')
 }
-<<<<<<< HEAD
-
-onBeforeMount(() => {
-  console.log('🔃 Preloading icons...')
-  useIconPreloader().preloadAllIcons().catch(err => {
-    console.error('❌ Error preloading icons:', err)
-  })
-})
-=======
->>>>>>> guest-website-staging
 </script>
