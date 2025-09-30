@@ -1,7 +1,7 @@
 <template>
   <main v-if="isMobile">
     <transition appear name="slide-down">
-      <HeaderNavigation />
+      <HeaderNavigation v-if="showHeader" />
     </transition>
 
     <transition name="fade">
@@ -84,6 +84,7 @@ const guestStore = useGuestStore()
 const rsvpStore = useRSVPStore()
 const privacyStore = usePrivacyStore()
 const uiStore = useUIStore()
+const route = useRoute()
 
 const lazyStoreAccess = {
   async getGoodWillStore() {
@@ -193,6 +194,10 @@ const showDeleteGoodWillModal = computed(() => uiStore.showDeleteGoodWillModal)
 
 const showCookie = computed(() => {
   return privacyStore.shouldShowBanner && showCookieWithDelay.value
+})
+
+const showHeader = computed(() => {
+  return route.name !== 'media-viewer' && isMobile.value
 })
 
 
@@ -410,7 +415,7 @@ onUnmounted(() => {
 }
 
 .slide-down-enter-active {
-  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 3.5s;
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s;
 }
 
 .slide-down-enter-from {

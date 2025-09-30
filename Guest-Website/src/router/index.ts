@@ -30,6 +30,12 @@ const routes = [
     meta: { scrollBehavior: 'instant'}
   },
   {
+    path: '/media/:imageID',
+    name: 'media-viewer',
+    component: () => import('../views/MediaViewerView.vue'),
+    meta: { scrollBehavior: 'instant'}
+  },
+  {
     path: '/payment-validation/:token',
     name: 'payment-validation',
     component: () => import('../views/PaymentValidation.vue'),
