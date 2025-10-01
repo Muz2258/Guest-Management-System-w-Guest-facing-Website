@@ -348,8 +348,9 @@ watch(showWelcomeModal, (newValue, oldValue) => {
 }, { immediate: false })
 
 watch(route, (newRoute) => {
-  const isMediaViewer = window.location.pathname.includes('media')
-  showHeader.value = newRoute.name !== 'media-viewer' && !isMediaViewer
+  if(newRoute) {
+    showHeader.value = newRoute.name !== 'media-viewer'
+  }
 })
 
 
@@ -371,7 +372,7 @@ onMounted(async () => {
   window.addEventListener('resize', checkMobileSize)
 
   const isMediaViewer = window.location.pathname.includes('media')
-  showHeader.value = route.name !== 'media-viewer' && !isMediaViewer
+  showHeader.value = !isMediaViewer
 
   console.log('Checking for cached data...')
   const result = guestStorage.checkCache()
