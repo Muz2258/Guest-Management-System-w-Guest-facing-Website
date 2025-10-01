@@ -1,6 +1,6 @@
 <template>
   <main v-if="isMobile">
-    <transition appear name="slide-down">
+    <transition appear name="slide-in">
       <HeaderNavigation v-if="showHeader" />
     </transition>
 
@@ -421,11 +421,11 @@ onUnmounted(() => {
   transform: translateY(75%);
 }
 
-.slide-down-enter-active {
+.slide-in-enter-active {
   transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s;
 }
 
-.slide-down-enter-from {
+.slide-in-enter-from {
   opacity: 0;
   transform: translateY(-20px);
 }
