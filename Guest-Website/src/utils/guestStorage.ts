@@ -16,7 +16,7 @@ interface StoredGuestData {
 class SecureGuestStorage {
   private readonly storageKey = import.meta.env.VITE_APP_PRIVACY_STORAGE_KEY
   private readonly secreteKey = import.meta.env.VITE_APP_PRIVACY_SECRETE_KEY
-  private readonly TTL = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+  private readonly TTL = import.meta.env.VITE_APP_PRIVACY_TTL * 24 * 60 * 60 * 1000
 
   /**
    * Encrypt data using AES encryption
