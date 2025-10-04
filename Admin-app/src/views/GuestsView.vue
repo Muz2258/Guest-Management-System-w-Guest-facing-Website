@@ -106,7 +106,7 @@
             <template v-if="row.plus_one_eligibility === 'eligible'">
               <div v-if="row.rsvp?.plus_one_name" class="plus-one-details">
                 <span>{{ row.rsvp.plus_one_name }}</span>
-                <div class="plus-one-actions">
+                <!-- <div class="plus-one-actions">
                   <el-button 
                     link
                     type="primary"
@@ -123,7 +123,7 @@
                   >
                     Remove
                   </el-button>
-                </div>
+                </div> -->
               </div>
               <el-button 
                 v-else-if="row.rsvp?.attendance_status === 'attending'"
@@ -163,7 +163,7 @@
                 placement="top"
                 :disabled="!authStore.hasFeatureAccess('edit_rsvp_responses')"
               >
-                <el-button
+                <!-- <el-button
                   circle
                   size="small"
                   :type="authStore.hasFeatureAccess('edit_rsvp_responses') ? 'success' : 'info'"
@@ -171,7 +171,7 @@
                   @click="handleUpdateStatus(row)"
                 >
                   <el-icon><Check /></el-icon>
-                </el-button>
+                </el-button> -->
               </el-tooltip>
 
               <el-tooltip
@@ -234,7 +234,7 @@
     <!-- Import Dialog -->
     <GuestImportDialog
       v-model="showImportDialog"
-      :existing-guests="guestStore.guests"
+      :existing-guests="guestStore.guests.map(g => g.guest)"
       @import="handleGuestImport"
     />
   </div>
@@ -248,7 +248,7 @@ import { useAuthStore } from '@/stores/auth'
 import GuestForm from '@/components/GuestForm.vue'
 import GuestImportDialog from '@/components/GuestImportDialog.vue'
 import { Link, Edit, Delete, Check, UserFilled } from '@element-plus/icons-vue'
-import type { Guest, GuestWithRSVP, GuestCategory, AttendanceStatus, RSVP } from '@/types/guest'
+import type { Guest, CompleteGuestData, GuestCategory, AttendanceStatus, RSVP } from '@/types/guest'
 
 const authStore = useAuthStore()
 
@@ -267,8 +267,19 @@ onMounted(() => {
 })
 
 // Utility functions
-const formatGuestName = (guest: GuestWithRSVP) => {
-  return guest.guest_type === 'couple' ? `Mr. & Mrs. ${guest.name}` : guest.name
+const formatGuestName = (guest: CompleteGuestData) => {
+  const guestType = guest.guest?.guest_type
+  const title = (() => {
+    const t = guest.guest?.name?.title
+    const titles: unknown[] = Array.isArray(t) ? t : (t ? [t] : [])
+    return titles
+      .map(x => String(x ?? '').trim())
+      .filter(Boolean)
+      .join(' ')
+  })()
+  const firstName = guest.guest?.name?.first_name
+  const lastName = guest.guest?.name?.last_name
+  return guestType === 'couple' ? `${title ? title : 'Mr.'} & Mrs. ${firstName} ${lastName}` : `${title} ${firstName} ${lastName}`
 }
 
 const getCategoryType = (category: GuestCategory): 'success' | 'warning' | 'info' => {
@@ -282,8 +293,8 @@ const getCategoryType = (category: GuestCategory): 'success' | 'warning' | 'info
   return types[category]
 }
 
-const getStatusType = (guest: GuestWithRSVP): 'success' | 'danger' | 'info' => {
-  const status = guest.rsvp?.attendance_status ?? 'pending'
+const getStatusType = (guest: CompleteGuestData): 'success' | 'danger' | 'info' => {
+  const status = (guest.rsvp?.attendance_status ?? 'pending') as AttendanceStatus
   const types: Record<'attending' | 'not_attending' | 'pending', 'success' | 'danger' | 'info'> = {
     attending: 'success',
     not_attending: 'danger',
@@ -292,16 +303,17 @@ const getStatusType = (guest: GuestWithRSVP): 'success' | 'danger' | 'info' => {
   return types[status]
 }
 
-const getStatusText = (guest: GuestWithRSVP) => {
-  const status = guest.rsvp?.attendance_status ?? 'pending'
-  if (status === 'attending' && guest.guest_type === 'couple') {
+const getStatusText = (guest: CompleteGuestData) => {
+  const status = (guest.rsvp?.attendance_status ?? 'pending') as AttendanceStatus
+  if (status === 'attending' && guest.guest.guest_type === 'couple') {
     return guest.rsvp?.spouse_attending ? 'Both Attending' : 'Attending'
   }
-  return {
+  const map: Record<AttendanceStatus, string> = {
     attending: 'Attending',
     not_attending: 'Not Attending',
     pending: 'Pending'
-  }[status]
+  }
+  return map[status]
 }
 
 // Event handlers
@@ -345,7 +357,7 @@ const handleDeleteGuest = async (guest: Guest) => {
   }
 }
 
-const handleAddPlusOne = async (guest: GuestWithRSVP) => {
+const handleAddPlusOne = async (guest: CompleteGuestData) => {
   if (!guest.rsvp?.rsvp_id) return
 
   const name = await ElMessageBox.prompt(
@@ -358,15 +370,15 @@ const handleAddPlusOne = async (guest: GuestWithRSVP) => {
     }
   )
 
-  if (name.action === 'confirm') {
+  /* if (name.action === 'confirm') {
     await guestStore.updateRSVP(guest.rsvp.rsvp_id, {
       plus_one_name: name.value.trim(),
       plus_one_attending: true
     })
-  }
+  } */
 }
 
-const handleEditPlusOne = async (guest: GuestWithRSVP) => {
+/* const handleEditPlusOne = async (guest: CompleteGuestData) => {
   if (!guest.rsvp?.rsvp_id || !guest.rsvp.plus_one_name) return
 
   try {
@@ -392,9 +404,9 @@ const handleEditPlusOne = async (guest: GuestWithRSVP) => {
       ElMessage.error('Failed to edit plus one')
     }
   }
-}
+} */
 
-const handleRemovePlusOne = async (guest: GuestWithRSVP) => {
+/* const handleRemovePlusOne = async (guest: CompleteGuestData) => {
   if (!guest.rsvp?.rsvp_id || !guest.rsvp.plus_one_name) return
 
   try {
@@ -418,7 +430,7 @@ const handleRemovePlusOne = async (guest: GuestWithRSVP) => {
       ElMessage.error('Failed to remove plus one')
     }
   }
-}
+} */
 
 const handleCopyInviteLink = async (guest: Guest) => {
   const guestAppUrl = import.meta.env.VITE_GUEST_APP_URL
@@ -449,10 +461,10 @@ const resetFilters = () => {
 }
 
 // Handle status update
-const handleUpdateStatus = async (guest: GuestWithRSVP) => {
+/* const handleUpdateStatus = async (guest: CompleteGuestData) => {
   console.log('🔄 handleUpdateStatus: Starting with guest:', {
-    id: guest.guest_id,
-    name: guest.name,
+    id: guest.guest.guest_id,
+    name: guest.guest.name,
     currentRsvp: guest.rsvp
   })
 
@@ -583,11 +595,11 @@ const handleUpdateStatus = async (guest: GuestWithRSVP) => {
 
       await guestStore.updateRSVP(guest.rsvp.rsvp_id, updates)
 
-      /* if (guest.rsvp?.rsvp_id) {
+      if (guest.rsvp?.rsvp_id) {
         await guestStore.updateRSVP(guest.rsvp.rsvp_id, updates)
       } else {
         await guestStore.createOrUpdateRSVP(guest.guest_id, newStatus, spouseAttending)
-      } */
+      }
       console.log('✅ RSVP status update completed')
     } else {
       console.log('ℹ️ Status unchanged, skipping update')
@@ -598,7 +610,7 @@ const handleUpdateStatus = async (guest: GuestWithRSVP) => {
   } finally {
     console.log('🏁 handleUpdateStatus: Operation completed')
   }
-}
+} */
 
 // Handle CSV import
 const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
@@ -623,6 +635,7 @@ const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
         guest_type: guestData.guest_type,
         guest_category: guestData.guest_category,
         plus_one_eligibility: guestData.plus_one_eligibility ?? 'not_eligible',
+        plus_one_limit: guestData.plus_one_limit ?? 0,
         invitation_type: 'rsvp_guest',
         invitation_method: 'digital'
       }

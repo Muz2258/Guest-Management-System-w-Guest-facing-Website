@@ -3,14 +3,14 @@ import { ref, computed } from 'vue'
 import { supabase } from '@/utils/supabase'
 import { useAuthStore } from './auth'
 import { useRouter } from 'vue-router'
-import type { Guest, RSVP, GuestWithRSVP, GuestCategory, AttendanceStatus } from '@/types/guest'
+import type { Guest, RSVP, CompleteGuestData, GuestCategory, AttendanceStatus } from '@/types/guest'
 import { ElMessage } from 'element-plus'
 
 export const useGuestStore = defineStore('guest', () => {
   const authStore = useAuthStore()
   const router = useRouter()
   
-  const guests = ref<GuestWithRSVP[]>([])
+  const guests = ref<CompleteGuestData[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
   const totalGuests = ref(0)
@@ -30,7 +30,7 @@ export const useGuestStore = defineStore('guest', () => {
     }
 
     if (filterCategory.value !== 'all') {
-      filtered = filtered.filter(guest => guest.guest_category === filterCategory.value)
+      filtered = filtered.filter(guest => guest.guest.guest_category === filterCategory.value)
     }
 
     return filtered
@@ -47,15 +47,16 @@ export const useGuestStore = defineStore('guest', () => {
 
       const { data, error: err, count } = await supabase
         .from('guests')
-        .select('*, rsvps(*)', { count: 'exact' })
+        .select('*, rsvps(*), plus_ones(*)', { count: 'exact' })
         .range(from, to)
         .order('created_at', { ascending: false })
 
       if (err) throw err
 
       guests.value = data.map(item => ({
-        ...item,
-        rsvp: item.rsvps?.[0] || null
+        guest: {...item} as Guest,
+        rsvp: item.rsvps?.[0] || null,
+        plus_one_data: item.plus_ones || null
       }))
 
       totalGuests.value = count || 0
@@ -169,7 +170,7 @@ export const useGuestStore = defineStore('guest', () => {
     }
   }
 
-  async function updateRSVP(rsvpId: string, updates: Partial<RSVP>) {
+  /* async function updateRSVP(rsvpId: string, updates: Partial<RSVP>) {
     console.log('🔄 updateRSVP: Starting update with:', { rsvpId, updates })
     try {
       loading.value = true
@@ -208,7 +209,7 @@ export const useGuestStore = defineStore('guest', () => {
       loading.value = false
       console.log('🏁 updateRSVP: Operation completed')
     }
-  }
+  } */
 
   async function createOrUpdateRSVP(guestId: string, status: AttendanceStatus, spouseAttending?: boolean) {
     console.log('🔄 createOrUpdateRSVP: Starting with:', { guestId, status })
@@ -290,7 +291,7 @@ export const useGuestStore = defineStore('guest', () => {
     createGuest,
     updateGuest,
     deleteGuest,
-    updateRSVP,
+    // updateRSVP,
     createOrUpdateRSVP,
   }
 })
