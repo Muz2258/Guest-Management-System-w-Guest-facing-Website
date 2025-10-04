@@ -5,27 +5,58 @@ export type InvitationMethod = 'digital' | 'physical_qr'
 export type AttendanceStatus = 'attending' | 'not_attending' | 'pending'
 export type PlusOneEligibility = 'eligible' | 'not_eligible'
 export type GiftType = 'monetary' | 'item'
+export type PlusOneType = 'spouse' | 'others'
+
+export interface Name {
+  titles: []
+  first_name: string
+  middle_name?: string | null
+  last_name?: string | null
+  suffixes: []
+}
 
 export interface Guest {
-  first_name: string
-  last_name: string
+  name: Name
   guest_category: GuestCategory
   guest_type: GuestType
   plus_one_eligibility: PlusOneEligibility
+  plus_one_limit: number
   invitation_type: InvitationType
-}
-
-export interface RSVP {
-  attendance_status: AttendanceStatus
-  spouse_attending: boolean | null
-  plus_one_attending: boolean | null
-  plus_one_name: string | null
 }
 
 export interface Permissions {
   can_rsvp: boolean
   can_bring_plus_one: boolean
   is_couple: boolean
+}
+
+export interface GuestData {
+  auth_token: string
+  authenticated: boolean
+  guest: Guest
+  permissions: Permissions
+}
+
+export interface RSVP {
+  attendance_status: AttendanceStatus
+  spouse_attending: boolean | null
+}
+
+export interface PlusOnes {
+  plus_one_id: string
+  type: PlusOneType
+  name: Name
+}
+
+export interface PlusOneData {
+  plus_ones: PlusOnes[]
+  plus_one_limit: number
+  plus_one_remaining: number
+}
+
+export interface RSVPData {
+  rsvp: RSVP
+  plus_one_data: PlusOneData
 }
 
 export interface GoodWillMessage {
@@ -51,13 +82,6 @@ export interface Gift {
   gift_amount: number | null
   gift_item_id?: string | null
   status: 'pending' | 'success' | 'failed'
-}
-
-export interface GuestData {
-  auth_token: string
-  authenticated: boolean
-  guest: Guest
-  permissions: Permissions
 }
 
 export interface GuestGifts {

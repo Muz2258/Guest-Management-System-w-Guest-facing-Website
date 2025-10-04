@@ -316,9 +316,8 @@ let countdownInterval: NodeJS.Timeout | null = null;
 const guestInfo = computed(() => guestData.value?.guest)
 const guestRsvp = computed(() => rsvpData.value)
 const guestPermissions = computed(() => guestData.value?.permissions)
-const guestResponse = computed(() => guestRsvp.value?.attendance_status || 'pending')
-const hasPlusOne = computed(() => guestRsvp.value?.plus_one_attending)
-const plusOneName = computed(() => guestRsvp.value?.plus_one_name || '')
+const guestResponse = computed(() => guestRsvp.value?.rsvp.attendance_status || 'pending')
+const hasPlusOne = computed(() => (guestRsvp.value?.plus_one_data?.plus_ones?.length ?? 0) > 0)
 const hasSentMessage = computed(() => goodWillMessage.value?.has_message)
 const isCouple = computed(() => guestPermissions.value?.is_couple)
 const isRsvpGuest = computed(() => guestPermissions.value?.can_rsvp)
@@ -345,14 +344,19 @@ const activeCondition = computed(() => {
 })
 
 const guestName = computed(() => {
-    const firstName = guestInfo.value?.first_name || '';
-    const lastName = guestInfo.value?.last_name || '';
+    const firstName = guestInfo.value?.name.first_name || '';
+    const lastName = guestInfo.value?.name.last_name || '';
 
     if(isCouple.value && lastName) {
         return `Mr. & Mrs. ${lastName}`;
     } else {
         return firstName;
     }
+})
+
+const plusOneName = computed(() => {
+  const name = guestRsvp.value?.plus_one_data?.plus_ones[0]?.name || ''
+  return name ? `${name.first_name} ${name.last_name}` : 'your +1'
 })
 
 const plusOneCardInfo = computed(() => {

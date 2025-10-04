@@ -57,14 +57,15 @@ const guestDisplayName = computed(() => {
     return 'Honored Guest'
   }
   
-  const firstName = guest.value.first_name || ''
-  const lastName = guest.value.last_name || ''
+  const title = guest.value.name.titles || null
+  const firstName = guest.value.name.first_name || ''
+  const lastName = guest.value.name.last_name || ''
   const isCouple = guestPermissions.value?.is_couple
   
   if (isCouple && lastName) {
     return `Mr. & Mrs. ${lastName}`
   }else {
-    return firstName
+    return `${title} ${firstName}`
   }
 })
 

@@ -57,7 +57,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 
 /* ---------------------- Local Variables ----------------------- */
-const selectedResponse = ref<'attending' | 'not_attending' | 'pending'>(rsvpStore.rsvpData?.attendance_status || 'pending')
+const selectedResponse = ref<'attending' | 'not_attending' | 'pending'>(rsvpStore.rsvpData?.rsvp.attendance_status || 'pending')
 
 
 /* ---------------------- Computed Properties --------------------- */
@@ -65,7 +65,7 @@ const isUpdating = computed(() => rsvpStore.loading)
 const isVisible = computed(() => props.isVisible)
 
 const currentRSVPText = computed(() => {
-    const status = rsvpStore.rsvpData?.attendance_status
+    const status = rsvpStore.rsvpData?.rsvp.attendance_status
 
     if (status === 'attending') return "Yes, I'll be there"
     if (status === 'not_attending') return "Sorry, I can't make it"
@@ -74,14 +74,14 @@ const currentRSVPText = computed(() => {
 })
 
 const buttonLabel = computed(() => {
-    const status = rsvpStore.rsvpData?.attendance_status
+    const status = rsvpStore.rsvpData?.rsvp.attendance_status
 
     if(status === 'attending') return "Update to 'Sorry, I can't make it'"
     return "Update to 'Yes, I'll be there'"
 })
 
 const submitValue = computed(() => {
-    const status = rsvpStore.rsvpData?.attendance_status
+    const status = rsvpStore.rsvpData?.rsvp.attendance_status
 
     if(status === 'attending') return 'not_attending'
     return 'attending'
@@ -106,9 +106,7 @@ const handleRSVPUpdate = async (response: 'attending' | 'not_attending') => {
 
     await rsvpStore.updateGuestRsvp(guestToken, {
         attendance_status: response,
-        spouse_attending: selectedResponse.value === 'attending' ? rsvpStore.rsvpData?.spouse_attending : null,
-        plus_one_attending: null,
-        plus_one_name: null
+        spouse_attending: selectedResponse.value === 'attending' ? rsvpStore.rsvpData?.rsvp.spouse_attending : null
     })
 
     uiStore.showHideUpdateRSVPModal(false)

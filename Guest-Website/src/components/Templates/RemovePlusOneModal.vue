@@ -50,7 +50,10 @@ const props = withDefaults(defineProps<Props>(), {
 
 
 /* ------------------ Computed Properties ----------------- */
-const plusOneName = computed(() => rsvpStore.rsvpData?.plus_one_name)
+const plusOneName = computed(() => {
+  const plusOne = rsvpStore.rsvpData?.plus_one_data?.plus_ones?.[0]
+  return plusOne ? `${plusOne.name.first_name} ${plusOne.name.last_name}` : 'your +1'
+})
 const isDeleting = computed(() => rsvpStore.loading)
 const isVisible = computed(() => props.isVisible)
 
@@ -62,14 +65,22 @@ const handleClose = () => {
 
 const handleDelete = async () => {
     const guestToken = guestStore.guestData?.auth_token
+    const plusOneID = rsvpStore.rsvpData?.plus_one_data?.plus_ones?.[0]?.plus_one_id
+    const plusOneType = rsvpStore.rsvpData?.plus_one_data?.plus_ones?.[0]?.type
+    const plusOneName = rsvpStore.rsvpData?.plus_one_data?.plus_ones?.[0]?.name
 
     if(!guestToken) {
         throw new Error('No guest token found. Cannot remove plus one.')
     }
 
-    await rsvpStore.updateGuestRsvp(guestToken, {
-        plus_one_attending: false,
-        plus_one_name: null
+    if(!plusOneID) {
+        throw new Error('No plus one found to remove.')
+    }
+
+    await rsvpStore.managePlusOneData(guestToken, 'delete', {
+        p_plus_one_id: plusOneID,
+        plus_one_type: plusOneType,
+        plus_one_name: plusOneName
     })
 
     uiStore.showHideRemovePlusOneModal(false)

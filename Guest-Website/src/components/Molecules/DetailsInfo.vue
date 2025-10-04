@@ -9,7 +9,7 @@
     </div>
     <div class="flex flex-col gap-16 pb-32">
       <h3 class="text-heading-md text-neutrals-neu-0">{{ sessionTitle }}</h3>
-      <div class="flex gap-4">
+      <div v-if="locationName || locationAddress" class="flex gap-4">
         <Icon name="location-pin" :size="16" :color="getColor('neutral.neu_35')" class="mt-4"/>
         <div class="flex flex-col gap-4">
           <p class="text-neutrals-neu-0 text">{{ locationName }}</p>
@@ -23,13 +23,13 @@
           </button>
         </div>
       </div>
-      <div class="flex gap-4">
+      <div v-if="startTime || endTime" class="flex gap-4">
         <Icon name="alarm-clock" :size="16" :color="getColor('neutral.neu_35')" class="mt-4"/>
         <div class="flex flex-col gap-4">
           <p class="text-neutrals-neu-0 text">{{ startTime }} - {{ endTime }}</p>
-          <p v-if="remarks" class="text-neutrals-neu-35 text-s">{{ remarks }}</p>
         </div>
       </div>
+      <p v-if="remarks" class="text-neutrals-neu-35 text-s">{{ remarks }}</p>
     </div>
   </div>
 </template>
@@ -48,11 +48,11 @@ const props = defineProps({
     },
     locationName: {
         type: String,
-        required: true
+        required: false
     },
     locationAddress: {
         type: String,
-        required: true
+        required: false
     },
     locationCoordinates: {
         type: String,
@@ -60,7 +60,7 @@ const props = defineProps({
     },
     startTime: {
         type: String,
-        required: true
+        required: false
     },
     endTime: {
         type: String,

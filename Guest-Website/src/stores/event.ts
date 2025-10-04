@@ -91,11 +91,7 @@ export const useEventStore = defineStore('event', () => {
         },
         {
           sessionTitle: 'After Party',
-          locationName: 'DY Events Place',
-          locationAddress: 'Edjeba road, off NPA - DSC Express way, Warri, Delta State. Nigeria',
-          locationCoordinates: '5.541824846954904, 5.729033854442553',
-          startTime: '10:00 PM',
-          endTime: 'Mama Calls',
+          remarks: 'Venue details will be shared during the reception.'
         }
       ],
       rsvpEndDate: '2025-10-31', // October 31, 2025

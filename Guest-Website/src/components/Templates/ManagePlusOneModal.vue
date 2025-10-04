@@ -67,6 +67,11 @@ const guestRsvp = computed(() => rsvpStore.rsvpData)
 const isLoading = computed(() => rsvpStore.loading)
 const isVisible = computed(() => props.isVisible)
 
+const plusOneName = computed(() => {
+  const plusOne = guestRsvp.value?.plus_one_data?.plus_ones?.[0]
+  return plusOne ? `${plusOne.name.first_name} ${plusOne.name.last_name}` : 'your +1'
+})
+
 const isFormValid = computed(() => {
     return formData.value.firstName.trim() !== '' && 
            errors.value.firstName === '' && 
@@ -74,7 +79,7 @@ const isFormValid = computed(() => {
 })
 
 const isEditing = computed(() => {
-    return !!guestRsvp.value?.plus_one_name
+    return !!plusOneName.value && plusOneName.value !== 'your +1'
 })
 
 /* ------------------- Variables ------------------- */
@@ -115,20 +120,37 @@ const handleSubmit = async () => {
     validateLastName()
     
     if (isFormValid.value) {
-        const plusOneName = `${formData.value.firstName.trim()} ${formData.value.lastName.trim()}`.trim()
-        const guestToken = guestStore.guestData?.auth_token
+      const guestToken = guestStore.guestData?.auth_token
+      const plusOneID = guestRsvp.value?.plus_one_data?.plus_ones?.[0]?.plus_one_id || null
+      const formAction = isEditing.value ? 'update' : 'add'
+      const plusOneName = {
+        first_name: formData.value.firstName.trim(),
+        last_name: formData.value.lastName.trim(),
+      }
         
-        if(!guestToken) {
-            throw new Error('No guest token available')
-        }
+      if(!guestToken) {
+          throw new Error('No guest token available')
+      }
 
-        await rsvpStore.updateGuestRsvp(guestToken, {
-            plus_one_name: plusOneName, 
-            plus_one_attending: true
+      if(!plusOneID && isEditing.value) {
+          throw new Error('No plus one found to remove.')
+      }
+
+      if (isEditing.value) {
+        await rsvpStore.managePlusOneData(guestToken, formAction, {
+          p_plus_one_id: plusOneID,
+          plus_one_type: 'others',
+          plus_one_name: plusOneName
         })
+      } else {
+        await rsvpStore.managePlusOneData(guestToken, formAction, {
+          plus_one_type: 'others',
+          plus_one_name: plusOneName
+        })
+      }
         
-        uiStore.showHidePlusOneModal(false)
-        clearFormData()
+      uiStore.showHidePlusOneModal(false)
+      clearFormData()
     }
 }
 

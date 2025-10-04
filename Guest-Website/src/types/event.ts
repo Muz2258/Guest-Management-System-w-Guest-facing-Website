@@ -1,10 +1,10 @@
 export interface SessionDetail {
   sessionTitle: string
-  locationName: string
-  locationAddress: string
-  locationCoordinates: string
-  startTime: string
-  endTime: string
+  locationName?: string
+  locationAddress?: string
+  locationCoordinates?: string
+  startTime?: string
+  endTime?: string
   remarks?: string
 }
 
