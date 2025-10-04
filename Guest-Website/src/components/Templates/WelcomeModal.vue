@@ -65,7 +65,7 @@ const guestDisplayName = computed(() => {
   if (isCouple && lastName) {
     return `Mr. & Mrs. ${lastName}`
   }else {
-    return `${title} ${firstName}`
+    return `${title ? title : ''} ${firstName}`
   }
 })
 
