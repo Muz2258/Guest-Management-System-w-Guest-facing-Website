@@ -179,7 +179,7 @@ export const useGiftStore = defineStore('gift', () => {
     error.value = null
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseUrl = import.meta.env.VITE_APP_DATABASE_URL
       const initResponse = await fetch(`${supabaseUrl}/functions/v1/initialize-payment`, {
         method: 'POST',
         headers: {

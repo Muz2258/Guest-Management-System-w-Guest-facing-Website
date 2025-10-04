@@ -1,6 +1,6 @@
 <template>
   <main v-if="isMobile">
-    <transition appear name="slide-down">
+    <transition appear name="slide-in">
       <HeaderNavigation v-if="showHeader" />
     </transition>
 
@@ -348,8 +348,9 @@ watch(showWelcomeModal, (newValue, oldValue) => {
 }, { immediate: false })
 
 watch(route, (newRoute) => {
-  const isMediaViewer = window.location.pathname.includes('media')
-  showHeader.value = newRoute.name !== 'media-viewer' && !isMediaViewer
+  if(newRoute) {
+    showHeader.value = newRoute.name !== 'media-viewer'
+  }
 })
 
 
@@ -371,7 +372,7 @@ onMounted(async () => {
   window.addEventListener('resize', checkMobileSize)
 
   const isMediaViewer = window.location.pathname.includes('media')
-  showHeader.value = route.name !== 'media-viewer' && !isMediaViewer
+  showHeader.value = !isMediaViewer
 
   console.log('Checking for cached data...')
   const result = guestStorage.checkCache()
@@ -420,11 +421,11 @@ onUnmounted(() => {
   transform: translateY(75%);
 }
 
-.slide-down-enter-active {
+.slide-in-enter-active {
   transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.5s;
 }
 
-.slide-down-enter-from {
+.slide-in-enter-from {
   opacity: 0;
   transform: translateY(-20px);
 }

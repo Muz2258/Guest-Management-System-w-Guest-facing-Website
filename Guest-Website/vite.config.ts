@@ -11,7 +11,6 @@ const customResolvers = {
   '@/utils/guestStorage.ts': ['guestStorage']
 }
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
 
@@ -63,10 +62,10 @@ export default defineConfig(({ mode }) => {
     build: {
       minify: 'terser',
       terserOptions,
-      chunkSizeWarningLimit: 1000,
-      sourcemap: false,
-      assetsInlineLimit: 4096,
-      cssCodeSplit: true,
+      // chunkSizeWarningLimit: 1000,
+      sourcemap: true,
+      // assetsInlineLimit: 4096,
+      // cssCodeSplit: true,
       cssMinify: true
     },
     optimizeDeps: {
