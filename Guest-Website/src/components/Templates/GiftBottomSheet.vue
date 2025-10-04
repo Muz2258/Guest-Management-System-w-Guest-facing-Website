@@ -49,9 +49,12 @@
                         <span>Your contribution:</span>
                         <span>{{ currency(giftBreakdown?.netAmount) }}</span>
                       </p>
-                      <p class="text-denotive-blue text-xs flex justify-between mb-6">
-                        <span>Processing fees ({{ giftStore.percentageFee }}% + ₦{{ giftStore.baseFee }}):</span>
+                      <p class="text-denotive-blue text-xs flex justify-between mb-2">
+                        <span>Processing fees:</span>
                         <span>{{ currency(giftBreakdown?.processingFee) }}</span>
+                      </p>
+                      <p class="text-denotive-blue text-[10px] flex justify-between mb-6">
+                        <span>{{ giftStore.percentageFee }}% {{ giftStore.baseFee ? `+ ${currency(giftStore.baseFee)}` : '' }} (capped at {{ currency(2000) }})</span>
                       </p>
                       <p v-if="giftBreakdown?.deliveryFee" class="text-denotive-blue text-xs flex justify-between mb-6">
                         <span>Delivery fee:</span>

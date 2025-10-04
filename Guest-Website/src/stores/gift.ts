@@ -51,12 +51,13 @@ export const useGiftStore = defineStore('gift', () => {
   const giftItems = ref<GiftItem[]>([])
   const selectedGiftItem = ref<GiftItem | null>(null)
 
-  const baseFee = 100
   const percentageFee = 1.5
   const maxProcessingFee = 2000
 
   /* ---------------------- Computed ---------------------- */
   const has_gifted = computed(() => gifts.value !== null && gifts.value.gifts.length > 0)
+
+  const baseFee = computed(() => selectedAmount.value && selectedAmount.value < 2500 ? 0 : 100)
 
   const sortedGiftItems = computed(() => {
     return [...giftItems.value].sort((a, b) => {
@@ -92,7 +93,7 @@ export const useGiftStore = defineStore('gift', () => {
       if (giftingMode.value === 'full_purchase') {
         giftSummary.value = {
           feeStructure: {
-            baseFee,
+            baseFee: baseFee.value,
             percentageFee
           },
           netAmount: 0,
@@ -103,7 +104,7 @@ export const useGiftStore = defineStore('gift', () => {
       } else {
         giftSummary.value = {
           feeStructure: {
-            baseFee,
+            baseFee: baseFee.value,
             percentageFee
           },
           netAmount: 0,
@@ -115,14 +116,14 @@ export const useGiftStore = defineStore('gift', () => {
     }
 
     const deliveryFee = giftingMode.value === 'full_purchase' ? selectedGiftItem.value?.delivery_fee || 0 : 0
-    const processingFee = Math.min((amount + deliveryFee) * (percentageFee / 100) + baseFee, maxProcessingFee)
+    const processingFee = Math.min((amount + deliveryFee) * (percentageFee / 100) + baseFee.value, maxProcessingFee)
     const netAmount = isPayingFees.value ? amount : amount - (processingFee + deliveryFee)
     const totalCharge = isPayingFees.value ? amount + processingFee + deliveryFee : amount
 
     if (giftingMode.value === 'full_purchase') {
       giftSummary.value = {
         feeStructure: {
-          baseFee,
+          baseFee: baseFee.value,
           percentageFee
         },
         netAmount,
@@ -133,7 +134,7 @@ export const useGiftStore = defineStore('gift', () => {
     }else {
       giftSummary.value = {
         feeStructure: {
-          baseFee,
+          baseFee: baseFee.value,
           percentageFee
         },
         netAmount,

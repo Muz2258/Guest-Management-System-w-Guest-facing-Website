@@ -6,7 +6,7 @@
         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f970/512.gif" alt="🥰" width="88" height="88">
       </picture>
       <p class="text-s text-neutrals-neu-35 mb-8">Thank you</p>
-      <h1 class="text-heading-lg text-neutrals-neu-0 mb-16">{{ guestName }}</h1>
+      <h1 class="text-heading-lg text-neutrals-neu-0 mb-16 text-center">{{ guestName }}</h1>
       <p class="text-s text-neutrals-neu-35 text-center mb-48">We've received your gift and we are super grateful to you. Looking forward to more celebrations with you.</p>
       <Button label="Back to homepage" type="secondary" @click="$router.push({ name: 'main-website' })" />
     </div>
@@ -21,8 +21,8 @@ const guestStore = useGuestStore()
 
 /* ------------------ Computed Properties ------------------ */
 const guestName = computed(() => {
-  const firstName = guestStore.guestData?.guest?.first_name || 'Honoured Guest'
-  const lastName = guestStore.guestData?.guest?.last_name || 'Honoured Guest'
+  const firstName = guestStore.guestData?.guest?.name.first_name || 'Honoured Guest'
+  const lastName = guestStore.guestData?.guest?.name.last_name || 'Honoured Guest'
   if (guestStore.guestData?.permissions.is_couple) {
     return `Mr & Mrs ${lastName}`
   }
