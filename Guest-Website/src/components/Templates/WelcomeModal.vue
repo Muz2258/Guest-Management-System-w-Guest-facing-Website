@@ -10,7 +10,7 @@
                     We're so excited to celebrate with you on our special day. Take the time to:
                 </p>
                 <ul class="list-disc list-inside mt-8 text-neutrals-neu-35 text">
-                    <li>Explore our big day details</li>
+                    <li v-if="canRsvp">Explore our big day details</li>
                     <li v-if="canRsvp">Update your RSVP <span class="text-brand-accent">(Required)</span></li>
                     <li v-if="canAddPlusOne">Add your plus one</li>
                     <li>Spoil us with gifts 😜</li>
@@ -22,7 +22,7 @@
         <template #footer>
             <div class="flex flex-col gap-8 items-center px-24 pb-24">
                 <Button v-if="canRsvp" label="RSVP Now" type="primary" class="w-full" @click="goToRSVP" />
-                <Button label="View Details" type="secondary" class="w-full" @click="goToDetails" />
+                <Button v-if="canRsvp" label="View Details" type="secondary" class="w-full" @click="goToDetails" />
                 <Button label="See Gallery" type="tertiary" class="w-full" @click="goToGallery" />
             </div>
         </template>
