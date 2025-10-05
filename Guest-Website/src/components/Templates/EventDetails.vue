@@ -1,5 +1,5 @@
 <template>
-    <section class="py-40 flex flex-col items-center">
+    <section class="py-40 flex flex-col items-center overflow-hidden">
       <div class="mb-32">
           <DecorativeBranches variant="purple">
             <h4 class="text-heading-s text-brand-pri">Details</h4>

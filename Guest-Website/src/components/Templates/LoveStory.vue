@@ -1,5 +1,5 @@
 <template>
-  <section id="love-story" class="flex flex-col items-center overflow-x-hidden py-40 bg-brand-sec-light-200">
+  <section id="love-story" class="flex flex-col items-center overflow-x-hidden py-40 bg-brand-sec-light-200 overflow-hidden">
     <div class="mb-20">
         <DecorativeBranches variant="purple">
             <h4 class="text-heading-s text-brand-pri">#BuiltToLast</h4>

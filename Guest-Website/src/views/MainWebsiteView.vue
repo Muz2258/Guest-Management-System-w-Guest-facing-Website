@@ -5,8 +5,10 @@
     <template v-if="heroMounted">
       <RSVP v-if="hasToken && mountedSections.rsvp" id="rsvp" />
       <EventDetails v-if="hasToken && isRsvpGuest && mountedSections.eventDetails" id="details" />
+      <ColorsSection v-if="mountedSections.colors" />
       <LoveStory v-if="mountedSections.loveStory" />
       <Gallery v-if="mountedSections.gallery" id="gallery" />
+      <Footer v-if="mountedSections.footer" />
     </template>
   </main>
 </template>
@@ -28,8 +30,10 @@ const heroMounted = ref(false)
 const mountedSections = ref({
   rsvp: false,
   eventDetails: false,
+  colors: false,
   loveStory: false,
-  gallery: false
+  gallery: false,
+  footer: false,
 })
 
 /* ------------------ Computed Properties ------------------ */
@@ -53,6 +57,10 @@ const mountSectionsIncrementally = async () => {
   mountedSections.value.eventDetails = true
   console.log('✅ EventDetails section mounted')
   
+  await nextTick()
+  mountedSections.value.colors = true
+  console.log('✅ Colors section mounted')
+  
   await new Promise(resolve => requestAnimationFrame(resolve))
   mountedSections.value.loveStory = true
   console.log('✅ LoveStory section mounted')
@@ -60,6 +68,10 @@ const mountSectionsIncrementally = async () => {
   await new Promise(resolve => requestAnimationFrame(resolve))
   mountedSections.value.gallery = true
   console.log('✅ Gallery section mounted')
+  
+  await nextTick()
+  mountedSections.value.footer = true
+  console.log('✅ Footer section mounted')
 }
 
 const handleHeroReady = async () => {

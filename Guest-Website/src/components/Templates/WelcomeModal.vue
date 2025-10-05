@@ -48,7 +48,7 @@ const props = withDefaults(defineProps<Props>(), {
 /* ------------------ Computed Properties ------------------ */
 const guest = computed(() => guestStore.guestData?.guest)
 const guestPermissions = computed(() => guestStore.guestData?.permissions)
-const canAddPlusOne = computed(() => guestPermissions.value?.can_bring_plus_one)
+const canAddPlusOne = computed(() => guestPermissions.value?.can_add_plus_one)
 const canRsvp = computed(() => guestPermissions.value?.can_rsvp)
 const isVisible = computed(() => props.isVisible)
 
@@ -63,7 +63,7 @@ const guestDisplayName = computed(() => {
   const isCouple = guestPermissions.value?.is_couple
   
   if (isCouple && lastName) {
-    return `Mr. & Mrs. ${lastName}`
+    return `${title ? title : 'Mr.'} & Mrs. ${lastName}`
   }else {
     return `${title ? title : ''} ${firstName}`
   }

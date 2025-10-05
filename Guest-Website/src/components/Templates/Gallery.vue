@@ -9,7 +9,7 @@
       
     <!-- Pinterest-style 2-column grid -->
     <div class="w-full max-w-4xl px-24">
-      <div class="columns-2 gap-6 mb-32">
+      <div class="columns-2 gap-6 mb-16">
         <div
           v-for="(item, index) in previewItems"
           :key="`media-${index}`"
@@ -25,7 +25,7 @@
       <!-- View All Button -->
       <div class="flex justify-center">
           <Button 
-              label="View all images" 
+              label="View all Photos & Videos" 
               type="tertiary"
               class="px-32"
               @click="openFullGallery"

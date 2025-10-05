@@ -1,6 +1,6 @@
 <template>
   <section 
-      class="flex flex-col items-center bg-neutrals-neu-100 py-40"
+      class="flex flex-col items-center bg-neutrals-neu-100 py-40 overflow-hidden"
   >
     <div class="mb-20">
         <DecorativeBranches variant="purple">
