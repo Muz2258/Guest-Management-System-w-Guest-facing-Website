@@ -5,7 +5,7 @@
     <template v-if="heroMounted">
       <RSVP v-if="hasToken && mountedSections.rsvp" id="rsvp" />
       <EventDetails v-if="hasToken && isRsvpGuest && mountedSections.eventDetails" id="details" />
-      <ColorsSection v-if="mountedSections.colors" />
+      <ColorsSection v-if="hasToken && isRsvpGuest && mountedSections.colors" />
       <LoveStory v-if="mountedSections.loveStory" />
       <Gallery v-if="mountedSections.gallery" id="gallery" />
       <Footer v-if="mountedSections.footer" />

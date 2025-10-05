@@ -1,5 +1,5 @@
 <template>
-  <div class="p-24 h-[16.5rem] w-[16.5rem] shrink-0 bg-neutrals-neu-100 flex flex-col justify-between shadow-card">
+  <div class="p-24 h-[16.5rem] w-[16.5rem] shrink-0 bg-neutrals-neu-100 flex flex-col justify-between shadow-card border border-brand-sec-light-200 rounded">
     <div class="flex flex-col items-center gap-24 mt-12 h-full">
       <picture>
         <source :srcset="sourceComputed.webp" type="image/webp">

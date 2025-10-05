@@ -1,5 +1,5 @@
 <template>
-    <div class="p-24 h-[16.5rem] w-[16.5rem] shrink-0 bg-neutrals-neu-100 flex flex-col justify-between shadow-card">
+    <div class="p-24 h-[16.5rem] w-[16.5rem] shrink-0 bg-neutrals-neu-100 flex flex-col justify-between shadow-card rounded border border-brand-sec-light-200">
         <div>
             <h2 class="text-neutrals-neu-0 text-heading-sm lining-nums mb-12">{{ title }}</h2>
             <p v-if="typeof description === 'string' && hasCopy" class="text-s text-neutrals-neu-46">{{ description }}</p>

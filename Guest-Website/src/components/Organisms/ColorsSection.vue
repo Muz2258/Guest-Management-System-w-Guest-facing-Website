@@ -1,5 +1,5 @@
 <template>
-  <page-section section-title="Colors Of The Day">
+  <page-section section-title="Colors Of The Day" class="bg-brand-sec-light-200">
     <template #content>
       <div class="flex justify-center gap-12 w-full mt-24 mb-32">
         <div v-for="color in colors" :key="color.id" class="flex flex-col items-center gap-12">

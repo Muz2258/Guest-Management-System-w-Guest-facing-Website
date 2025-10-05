@@ -94,7 +94,7 @@ export const useEventStore = defineStore('event', () => {
           remarks: 'Venue details will be shared during the reception.'
         }
       ],
-      rsvpEndDate: '2025-10-31', // October 31, 2025
+      rsvpEndDate: '2025-10-19', // October 19, 2025
       rsvpEndTime: '23:59:59', // 11:59 PM
       timezone: 'Africa/Lagos'
     }
