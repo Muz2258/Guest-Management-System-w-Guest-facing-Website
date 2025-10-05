@@ -1,6 +1,6 @@
 <template>
   <section 
-      class="flex flex-col items-center bg-neutrals-neu-100 py-40"
+      class="flex flex-col items-center bg-neutrals-neu-100 py-40 overflow-hidden"
   >
     <div class="mb-20">
         <DecorativeBranches variant="purple">
@@ -321,7 +321,7 @@ const hasPlusOne = computed(() => (guestRsvp.value?.plus_one_data?.plus_ones?.le
 const hasSentMessage = computed(() => goodWillMessage.value?.has_message)
 const isCouple = computed(() => guestPermissions.value?.is_couple)
 const isRsvpGuest = computed(() => guestPermissions.value?.can_rsvp)
-const plusOneEligible = computed(() => guestPermissions.value?.can_bring_plus_one)
+const plusOneEligible = computed(() => guestPermissions.value?.can_add_plus_one)
 const hasGift = computed(() => giftStore.has_gifted)
 
 const pending = computed(() => {
@@ -613,7 +613,7 @@ onUnmounted(() => {
 
 .rsvp-animation-enter-from .content, .rsvp-animation-leave-to .content {
     opacity: 0;
-    transform: translateY(40%);
+    transform: translateX(40%);
 }
 
 .rsvp-animation-enter-from .foot, .rsvp-animation-leave-to .foot {

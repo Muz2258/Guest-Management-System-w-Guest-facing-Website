@@ -76,8 +76,8 @@ export const useEventStore = defineStore('event', () => {
           locationName: 'Devout Christian Assembly',
           locationAddress: 'After Nativity Catholic Church, off Alegbo Okoribo Road, Warri, Delta State. Nigeria',
           locationCoordinates: '5.554419397932635, 5.802026810636565',
-          startTime: '12:00 PM',
-          endTime: '1:30 PM',
+          startTime: '10:00 AM',
+          endTime: '12:00 NOON',
           remarks: 'Photoshoot with guests and family follows immediately after (30 minutes)'
         },
         {
@@ -85,16 +85,16 @@ export const useEventStore = defineStore('event', () => {
           locationName: 'DY Events Place',
           locationAddress: 'Edjeba road, off NPA - DSC Express way, Warri, Delta State. Nigeria',
           locationCoordinates: '5.541646646304213, 5.729015750779724',
-          startTime: '2:30 PM',
-          endTime: '4:00 PM',
-          remarks: "Couple's entrance dance starts at 3:00 pm"
+          startTime: '1:00 PM',
+          endTime: '3:00 PM',
+          remarks: "Couple's entrance dance starts at 1:30 PM"
         },
         {
           sessionTitle: 'After Party',
           remarks: 'Venue details will be shared during the reception.'
         }
       ],
-      rsvpEndDate: '2025-10-31', // October 31, 2025
+      rsvpEndDate: '2025-10-19', // October 19, 2025
       rsvpEndTime: '23:59:59', // 11:59 PM
       timezone: 'Africa/Lagos'
     }

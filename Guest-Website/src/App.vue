@@ -356,43 +356,103 @@ watch(route, (newRoute) => {
 
 /* ------------------- Lifecycle Hooks --------------------- */
 onBeforeMount(async () => {
-  console.log('⌛ Checking url for token')
+  console.log('⌛ Checking URL for token')
   const urlParam = window.location.pathname.split('/').pop() || ''
   tempToken.value = typeof urlParam === 'string' && /^[a-f0-9]{64}$/.test(urlParam) && urlParam ? urlParam : null
 
   if(!tempToken.value) {
-    console.error('❌ No valid token found in URL. Guest visiting without token cannot access data.')
+    console.log('ℹ️ No token found in URL')
   } else {
-    console.log('✅ Found valid token in URL')
+    console.log('✅ Found valid token in URL:', tempToken.value)
   }
 })
 
 onMounted(async () => {
+  // Initialize UI immediately - don't wait for data
   checkMobileSize()
   window.addEventListener('resize', checkMobileSize)
 
   const isMediaViewer = window.location.pathname.includes('media')
   showHeader.value = !isMediaViewer
 
-  console.log('Checking for cached data...')
-  const result = guestStorage.checkCache()
+  // Get tokens upfront
+  const urlToken = tempToken.value
+  const storedToken = guestStorage.getStoredToken()
+  
+  // Quick decision tree - no redundant checks
+  let shouldUseCachedData = false
+  let tokenToFetch = null
 
-  if (result.hasCache) {
-    initialiseCriticalDataFromCache(result.data)
-    initialiseNonCriticalDataFromCache(result.data)
-    privacyStore.initializeForCachedUser()
-
-    console.log('✅ Cached data loaded successfully')
-    guestStore.hasCachedData = true
+  // Decision logic (synchronous - no waiting)
+  if (urlToken) {
+    if (storedToken === urlToken) {
+      // Token match - try cache first
+      const cached = guestStorage.checkCache()
+      if (cached.hasCache) {
+        shouldUseCachedData = true
+        console.log('⚡ Fast path: Using cached data for matching token')
+      } else {
+        tokenToFetch = urlToken
+        console.log('📡 Cache miss: Will fetch data for URL token')
+      }
+    } else {
+      // Token mismatch or no stored token - clear and fetch
+      if (storedToken) {
+        console.warn('⚠️ Token mismatch - clearing old data')
+        guestStorage.clearGuestData()
+      }
+      tokenToFetch = urlToken
+      console.log('📡 New token detected: Will fetch fresh data')
+    }
   } else {
-    console.log('📭 No valid cached data found. Fetching from database')
-    if(!tempToken.value) {
-      console.error('❌ No valid token present. Guest visiting without token cannot access data.')
+    // No URL token - check what we have locally
+    const cached = guestStorage.checkCache()
+    if (cached.hasCache) {
+      shouldUseCachedData = true
+      console.log('⚡ Fast path: Using cached data (no URL token)')
+    } else if (storedToken) {
+      tokenToFetch = storedToken
+      console.log('📡 Data expired: Will re-fetch using stored token')
+    } else {
+      console.error('❌ No token or cached data available')
+      guestStore.hasCachedData = false
+      guestStore.guestData = null
       return
     }
+  }
 
-    await initialiseStoreWithToken(tempToken.value)
-    privacyStore.initializeNotice(tempToken.value)
+  // Execute the action (cache load is instant, fetch is async)
+  if (shouldUseCachedData) {
+    // INSTANT: Load from cache synchronously
+    const cachedData = guestStorage.checkCache()
+    initialiseCriticalDataFromCache(cachedData.data)
+    privacyStore.initializeForCachedUser()
+    guestStore.hasCachedData = true
+    
+    // Load non-critical data in background (doesn't block UI)
+    setTimeout(() => {
+      initialiseNonCriticalDataFromCache(cachedData.data)
+      console.log('✅ Background: Non-critical data loaded')
+    }, 0)
+    
+    console.log('✅ Page ready with cached data')
+  } else if (tokenToFetch) {
+    // ASYNC: Show loading state and fetch
+    guestStore.loading = true
+    
+    try {
+      // Fetch critical data first
+      await initialiseStoreWithToken(tokenToFetch)
+      privacyStore.initializeNotice(tokenToFetch)
+      guestStore.hasCachedData = false
+      
+      console.log('✅ Page ready with fresh data')
+    } catch (error) {
+      console.error('❌ Failed to fetch guest data:', error)
+      guestStore.guestData = null
+    } finally {
+      guestStore.loading = false
+    }
   }
 })
 

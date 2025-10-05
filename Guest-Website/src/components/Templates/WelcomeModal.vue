@@ -10,19 +10,20 @@
                     We're so excited to celebrate with you on our special day. Take the time to:
                 </p>
                 <ul class="list-disc list-inside mt-8 text-neutrals-neu-35 text">
-                    <li>Explore our big day details</li>
-                    <li v-if="canRsvp">Update your RSVP <span class="text-brand-accent">(Required)</span></li>
+                    <li v-if="canRsvp">Explore our big day details</li>
+                    <li v-if="canRsvp && !hasRsvp">Update your RSVP <span class="text-brand-accent">(Required)</span></li>
                     <li v-if="canAddPlusOne">Add your plus one</li>
                     <li>Spoil us with gifts 😜</li>
-                    <li>and get ready to party! 💃🏾🕺🏾</li>
+                    <li v-if="canRsvp">and get ready to party! 💃🏾🕺🏾</li>
+                    <li>Follow the event as it unfolds</li>
                 </ul>
             </div>
         </template>
 
         <template #footer>
             <div class="flex flex-col gap-8 items-center px-24 pb-24">
-                <Button v-if="canRsvp" label="RSVP Now" type="primary" class="w-full" @click="goToRSVP" />
-                <Button label="View Details" type="secondary" class="w-full" @click="goToDetails" />
+                <Button v-if="canRsvp && !hasRsvp" label="RSVP Now" type="primary" class="w-full" @click="goToRSVP" />
+                <Button v-if="canRsvp" label="View Details" type="secondary" class="w-full" @click="goToDetails" />
                 <Button label="See Gallery" type="tertiary" class="w-full" @click="goToGallery" />
             </div>
         </template>
@@ -32,6 +33,7 @@
 <script setup lang="ts">
 /* ------------------ Stores ------------------ */
 const guestStore = useGuestStore()
+const rsvpStore = useRSVPStore()
 const uiStore = useUIStore()
 
 
@@ -48,9 +50,10 @@ const props = withDefaults(defineProps<Props>(), {
 /* ------------------ Computed Properties ------------------ */
 const guest = computed(() => guestStore.guestData?.guest)
 const guestPermissions = computed(() => guestStore.guestData?.permissions)
-const canAddPlusOne = computed(() => guestPermissions.value?.can_bring_plus_one)
+const canAddPlusOne = computed(() => guestPermissions.value?.can_add_plus_one)
 const canRsvp = computed(() => guestPermissions.value?.can_rsvp)
 const isVisible = computed(() => props.isVisible)
+const hasRsvp = computed(() => rsvpStore.rsvpData?.rsvp.attendance_status !== 'pending' && rsvpStore.rsvpData?.rsvp.attendance_status !== 'not_attending')
 
 const guestDisplayName = computed(() => {
   if (!guest.value) {
@@ -63,9 +66,9 @@ const guestDisplayName = computed(() => {
   const isCouple = guestPermissions.value?.is_couple
   
   if (isCouple && lastName) {
-    return `Mr. & Mrs. ${lastName}`
+    return `${title ? title : 'Mr.'} & Mrs. ${lastName}`
   }else {
-    return `${title} ${firstName}`
+    return `${title ? title : ''} ${firstName}`
   }
 })
 

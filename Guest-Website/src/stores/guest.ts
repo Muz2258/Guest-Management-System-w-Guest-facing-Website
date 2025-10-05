@@ -28,10 +28,10 @@ export const useGuestStore = defineStore('guest', () => {
     try {
       // Check if we have valid cached data first (unless forcing refresh)
       if (!forceRefresh) {
-        const isDataCached = guestStorage.checkCache(token)
+        const isDataCached = guestStorage.checkCache()
 
         if (isDataCached){
-          const cachedData = guestStorage.getGuestData(token)
+          const cachedData = guestStorage.getGuestData()
 
           if(cachedData?.data?.guestData?.guestInfo) {
             guestData.value = cachedData.data.guestData.guestInfo

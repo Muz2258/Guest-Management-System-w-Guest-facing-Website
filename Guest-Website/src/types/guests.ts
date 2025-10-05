@@ -26,7 +26,7 @@ export interface Guest {
 
 export interface Permissions {
   can_rsvp: boolean
-  can_bring_plus_one: boolean
+  can_add_plus_one: boolean
   is_couple: boolean
 }
 

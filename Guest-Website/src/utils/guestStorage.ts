@@ -6,17 +6,24 @@ import {
 } from './errorHandler'
 
 interface StoredGuestData {
-  token: string
   cookiesSeen?: boolean
   guestData?: any
   timestamp: number
   expiresAt: number
 }
 
+interface StoredToken {
+  token: string
+  timestamp: number
+  expiresAt: number
+}
+
 class SecureGuestStorage {
   private readonly storageKey = import.meta.env.VITE_APP_PRIVACY_STORAGE_KEY
+  private readonly tokenKey = `${import.meta.env.VITE_APP_PRIVACY_STORAGE_KEY}_token`
   private readonly secreteKey = import.meta.env.VITE_APP_PRIVACY_SECRETE_KEY
-  private readonly TTL = import.meta.env.VITE_APP_PRIVACY_TTL * 24 * 60 * 60 * 1000
+  private readonly DATA_TTL = 24 * 60 * 60 * 1000
+  private readonly TOKEN_TTL = import.meta.env.VITE_APP_PRIVACY_TTL * 24 * 60 * 60 * 1000
 
   /**
    * Encrypt data using AES encryption
@@ -33,6 +40,70 @@ class SecureGuestStorage {
     return bytes.toString(CryptoJS.enc.Utf8)
   }
 
+  private saveToken(token: string): void {
+    const result = handleSync(() => {
+      const now = Date.now()
+      const storedToken: StoredToken = {
+        token,
+        timestamp: now,
+        expiresAt: now + this.TOKEN_TTL
+      }
+
+      const jsonString = JSON.stringify(storedToken)
+      const encryptedData = this.encrypt(jsonString)
+
+      localStorage.setItem(this.tokenKey, encryptedData)
+      console.log('✅ Token securely saved to storage')
+    }, 'save-token', ErrorType.STORAGE)
+
+    if (!result.success) {
+      logger.log(result.error)
+    }
+  }
+
+  getStoredToken(): string | null {
+    const result = handleSync(() => {
+      const encryptedData = localStorage.getItem(this.tokenKey)
+      
+      if (!encryptedData) {
+        console.log('📭 No stored token found')
+        return null
+      }
+
+      const decryptedData = this.decrypt(encryptedData)
+      const storedToken: StoredToken = JSON.parse(decryptedData)
+
+      // Check if token has expired
+      if (Date.now() > storedToken.expiresAt) {
+        console.log('⏰ Stored token has expired, cleaning up')
+        this.clearToken()
+        return null
+      }
+
+      console.log('✅ Retrieved valid token from storage')
+      return storedToken.token
+    }, 'get-stored-token', ErrorType.STORAGE)
+
+    if (!result.success) {
+      // If decryption fails, clear potentially corrupted data
+      this.clearToken()
+      return null
+    }
+
+    return result.data
+  }
+
+  private clearToken(): void {
+    const result = handleSync(() => {
+      localStorage.removeItem(this.tokenKey)
+      console.log('🧹 Cleared stored token')
+    }, 'clear-token', ErrorType.STORAGE)
+
+    if (!result.success) {
+      logger.log(result.error)
+    }
+  }
+
   /**
    * Save guest data to local storage with encryption
    */
@@ -43,9 +114,10 @@ class SecureGuestStorage {
     guestGift?: any;
   }>): Promise<void> {
     const result = handleSync(() => {
-      // Get existing data to merge
+      this.saveToken(token)
+
       console.log('fetching existing guest data for merge...')
-      const existing = this.getGuestData(token)
+      const existing = this.getGuestData()
       const currentData = existing?.data?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}, guestGift: {}}
       const currentCookiesSeen = existing?.data?.cookiesSeen || false
 
@@ -60,11 +132,10 @@ class SecureGuestStorage {
 
       const now = Date.now()
       const storedData: StoredGuestData = {
-        token,
         cookiesSeen: currentCookiesSeen,
         guestData: mergedData,
         timestamp: now,
-        expiresAt: now + this.TTL
+        expiresAt: now + this.DATA_TTL
       }
 
       const jsonString = JSON.stringify(storedData)
@@ -82,7 +153,7 @@ class SecureGuestStorage {
   /**
    * Retrieve and decrypt guest data from local storage
    */
-  getGuestData(token?: string): { data: any; isValid: boolean } | null {
+  getGuestData(): { data: any; isValid: boolean } | null {
     const result = handleSync(() => {
       const encryptedData = localStorage.getItem(this.storageKey)
       
@@ -98,12 +169,6 @@ class SecureGuestStorage {
       if (Date.now() > storedData.expiresAt) {
         console.log('⏰ Stored guest data has expired, cleaning up')
         this.clearGuestData()
-        return null
-      }
-
-      // If token is provided, verify it matches
-      if (token && storedData.token !== token) {
-        console.log('🔑 Token mismatch, stored data is for different guest')
         return null
       }
 
@@ -123,19 +188,18 @@ class SecureGuestStorage {
     return result.data
   }
 
-  markCookiesAsSeen(token: string): boolean {
+  markCookiesAsSeen(): boolean {
     const result = handleSync(() => {
       // Get existing data to merge
-      const existing = this.getGuestData(token)
+      const existing = this.getGuestData()
       const currentData = existing?.data?.guestData || {guestInfo: {}, guestRsvp: {}, guestMessage: {}, guestGift: {}}
 
       const now = Date.now()
       const update: StoredGuestData = {
-        token,
         cookiesSeen: true,
         guestData: currentData,
         timestamp: now,
-        expiresAt: now + this.TTL
+        expiresAt: now + this.DATA_TTL
       }
 
       const jsonString = JSON.stringify(update)
@@ -152,12 +216,9 @@ class SecureGuestStorage {
   /**
    * Check if guest data exists for a specific token
    */
-  checkCache(token?: string): any {
+  checkCache(): any {
     console.log('📦 Attempting to load guest data from cache...')
-    let cachedData = null
-
-    if(!token) cachedData = this.getGuestData()
-    else cachedData = this.getGuestData(token)
+    const cachedData = this.getGuestData()
     
     if (cachedData && cachedData.isValid) {
       console.log('✅ Loaded guest data from cache:', cachedData.data)
@@ -171,9 +232,13 @@ class SecureGuestStorage {
   /**
    * Check if valid guest data exists for a specific token
    */
-  hasValidData(token: string): boolean {
-    const result = this.getGuestData(token)
+  hasValidData(): boolean {
+    const result = this.getGuestData()
     return result !== null && result.isValid
+  }
+
+  hasValidToken(): boolean {
+    return this.getStoredToken() !== null
   }
 
   /**
@@ -188,6 +253,12 @@ class SecureGuestStorage {
     if (!result.success) {
       logger.log(result.error)
     }
+  }
+
+  clearAll(): void {
+    this.clearGuestData()
+    this.clearToken()
+    console.log('🧹 Cleared all stored data and token')
   }
 
   /**
@@ -207,6 +278,20 @@ class SecureGuestStorage {
     return result.success ? result.data : null
   }
 
+  getTokenTimeUntilExpiry(): number | null {
+    const result = handleSync(() => {
+      const encryptedData = localStorage.getItem(this.tokenKey)
+      if (!encryptedData) return null
+
+      const decryptedData = this.decrypt(encryptedData)
+      const storedToken: StoredToken = JSON.parse(decryptedData)
+
+      return Math.max(0, storedToken.expiresAt - Date.now())
+    }, 'get-token-expiry-time', ErrorType.STORAGE)
+
+    return result.success ? result.data : null
+  }
+
   /**
    * Refresh the expiry time of stored data
    */
@@ -219,7 +304,7 @@ class SecureGuestStorage {
       const storedData: StoredGuestData = JSON.parse(decryptedData)
 
       // Update expiry time
-      storedData.expiresAt = Date.now() + this.TTL
+      storedData.expiresAt = Date.now() + this.DATA_TTL
 
       const jsonString = JSON.stringify(storedData)
       const newEncryptedData = this.encrypt(jsonString)
@@ -228,6 +313,30 @@ class SecureGuestStorage {
       
       console.log('🔄 Refreshed guest data expiry')
     }, 'refresh-expiry', ErrorType.STORAGE)
+
+    if (!result.success) {
+      logger.log(result.error)
+    }
+  }
+
+  refreshTokenExpiry(): void {
+    const result = handleSync(() => {
+      const encryptedData = localStorage.getItem(this.tokenKey)
+      if (!encryptedData) return
+
+      const decryptedData = this.decrypt(encryptedData)
+      const storedToken: StoredToken = JSON.parse(decryptedData)
+
+      // Update expiry time
+      storedToken.expiresAt = Date.now() + this.TOKEN_TTL
+
+      const jsonString = JSON.stringify(storedToken)
+      const newEncryptedData = this.encrypt(jsonString)
+      
+      localStorage.setItem(this.tokenKey, newEncryptedData)
+      
+      console.log('🔄 Refreshed token expiry')
+    }, 'refresh-token-expiry', ErrorType.STORAGE)
 
     if (!result.success) {
       logger.log(result.error)
