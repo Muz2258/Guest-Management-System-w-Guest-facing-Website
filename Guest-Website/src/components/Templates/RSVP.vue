@@ -321,7 +321,7 @@ const hasPlusOne = computed(() => (guestRsvp.value?.plus_one_data?.plus_ones?.le
 const hasSentMessage = computed(() => goodWillMessage.value?.has_message)
 const isCouple = computed(() => guestPermissions.value?.is_couple)
 const isRsvpGuest = computed(() => guestPermissions.value?.can_rsvp)
-const plusOneEligible = computed(() => guestPermissions.value?.can_bring_plus_one)
+const plusOneEligible = computed(() => guestPermissions.value?.can_add_plus_one)
 const hasGift = computed(() => giftStore.has_gifted)
 
 const pending = computed(() => {

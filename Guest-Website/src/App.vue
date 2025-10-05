@@ -376,6 +376,19 @@ onMounted(async () => {
 
   console.log('Checking for cached data...')
   const result = guestStorage.checkCache()
+  const storedToken = result.data?.guestData?.guestInfo?.token
+
+  if(tempToken.value && storedToken !== tempToken.value) {
+    console.warn('⚠️ Token in URL does not match token in cache. Ignoring cached data.')
+    guestStorage.clearGuestData()
+    result.hasCache = false
+
+    guestStore.hasCachedData = false
+    guestStore.guestData = null
+
+    await guestStore.fetchGuestByToken(tempToken.value, true)
+    privacyStore.initializeNotice(tempToken.value)
+  }
 
   if (result.hasCache) {
     initialiseCriticalDataFromCache(result.data)
