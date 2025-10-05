@@ -613,7 +613,7 @@ onUnmounted(() => {
 
 .rsvp-animation-enter-from .content, .rsvp-animation-leave-to .content {
     opacity: 0;
-    transform: translateY(40%);
+    transform: translateX(40%);
 }
 
 .rsvp-animation-enter-from .foot, .rsvp-animation-leave-to .foot {
