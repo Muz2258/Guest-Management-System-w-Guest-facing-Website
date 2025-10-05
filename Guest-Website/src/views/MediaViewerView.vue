@@ -122,6 +122,8 @@ const currentIndex = ref<number>(0)
 const currentTranslate = ref(0)
 const isAnimating = ref(false)
 const hideUI = ref(false)
+const isLoadingMedia = ref(false)
+const viewerReady = ref(false)
 
 const mediaItems = computed<MediaItem[]>(() => {
   const items = galleryStore.mediaItems.flat()
@@ -289,6 +291,49 @@ const toggleUI = () => {
   hideUI.value = !hideUI.value
 }
 
+const initializeViewerWithImage = (imageID: string) => {
+  const mediaItem = mediaItems.value.find(item => item.id === imageID)
+  
+  if (!mediaItem) {
+    console.warn(`⚠️ No media item found with ID: ${imageID}`)
+    return
+  }
+
+  currentIndex.value = mediaItems.value.indexOf(mediaItem)
+  
+  if (currentIndex.value === -1) {
+    console.warn(`⚠️ Media item with ID: ${imageID} not found in media items array`)
+    return
+  }
+
+  console.log(`🎯 Opening Media Viewer at index: ${currentIndex.value}`)
+  
+  goToSlide(currentIndex.value, 'instant')
+  scrollThumbnailToCenter(currentIndex.value, 'instant')
+  initializeMediaStates()
+  
+  console.log('✅ Viewer initialized and ready')
+  
+  /* nextTick(() => {
+    removeImageIDFromURL()
+  }) */
+}
+
+/* const removeImageIDFromURL = () => {
+  const currentPath = route.path
+  const pathWithoutImageID = currentPath.replace(/\/[a-f0-9-]+$/, '')
+  
+  router.replace(pathWithoutImageID)
+  console.log('🧹 Removed imageID from URL')
+} */
+
+watch(() => route.params.imageID, (newImageID) => {
+  if (newImageID && galleryStore.mediaItems.length > 0) {
+    console.log('🔄 Route changed to new image:', newImageID)
+    initializeViewerWithImage(newImageID as string)
+  }
+})
+
 watch(() => currentIndex.value, async (newIndex, oldIndex) => {
   goToSlide(newIndex, 'smooth')
   scrollThumbnailToCenter(newIndex, 'smooth')
@@ -341,38 +386,42 @@ watch(() => mediaItems.value, (newItems, oldItems) => {
 })
 
 onMounted(async () => {
-  console.log('checking for media items in store')
-  if(galleryStore.mediaItems.length === 0) {
-    console.log('fetching media items for media viewer')
-    await galleryStore.fetchMediaItems()
-    console.log('fetched media items:', galleryStore.mediaItems)
+  viewerReady.value = true
+  console.log('✅ Media viewer mounted')
+
+  const imageID = route.params.imageID as string
+  console.log('🎯 Image ID from route:', imageID)
+
+  if (!imageID) {
+    console.warn('⚠️ No image ID provided')
+    return
   }
 
-  nextTick(() => {
-    const imageID = route.params.imageID as string
-
-    console.log('🎯 Checking for image ID in route params:', imageID)
-    if(!imageID) return
-
-    const mediaItem = mediaItems.value.find(item => item.id === imageID)
-    if(!mediaItem) {
-      console.warn(`⚠️ No media item found with ID: ${imageID}`)
-      return
-    }
-
-    currentIndex.value = mediaItems.value.indexOf(mediaItem)
-    if(currentIndex.value === -1) {
-      console.warn(`⚠️ Media item with ID: ${imageID} not found in media items array`)
-      return
-    }
-
-    console.log(`🎯 Opening Media Viewer at index from query param: ${currentIndex.value}`)
+  const hasMediaData = galleryStore.mediaItems.length > 0
   
-  
-    goToSlide(currentIndex.value, 'instant')
-    scrollThumbnailToCenter(currentIndex.value, 'instant')
-    initializeMediaStates()
-  })
+  if (hasMediaData) {
+    console.log('⚡ Fast path: Using existing media data')
+    
+    nextTick(() => {
+      initializeViewerWithImage(imageID)
+    })
+  } else {
+    console.log('📡 No media data found, fetching...')
+    isLoadingMedia.value = true
+
+    try {
+      await galleryStore.fetchMediaItems()
+      console.log('✅ Fetched media items:', galleryStore.mediaItems.length)
+      
+      nextTick(() => {
+        initializeViewerWithImage(imageID)
+      })
+    } catch (error) {
+      console.error('❌ Failed to fetch media items:', error)
+    } finally {
+      isLoadingMedia.value = false
+    }
+  }
 })
 
 onUnmounted(() => {
