@@ -78,7 +78,7 @@ export const useEventStore = defineStore('event', () => {
           locationCoordinates: '5.554419397932635, 5.802026810636565',
           startTime: '10:00 AM',
           endTime: '12:00 NOON',
-          remarks: 'Photoshoot with guests and family follows immediately after (30 minutes)'
+          remarks: 'Photoshoot with guests and family follows immediately after (30 minutes)',
         },
         {
           sessionTitle: 'Reception',
@@ -87,7 +87,10 @@ export const useEventStore = defineStore('event', () => {
           locationCoordinates: '5.541646646304213, 5.729015750779724',
           startTime: '1:00 PM',
           endTime: '3:00 PM',
-          remarks: "Couple's entrance dance starts at 1:30 PM"
+          remarks: "Couple's entrance dance starts at 1:30 PM",
+          notices: [
+            'Children will not be allowed at the reception.',
+          ]
         },
         {
           sessionTitle: 'After Party',

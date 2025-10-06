@@ -23,10 +23,11 @@ const guestStore = useGuestStore()
 const guestName = computed(() => {
   const firstName = guestStore.guestData?.guest?.name.first_name || ''
   const lastName = guestStore.guestData?.guest?.name.last_name || ''
+  const title = guestStore.guestData?.guest?.name.titles || ''
   if (guestStore.guestData?.permissions.is_couple) {
-    return `Mr & Mrs ${lastName ? lastName : firstName}`
+    return `${title ? title : ''} & Mrs ${lastName ? lastName : firstName}`
   }
-  return firstName
+  return `${title ? title : ''} ${firstName}`
 })
 
 

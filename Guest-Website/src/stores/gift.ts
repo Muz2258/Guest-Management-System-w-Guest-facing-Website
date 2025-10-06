@@ -356,16 +356,16 @@ export const useGiftStore = defineStore('gift', () => {
     guestStorage.saveGuestData(token, { guestGift: gifts.value })
   }
 
-  const removeGuestGift = async (token: string, ref: string) => {
-    console.log('Removing guest gift with ref:', ref)
+  const updateCanceledGuestGift = async (token: string, ref: string) => {
+    console.log('Updating canceled guest gift with ref:', ref)
     if(!token || !ref) {
-      console.error('token and reference is required to remove gift from database')
+      console.error('token and reference is required to update gift in database')
       return
     }
 
     try {
       const { data: res, error: err } = await supabase
-        .rpc('guest_remove_gift', {
+        .rpc('guest_update_gift', {
           auth_token: token,
           item_reference: ref
         })
@@ -375,9 +375,9 @@ export const useGiftStore = defineStore('gift', () => {
         throw err
       }
 
-      console.log('Gift removed from database successfully:', res)
+      console.log('Gift updated in database successfully:', res)
     } catch (err) {
-      console.error('Error removing gift:', err)
+      console.error('Error updating gift:', err)
     }
   }
 
@@ -411,6 +411,6 @@ export const useGiftStore = defineStore('gift', () => {
     clearGiftSelection,
     setIsPayingFees,
     setGiftingMode,
-    removeGuestGift
+    updateCanceledGuestGift
   }
 })

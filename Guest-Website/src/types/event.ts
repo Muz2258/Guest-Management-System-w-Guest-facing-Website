@@ -6,6 +6,7 @@ export interface SessionDetail {
   startTime?: string
   endTime?: string
   remarks?: string
+  notices?: Array<string>
 }
 
 export interface EventDetails {
