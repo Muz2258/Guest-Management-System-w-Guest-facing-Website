@@ -7,9 +7,9 @@
         class="w-[1px] flex grow bg-brand-sec"
       ></div>
     </div>
-    <div class="flex flex-col gap-16 pb-32">
-      <h3 class="text-heading-md text-neutrals-neu-0">{{ sessionTitle }}</h3>
-      <div v-if="locationName || locationAddress" class="flex gap-4">
+    <div class="flex flex-col pb-32">
+      <h3 class="text-heading-md text-neutrals-neu-0 mb-16">{{ sessionTitle }}</h3>
+      <div v-if="locationName || locationAddress" class="flex gap-4 mb-16">
         <Icon name="location-pin" :size="16" :color="getColor('neutral.neu_35')" class="mt-4"/>
         <div class="flex flex-col gap-4">
           <p class="text-neutrals-neu-0 text">{{ locationName }}</p>
@@ -23,13 +23,14 @@
           </button>
         </div>
       </div>
-      <div v-if="startTime || endTime" class="flex gap-4">
+      <div v-if="startTime || endTime" class="flex gap-4 mb-16">
         <Icon name="alarm-clock" :size="16" :color="getColor('neutral.neu_35')" class="mt-4"/>
         <div class="flex flex-col gap-4">
           <p class="text-neutrals-neu-0 text">{{ startTime }} - {{ endTime }}</p>
         </div>
       </div>
-      <p v-if="remarks" class="text-neutrals-neu-35 text-s">{{ remarks }}</p>
+      <p v-if="remarks" class="text-neutrals-neu-35 text-s mb-8">{{ remarks }}</p>
+      <p v-if="notices" v-for="(notice, i) in notices" class="text-denotive-red text-s" :class="{'mb-8': i < notices.length - 1}">IMPORTANT! {{ notice }}</p>
     </div>
   </div>
 </template>
@@ -38,44 +39,11 @@
 /* ------------------ Imports ------------------ */
 import { getColor } from '../../utils/colors';
 import Icon from '../Icon';
+import type { SessionDetail } from '../../types/event';
 
 
 /* ------------------ Props and Emitters ------------------ */
-const props = defineProps({
-    sessionTitle: {
-        type: String,
-        required: true
-    },
-    locationName: {
-        type: String,
-        required: false
-    },
-    locationAddress: {
-        type: String,
-        required: false
-    },
-    locationCoordinates: {
-        type: String,
-        required: false
-    },
-    startTime: {
-        type: String,
-        required: false
-    },
-    endTime: {
-        type: String,
-        required: false
-    },
-    remarks: {
-        type: String,
-        required: false
-    },
-    isLast: {
-        type: Boolean,
-        required: false,
-        default: false
-    }
-});
+const props = defineProps<SessionDetail & { isLast: boolean }>();
 
 
 /* ------------------ Computed Properties ------------------ */

@@ -8,8 +8,15 @@
       <div class="flex flex-col items-center w-[87%]">
           <DetailsInfo 
               v-for="(session, index) in sessionDetails" 
-              :key="index" 
-              v-bind="session" 
+              :key="`session-${index}`" 
+              :sessionTitle="session.sessionTitle"
+              :locationName="session.locationName"
+              :locationAddress="session.locationAddress"
+              :locationCoordinates="session.locationCoordinates"
+              :startTime="session.startTime"
+              :endTime="session.endTime"
+              :remarks="session.remarks"
+              :notices="session.notices ? session.notices : []"
               :isLast="index === sessionDetails.length - 1" 
           />
       </div>
