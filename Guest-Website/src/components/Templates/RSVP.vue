@@ -346,7 +346,7 @@ const activeCondition = computed(() => {
 const guestName = computed(() => {
     const firstName = guestInfo.value?.name.first_name || '';
     const lastName = guestInfo.value?.name.last_name || '';
-    const title = guestInfo.value?.name.titles || null;
+    const title = guestInfo.value?.name.titles.join(' ') || null;
 
     if(isCouple.value && lastName) {
         return `${title ? title : ''} & Mrs. ${lastName ? lastName : firstName}`;
@@ -357,7 +357,7 @@ const guestName = computed(() => {
 
 const plusOneName = computed(() => {
   const name = guestRsvp.value?.plus_one_data?.plus_ones[0]?.name || ''
-  return name ? `${name.titles ? name.titles : ''} ${name.first_name} ${name.last_name}` : 'your +1'
+  return name ? `${name.titles ? name.titles.join(' ') : ''} ${name.first_name} ${name.last_name}` : 'your +1'
 })
 
 const plusOneCardInfo = computed(() => {

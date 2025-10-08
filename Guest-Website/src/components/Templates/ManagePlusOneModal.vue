@@ -69,7 +69,7 @@ const isVisible = computed(() => props.isVisible)
 
 const plusOneName = computed(() => {
   const plusOne = guestRsvp.value?.plus_one_data?.plus_ones?.[0]
-  return plusOne ? `${plusOne.name.first_name} ${plusOne.name.last_name}` : 'your +1'
+  return plusOne ? `${plusOne.name.titles ? plusOne.name.titles.join(' ') : ''} ${plusOne.name.first_name} ${plusOne.name.last_name}` : 'your +1'
 })
 
 const isFormValid = computed(() => {
