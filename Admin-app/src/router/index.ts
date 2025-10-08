@@ -60,7 +60,7 @@ router.beforeEach(async (to) => {
     isAuthenticated: authStore.isAuthenticated,
     hasSession: !!authStore.session,
     hasUser: !!authStore.user,
-    isStaffMember: authStore.isStaffMember,
+    // isStaffMember: authStore.isStaffMember,
     requiresAuth
   })
 
@@ -102,11 +102,11 @@ router.beforeEach(async (to) => {
     }
 
     // Check staff access (only for authenticated routes)
-    if (!authStore.isStaffMember) {
+    /* if (!authStore.isStaffMember) {
       console.log('❌ Staff access required but user is not staff')
       ElMessage.error('Staff access required')
       return { name: 'Login' }
-    }
+    } */
   }
 
   console.log('✅ Navigation guard checks passed')

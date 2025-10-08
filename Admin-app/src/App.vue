@@ -32,7 +32,7 @@ onBeforeMount(async () => {
     <el-aside class="app-sidenav" width="200px">
       <MainNav />
     </el-aside>
-    <el-main class="app-main">
+    <el-main>
       <RouterView />
     </el-main>
   </div>
@@ -45,11 +45,11 @@ onBeforeMount(async () => {
   height: 100vh;
   width: 100vw;
   display: grid;
+  grid-template-rows: 60px 1fr;
+  grid-template-columns: 200px 1fr;
   grid-template-areas:
     "header header"
     "sidenav mainview";
-  grid-template-rows: 60px 1fr;
-  grid-template-columns: 200px 1fr;
 }
 
 .app-header {
@@ -66,13 +66,14 @@ onBeforeMount(async () => {
   background-color: var(--el-bg-color);
 }
 
-.app-main {
+.el-main {
   grid-area: mainview;
-  overflow: hidden;
   background-color: var(--el-bg-color-page);
   padding: 0;
+  height: calc(100vh - 60px);
+  /* width: calc(100vw - 200px); */
   display: flex;
-  /* width: 100%; */
+  /* overflow: hidden; */
 }
 
 .header-content {
