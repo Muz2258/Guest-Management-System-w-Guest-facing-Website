@@ -16,39 +16,23 @@ export const useGuestStore = defineStore('guest', () => {
   const guestLoading = ref(false)
   const error = ref<string | null>(null)
   const totalGuests = ref(0)
-  const currentPage = ref(1)
-  const pageSize = ref(50)
+  const currentPage = ref<number>(1)
+  const pageSize = ref<number>(50)
 
   // Computed
   const hasGuests = computed(() => guests.value.length > 0)
 
-  // Filters
-  const filterAttendance = ref<AttendanceStatus | 'all'>('all')
-  const filterCategory = ref<GuestCategory | 'all'>('all')
-
-  const filteredGuests = computed(() => {
-    let filtered = [...guests.value]
-
-    if (filterAttendance.value !== 'all') {
-      filtered = filtered.filter(guest => guest.rsvp_status === filterAttendance.value)
-    }
-
-    if (filterCategory.value !== 'all') {
-      filtered = filtered.filter(guest => guest.guest_category === filterCategory.value)
-    }
-
-    return filtered
-  })
-
   // Actions
-  async function fetchGuests(page = 1, limit = 50, filters?: { [k: string]: any } | undefined) {
+  async function fetchGuests(page?: number, limit?: number, filters?: { [k: string]: any } | undefined) {
     try {
       loading.value = true
       // error.value = null
 
-      const from = (page - 1) * limit
-      const to = from + limit - 1
-      // Build base query from view (try vw_guests_list and fallback to vw_guest_list)
+      const limitVal = (typeof limit === 'number' && limit > 0) ? limit : pageSize.value
+      const pageNum = (typeof page === 'number' && page > 0) ? page : currentPage.value
+      const from = (pageNum - 1) * limitVal
+      const to = from + limitVal - 1
+      
       const buildQuery = (viewName: string) => supabase
         .from(viewName)
         .select('*', { count: 'exact' })
@@ -67,8 +51,6 @@ export const useGuestStore = defineStore('guest', () => {
             const vals = value.filter(v => v !== undefined && v !== null && v !== '' )
             if (vals.length === 0) return
             query = query.in(col, vals)
-          } else if (value === 'all') {
-            // skip
           } else {
             // Special-case boolean-ish strings
             if (value === 'true' || value === true) query = query.eq(col, true)
@@ -79,11 +61,13 @@ export const useGuestStore = defineStore('guest', () => {
 
         // map filter keys to view columns
         if (filters.guest_category) applyFilter('guest_category', filters.guest_category)
-        if (filters.attendance_status) applyFilter('rsvp_status', filters.attendance_status)
+        if (filters.rsvp_status) applyFilter('rsvp_status', filters.rsvp_status)
         if (filters.family_side) applyFilter('family_side', filters.family_side)
         if (filters.invitation_type) applyFilter('invitation_type', filters.invitation_type)
         if (filters.plus_one_eligibility) applyFilter('plus_one_eligibility', filters.plus_one_eligibility)
-        if (typeof filters.invite_sent !== 'undefined' && filters.invite_sent !== 'all') applyFilter('invite_sent', filters.invite_sent)
+        if (filters.invite_sent) applyFilter('invite_sent', filters.invite_sent)
+        if (filters.spouse_rsvp_status) applyFilter('spouse_rsvp_status', filters.spouse_rsvp_status)
+        if (filters.guest_type) applyFilter('guest_type', filters.guest_type)
       }
 
       let data: any = null
@@ -425,8 +409,7 @@ export const useGuestStore = defineStore('guest', () => {
       }
 
       console.log('Plus one updated successfully')
-      // If the payload contains a guest_id, refresh that guest's full data so
-      // the locally-stored `guest.plus_ones` receive the DB-assigned plus_one_id
+
       let guestIdForRefresh: string | null = null
       if (Array.isArray(plusOnes) && plusOnes.length > 0) {
         const first = (plusOnes as any[])[0]
@@ -465,11 +448,8 @@ export const useGuestStore = defineStore('guest', () => {
         throw actionError
       }
 
-      // Refresh the guest list
       await fetchGuests(currentPage.value, pageSize.value)
 
-      // If we have a loaded guest in the store, refresh its detail so the local
-      // plus_ones array stays in sync with the DB
       try {
         if (guest.value && guest.value.guest && guest.value.guest.guest_id) {
           await fetchGuestData(guest.value.guest.guest_id)
@@ -485,6 +465,49 @@ export const useGuestStore = defineStore('guest', () => {
     }
   }
 
+  const bulkUpdate = async (table: string, data: Array<{}>, update: any) => {
+    console.log('Perfoming bulk action for:', data, 'on table:', table)
+    try{
+      const {error} = await supabase
+        .from(table)
+        .update(update)
+        .in('guest_id', data)
+
+      if(error) {
+        console.log(error)
+        throw error
+      }
+
+      await fetchGuests(currentPage.value, pageSize.value)
+    }catch (err) {
+      console.log(err)
+      error.value = err instanceof Error ? err.message : 'Failed bulk operation'
+      console.error('Could not perform operation:', error.value)
+      ElMessage.error(error.value)
+    }
+  }
+
+  const bulkDelete = async (ids: string[]) => {
+    console.log('Perfoming bulk delet for:', ids, 'on guest table')
+    try{
+      const {error} = await supabase
+        .from('guests')
+        .delete()
+        .in('guest_id', ids)
+
+      if(error) {
+        console.log(error)
+        throw error
+      }
+
+      await fetchGuests(currentPage.value, pageSize.value)
+    }catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed bulk operation'
+      console.error('Could not perform operation:', error.value)
+      ElMessage.error(error.value)
+    }
+  }
+
   return {
     // States
     guest,
@@ -495,11 +518,6 @@ export const useGuestStore = defineStore('guest', () => {
     hasGuests,
     currentPage,
     pageSize,
-
-    // Filters
-    filterAttendance,
-    filterCategory,
-    filteredGuests,
 
     // Actions
     fetchGuestData,
@@ -512,7 +530,9 @@ export const useGuestStore = defineStore('guest', () => {
     generateInvitationLink,
     markInviteAsSent,
     createOrUpdatePlusOne,
-    deletePlusOne
+    deletePlusOne,
+    bulkUpdate,
+    bulkDelete
   }
 })
 

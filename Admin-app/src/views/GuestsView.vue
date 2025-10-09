@@ -30,219 +30,173 @@
       </div>
     </div>
 
+    <!-- Main Content -->
+    <div v-if="!isBulkEditing" class="filters">
+      <div>
+        <el-button @click="showFilterDrawer = true" :type="appliedFiltersCount ? 'primary' : 'default'" plain>Advanced Filters {{ appliedFiltersCount ? `(${appliedFiltersCount})` : '' }}</el-button>
+        <el-button v-if="appliedFiltersCount" @click="resetFilters" plain>Clear All</el-button>
+      </div>
+
+      <el-pagination
+        v-model:current-page="guestStore.currentPage"
+        v-model:page-size="guestStore.pageSize"
+        :total="guestStore.totalGuests"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="handleSizeChangeWithScroll"
+        @current-change="handleCurrentChangeWithScroll"
+      />
+    </div>
+
+    <div v-else class="bulk-action-buttons">
+      <el-select v-model="bulkActionValues.inviteValue" :empty-values="[null, undefined]" placeholder="Mark Invite as:" style="width: 200px" @change="handleBulkChange('invite')">
+        <el-option label="Sent" value="sent" />
+        <el-option label="Not Sent" value="not_sent" />
+      </el-select>
+
+      <el-select v-model="bulkActionValues.statusValue" :empty-values="[null, undefined]" placeholder="Set Status to:" style="width: 200px" @change="handleBulkChange('status')">
+        <el-option value="attending" label="Attending" />
+        <el-option value="not_attending" label="Not Attending" />
+        <el-option value="spouse_attending" label="Attending with Spouse" />
+        <el-option value="pending" label="Pending" />
+      </el-select>
+
+      <el-select v-model="bulkActionValues.categoryValue" :empty-values="[null, undefined]" placeholder="Set Category to:" style="width: 200px" @change="handleBulkChange('category')">
+        <el-option value="family" label="Family" />
+        <el-option value="friend" label="Friend" />
+        <el-option value="asoebi" label="Asoebi" />
+      </el-select>
+
+      <el-select v-model="bulkActionValues.sideValue" :empty-values="[null, undefined]" placeholder="Set Side to:" style="width: 200px" @change="handleBulkChange('side')">
+        <el-option value="bride" label="Bride" />
+        <el-option value="groom" label="Groom" />
+        <el-option value="both" label="both" />
+      </el-select>
+
+      <!-- <el-button :icon="Link">Generate Invitation {{ selectedTableItems?.length === 1 ? 'Link' : 'Links' }}</el-button> -->
+      <el-button :icon="Delete" type="danger" plain :loading="deletingGuest" @click="handleBulkDelete">Delete {{ selectedTableItems?.length === 1 ? 'Guest' : 'Guests' }}</el-button>
+    </div>
+
     <!-- Empty State -->
     <el-empty v-if="!guestStore.hasGuests" description="Start building your guest list" />
 
-    <!-- Main Content -->
-    <template v-else>
-      <!-- Filters -->
-      <div v-if="!isBulkEditing" class="filters">
-        <div>
-          <el-button icon="" @click="showFilterDrawer = true">Advanced Filters</el-button>
-        </div>
+    <el-table v-else ref="guestTable" :data="guestTableData" v-loading="guestStore.loading" row-key="id" @selection-change="handleSelection">
+      <el-table-column type="selection" width="48" />
+      <el-table-column fixed label="Name" prop="name" width="300" />
+      <el-table-column label="Status" min-width="180">
+        <template #default="{ row }">
+          <el-tag :type="getStatusType(row.id)">
+            {{ row.status }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="Category" prop="category" min-width="150" />
+      <el-table-column label="Side" prop="family" min-width="150" />
+      <el-table-column label="Class" prop="class" min-width="150" />
+      <el-table-column label="Plus One" prop="plus_ones" min-width="150" />
+      <el-table-column label="Actions" width="350" fixed="right">
+        <template #default="{ row }">
+          <div class="action-buttons">
+            <el-tooltip
+              v-if="row.can_add_plus_one"
+              content="Manage Plus Ones"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                circle
+                @click="row.actions.managePlusOnes()"
+              >
+                <el-icon><User /></el-icon>
+              </el-button>
+            </el-tooltip>
 
-        <el-pagination
-          v-model:current-page="guestStore.currentPage"
-          v-model:page-size="guestStore.pageSize"
-          :total="guestStore.totalGuests"
-          :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
-          @size-change="handleSizeChangeWithScroll"
-          @current-change="handleCurrentChangeWithScroll"
-        />
+            <el-tooltip
+              content="Update RSVP Status"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                circle
+                @click="row.actions.updateStatus()"
+              >
+                <el-icon><Refresh /></el-icon>
+              </el-button>
+            </el-tooltip>
 
-        <el-drawer
-          title="Advanced Filters"
-          v-model:visible="showFilterDrawer"
-          direction="rtl"
-          size="420px"
-        >
-          <div class="advanced-filters-drawer">
-            <el-select v-model="selectedFilters.guest_category" placeholder="Category" clearable multiple style="width:100%; margin-bottom:12px">
-              <el-option label="Family" value="family" />
-              <el-option label="Friend" value="friend" />
-              <el-option label="Asoebi" value="asoebi" />
-              <el-option label="Bestman" value="bestman" />
-              <el-option label="Chief Bridesmaid" value="chiefbridesmaid" />
-            </el-select>
+            <el-tooltip
+              content="Mark as sent"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                circle
+                :type="row.invite_sent ? 'success' : 'default'"
+                @click="row.actions.markAsSent()"
+              >
+                <el-icon><Position /></el-icon>
+              </el-button>
+            </el-tooltip>
+            
 
-            <el-select v-model="selectedFilters.attendance_status" placeholder="Attendance" clearable multiple style="width:100%; margin-bottom:12px">
-              <el-option label="Attending" value="attending" />
-              <el-option label="Not Attending" value="not_attending" />
-              <el-option label="Pending" value="pending" />
-            </el-select>
+            <el-tooltip
+              v-if="row.invitation_link"
+              content="Copy Invite Link"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                circle
+                @click="row.actions.copyLink()"
+              >
+                <el-icon><Link /></el-icon>
+              </el-button>
+            </el-tooltip>
+            
+            <el-tooltip
+              v-else
+              content="generate Invite Link"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                :icon="Link"
+                plain
+                @click="row.actions.generateLink()"
+              >Get Invite Link</el-button>
+            </el-tooltip>
 
-            <el-select v-model="selectedFilters.family_side" placeholder="Family Side" clearable multiple style="width:100%; margin-bottom:12px">
-              <el-option label="Bride's Family" value="bride" />
-              <el-option label="Groom's Family" value="groom" />
-              <el-option label="Both" value="both" />
-            </el-select>
+            <el-tooltip
+              content="Edit Guest"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                circle
+                @click="row.actions.edit()"
+              >
+                <el-icon><Edit /></el-icon>
+              </el-button>
+            </el-tooltip>
 
-            <el-select v-model="selectedFilters.invitation_type" placeholder="Invitation Type" clearable multiple style="width:100%; margin-bottom:12px">
-              <el-option label="RSVP" value="rsvp_guest" />
-              <el-option label="Information Only" value="information_only" />
-            </el-select>
-
-            <el-select v-model="selectedFilters.plus_one_eligibility" placeholder="Plus One Eligibility" clearable multiple style="width:100%; margin-bottom:12px">
-              <el-option label="Eligible" value="eligible" />
-              <el-option label="Not Eligible" value="not_eligible" />
-            </el-select>
-
-            <el-select v-model="selectedFilters.invite_sent" placeholder="Invite Sent" clearable style="width:100%; margin-bottom:12px">
-              <el-option label="All" :value="'all'" />
-              <el-option label="Sent" :value="true" />
-              <el-option label="Not Sent" :value="false" />
-            </el-select>
-
-            <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px">
-              <el-button @click="resetFilters">Clear</el-button>
-              <el-button type="primary" @click="handleApplyFromDrawer">Apply</el-button>
-            </div>
+            <el-tooltip
+              content="Remove Guest"
+              placement="top"
+              :show-after="500"
+            >
+              <el-button
+                circle
+                type="danger"
+                plain
+                @click="row.actions.delete()"
+              >
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </el-tooltip>
           </div>
-        </el-drawer>
-      </div>
-
-      <div v-else class="bulk-action-buttons">
-        <el-select :empty-values="[null, undefined]" placeholder="Mark Invite as:" style="width: 200px">
-          <el-option label="Sent" value="sent" />
-          <el-option label="Not Sent" value="not_sent" />
-        </el-select>
-
-        <el-select :empty-values="[null, undefined]" placeholder="Set Status to:" style="width: 200px">
-          <el-option value="attending" label="Attending" />
-          <el-option value="not_attending" label="Not Attending" />
-          <el-option value="spouse_attending" label="Attending with Spouse" />
-          <el-option value="pending" label="Pending" />
-        </el-select>
-
-        <el-select :empty-values="[null, undefined]" placeholder="Set Category to:" style="width: 200px">
-          <el-option value="family" label="Family" />
-          <el-option value="friend" label="Friend" />
-          <el-option value="asoebi" label="Asoebi" />
-        </el-select>
-
-        <el-button :icon="Link">Generate Invitation {{ selectedTableItems?.length === 1 ? 'Link' : 'Links' }}</el-button>
-        <el-button :icon="Delete" type="danger" plain>Delete {{ selectedTableItems?.length === 1 ? 'Guest' : 'Guests' }}</el-button>
-      </div>
-
-      <el-table ref="guestTable" :data="guestTableData" v-loading="guestStore.loading" row-key="id" @selection-change="handleSelection">
-        <el-table-column type="selection" width="48" />
-        <el-table-column fixed label="Name" prop="name" width="300" />
-        <el-table-column label="Status" min-width="150">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.id)">
-              {{ row.status }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="Category" prop="category" min-width="150" />
-        <el-table-column label="Family" prop="family" min-width="150" />
-        <el-table-column label="Class" prop="class" min-width="150" />
-        <el-table-column label="Plus One" prop="plus_ones" min-width="150" />
-        <el-table-column label="Actions" width="350" fixed="right">
-          <template #default="{ row }">
-            <div class="action-buttons">
-              <el-tooltip
-                v-if="row.can_add_plus_one"
-                content="Manage Plus Ones"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  circle
-                  @click="row.actions.managePlusOnes()"
-                >
-                  <el-icon><User /></el-icon>
-                </el-button>
-              </el-tooltip>
-
-              <el-tooltip
-                content="Update RSVP Status"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  circle
-                  @click="row.actions.updateStatus()"
-                >
-                  <el-icon><Refresh /></el-icon>
-                </el-button>
-              </el-tooltip>
-
-              <el-tooltip
-                content="Mark as sent"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  circle
-                  :type="row.invite_sent ? 'success' : 'default'"
-                  @click="row.actions.markAsSent()"
-                >
-                  <el-icon><Position /></el-icon>
-                </el-button>
-              </el-tooltip>
-              
-
-              <el-tooltip
-                v-if="row.invitation_link"
-                content="Copy Invite Link"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  circle
-                  @click="row.actions.copyLink()"
-                >
-                  <el-icon><Link /></el-icon>
-                </el-button>
-              </el-tooltip>
-              
-              <el-tooltip
-                v-else
-                content="generate Invite Link"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  :icon="Link"
-                  plain
-                  @click="row.actions.generateLink()"
-                >Get Invite Link</el-button>
-              </el-tooltip>
-
-              <el-tooltip
-                content="Edit Guest"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  circle
-                  @click="row.actions.edit()"
-                >
-                  <el-icon><Edit /></el-icon>
-                </el-button>
-              </el-tooltip>
-
-              <el-tooltip
-                content="Remove Guest"
-                placement="top"
-                :show-after="500"
-              >
-                <el-button
-                  circle
-                  type="danger"
-                  plain
-                  @click="row.actions.delete()"
-                >
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-              </el-tooltip>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-    </template>
+        </template>
+      </el-table-column>
+    </el-table>
 
     <!-- Guest Form Dialog -->
     <GuestForm
@@ -269,6 +223,92 @@
       @import="handleGuestImport"
     /> -->
   </div>
+
+  <el-drawer
+    title="Advanced Filters"
+    v-model="showFilterDrawer"
+    direction="rtl"
+    size="420px"
+  >
+    <template #default>
+      <div class="filter-section">
+        <p class="section-header">Invite Sent</p>
+        <el-checkbox-group v-model="selectedFilters.invite_sent">
+          <el-checkbox label="Sent" value="true" />
+          <el-checkbox label="Not Sent" value="false" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Attendance Status</p>
+        <el-checkbox-group v-model="selectedFilters.rsvp_status">
+          <el-checkbox label="Attending" value="attending" />
+          <el-checkbox label="Not Attending" value="not_attending" />
+          <el-checkbox label="Pending" value="pending" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Geust Category</p>
+        <el-checkbox-group v-model="selectedFilters.guest_category">
+          <el-checkbox label="Family" value="family" />
+          <el-checkbox label="Friend" value="friend" />
+          <el-checkbox label="Asoebi" value="asoebi" />
+          <el-checkbox label="Bestman" value="bestman" />
+          <el-checkbox label="Chief Bridesmaid" value="chiefbridesmaid" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Guest Type</p>
+        <el-checkbox-group v-model="selectedFilters.guest_type">
+          <el-checkbox label="Single" value="single" />
+          <el-checkbox label="Couple" value="couple" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Spouse Attendance Status</p>
+        <el-checkbox-group v-model="selectedFilters.spouse_rsvp_status">
+          <el-checkbox label="Attending" value="true" />
+          <el-checkbox label="Not Attending" value="false" />
+          <el-checkbox label="Pending" value="null" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Family Side</p>
+        <el-checkbox-group v-model="selectedFilters.family_side">
+          <el-checkbox label="Bride's Family" value="bride" />
+          <el-checkbox label="Groom's Family" value="groom" />
+          <el-checkbox label="Both" value="both" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Invitation Type</p>
+        <el-checkbox-group v-model="selectedFilters.invitation_type">
+          <el-checkbox label="RSVP Guest" value="rsvp_guest" />
+          <el-checkbox label="Information Only" value="information_only" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Plus One Eligibility</p>
+        <el-checkbox-group v-model="selectedFilters.plus_one_eligibility">
+          <el-checkbox label="Eligibility" value="eligibility" />
+          <el-checkbox label="Not Eligible" value="not_eligibility" />
+        </el-checkbox-group>
+      </div>
+    </template>
+
+    <template #footer>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px">
+        <el-button @click="resetFilters">Clear</el-button>
+        <el-button type="primary" @click="handleApplyFromDrawer">Apply</el-button>
+      </div>
+    </template>
+  </el-drawer>
 </template>
 
 <script setup lang="ts">
@@ -281,11 +321,26 @@ import GuestForm from '@/components/GuestForm.vue'
 import PlusOneForm from '@/components/PlusOneForm.vue'
 import GuestImportDialog from '@/components/GuestImportDialog.vue'
 import { Link, Edit, Delete, Check, User, Message, Position, Plus, Refresh } from '@element-plus/icons-vue'
-import type { Guest, GuestCategory, AttendanceStatus, RSVP, GuestTableRow } from '@/types/guest'
+import type { Guest, GuestCategory, AttendanceStatus, RSVP, GuestTableRow, GuestName } from '@/types/guest'
 
 const authStore = useAuthStore()
 const guestStore = useGuestStore()
 // const invitationLinks = useInvitationLinks()
+
+type TableItem = {
+  id: string
+  name: GuestName
+  category: string
+  family: string
+  status: string
+  class: string
+  plus_ones: string
+  invitation_link: string
+  invite_sent: boolean
+  can_add_plus_one: string
+  actions: any
+
+}
 
 const showGuestForm = ref(false)
 const showImportDialog = ref(false)
@@ -293,51 +348,44 @@ const selectedGuest = ref<GuestTableRow | null>(null)
 const importLoading = ref(false)
 const guestTable = ref<any>(null)
 const isBulkEditing = ref<boolean>(false)
-const selectedTableItems = ref<GuestTableRow[] | null>(null)
+const selectedTableItems = ref<TableItem[] | null>(null)
 const managePlusOne = ref<boolean>(false)
 const guestFormLoading = ref<boolean>(false)
 const plusOneSaving = ref<boolean>(false)
 const showFilterDrawer = ref<boolean>(false)
+const deletingGuest = ref<boolean>(false)
 
-// Filters
-const filterAttendance = ref<AttendanceStatus | 'all'>('all')
-const filterCategory = ref<GuestCategory | 'all'>('all')
+const bulkActionValues = ref<{
+  inviteValue: string | null
+  statusValue: string | null
+  categoryValue: string | null
+  sideValue: string | null
+}>({
+  inviteValue: null,
+  statusValue: null,
+  categoryValue: null,
+  sideValue: null
+})
 
-// Advanced filter selections (local state)
 const selectedFilters = ref<{
   guest_category?: string[]
-  attendance_status?: string[]
+  rsvp_status?: string[]
   family_side?: string[]
   invitation_type?: string[]
   plus_one_eligibility?: string[]
-  invite_sent?: any
+  invite_sent?: string[]
+  guest_type?: string[]
+  spouse_rsvp_status?: string[]
 }>({
   guest_category: [],
-  attendance_status: [],
+  rsvp_status: [],
   family_side: [],
   invitation_type: [],
   plus_one_eligibility: [],
-  invite_sent: 'all'
+  invite_sent: [],
+  guest_type: [],
+  spouse_rsvp_status: []
 })
-
-const applyFilters = async () => {
-  // Build payload mapping to view columns
-  const payload: any = {}
-  if (selectedFilters.value.guest_category && selectedFilters.value.guest_category.length > 0) payload.guest_category = selectedFilters.value.guest_category
-  if (selectedFilters.value.attendance_status && selectedFilters.value.attendance_status.length > 0) payload.attendance_status = selectedFilters.value.attendance_status
-  if (selectedFilters.value.family_side && selectedFilters.value.family_side.length > 0) payload.family_side = selectedFilters.value.family_side
-  if (selectedFilters.value.invitation_type && selectedFilters.value.invitation_type.length > 0) payload.invitation_type = selectedFilters.value.invitation_type
-  if (selectedFilters.value.plus_one_eligibility && selectedFilters.value.plus_one_eligibility.length > 0) payload.plus_one_eligibility = selectedFilters.value.plus_one_eligibility
-  if (typeof selectedFilters.value.invite_sent !== 'undefined') payload.invite_sent = selectedFilters.value.invite_sent
-
-  await guestStore.fetchGuests(currentPage.value, pageSize.value, payload)
-}
-
-const handleApplyFromDrawer = async () => {
-  showFilterDrawer.value = false
-  guestStore.currentPage = 1
-  await applyFilters()
-}
 
 
 /* ----------------------------------- Computed Properties ---------------------------------- */
@@ -370,6 +418,19 @@ const guestTableData = computed(() => {
   return remappedGuests
 })
 
+const currentPage = computed(() => guestStore.currentPage)
+
+const pageSize = computed(() => guestStore.pageSize)
+
+const appliedFiltersCount = computed(() => {
+  const filters = selectedFilters.value || {}
+  return Object.values(filters).reduce((count, val) => {
+    if (!val) return count
+    if (Array.isArray(val)) return count + val.filter(Boolean).length
+    return count
+  }, 0)
+})
+
 
 /* ------------------------------------------ Methods -------------------------------------- */
 const formatGuestName = (guest: GuestTableRow) => {
@@ -399,7 +460,7 @@ const formatGuestStatus = (guest: GuestTableRow) => {
   const status = (guest?.rsvp_status ?? 'pending') as AttendanceStatus
 
   if (status === 'attending' && guest?.guest_type === 'couple') {
-    return guest.spouse_rsvp_status ? 'Both With Spouse' : 'Attending Without Spouse'
+    return guest.spouse_rsvp_status ? 'Attending With Spouse' : 'Attending Without Spouse'
   }
 
   const mappedStatus: Record<AttendanceStatus, string> = {
@@ -415,9 +476,9 @@ const formatGuestFamilySide = (guest: GuestTableRow) => {
   const side = guest?.family_side ?? 'unknown'
 
   const mappedFamilySide: Record<string, string> = {
-    bride: 'Bride\'s Family',
-    groom: 'Groom\'s Family',
-    both: 'Both Families',
+    bride: 'Bride',
+    groom: 'Groom',
+    both: 'Both',
     unknown: 'Unknown'
   }
 
@@ -662,13 +723,17 @@ const markAsSent = async (guestID: string) => {
   try {
     await guestStore.markInviteAsSent(newInviteStatus, guestID)
 
+    const guest = guestStore.guests.find(g => g.guest_id === guestID)
+
+    if(guest) guest.invite_sent = newInviteStatus
+
     if(newInviteStatus) {
       ElMessage.success('Marked as invite sent!')
     } else {
       ElMessage.success('Marked as invite not sent!')
     }
 
-    await guestStore.fetchGuests(currentPage.value, pageSize.value)
+    // await guestStore.fetchGuests(currentPage.value, pageSize.value)
   } catch (error) {
     console.error('Failed to mark as sent:', error)
     ElMessage.error('Failed to mark as sent')
@@ -696,51 +761,6 @@ const handleCopyInviteLink = async (guestID: string) => {
   }
 }
 
-
-
-
-
-
-
-
-const currentPage = computed(() => guestStore.currentPage)
-
-const pageSize = computed(() => guestStore.pageSize)
-
-const filteredGuests = computed(() => {
-  let filtered = [...guestStore.guests]
-
-  if (filterAttendance.value !== 'all') {
-    filtered = filtered.filter(guest => guest.rsvp_status === filterAttendance.value)
-  }
-
-  if (filterCategory.value !== 'all') {
-    filtered = filtered.filter(guest => guest.guest_category === filterCategory.value)
-  }
-
-  return filtered
-})
-
-const getCategoryType = (category: GuestCategory): 'success' | 'warning' | 'info' => {
-  const types: Record<GuestCategory, 'success' | 'warning' | 'info'> = {
-    family: 'success',
-    friend: 'warning',
-    asoebi: 'info',
-    bestman: 'success',
-    chiefbridesmaid: 'warning'
-  }
-  return types[category]
-}
-
-const getInviteType = (invitationType: 'rsvp_guest' | 'information_only'): 'primary' | 'info' => {
-  const types: Record<'rsvp_guest' | 'information_only', 'primary' | 'info'> = {
-    rsvp_guest: 'primary',
-    information_only: 'info'
-  }
-  return types[invitationType]
-}
-
-// Event handlers
 const handleGuestSubmit = async (formData: Omit<Guest, 'guest_id' | 'auth_token' | 'created_at' | 'updated_at' | 'invitation_link' | 'created_by'>) => {
   try {
     if (selectedGuest.value?.guest_id) {
@@ -758,14 +778,74 @@ const handleGuestSubmit = async (formData: Omit<Guest, 'guest_id' | 'auth_token'
   }
 }
 
-const handleSizeChange = (size: number) => {
-  guestStore.pageSize = size
-  guestStore.fetchGuests(guestStore.currentPage, size)
+const handleBulkChange = async (type: 'invite' | 'status' | 'category' | 'side') => {
+  if (!selectedTableItems.value || selectedTableItems.value.length === 0) {
+    console.warn('No guests selected for bulk update')
+    return
+  }
+
+  const selectedIDs = selectedTableItems.value.map(item => item.id)
+
+  const mapInviteValue = (v: string | null): boolean | null =>
+    v === 'sent' ? true : v === 'not_sent' ? false : null
+
+  let table: string
+  let update: any
+
+  if(type === 'side' || type === 'category') table = 'guests'
+  else if(type === 'invite' || type === 'status') table = 'rsvps'
+  else throw new Error('Invalid type selected')
+
+  if (type === 'side') update = {family_side: bulkActionValues.value.sideValue}
+  else if (type === 'category') update = {guest_category: bulkActionValues.value.categoryValue}
+  else if (type === 'status') update = {attendance_status: bulkActionValues.value.statusValue}
+  else if (type === 'invite') update = {invite_sent: mapInviteValue(bulkActionValues.value.inviteValue)}
+
+  try{
+    await guestStore.bulkUpdate(table, selectedIDs, update)
+  }catch (err) {
+    throw err
+  }finally{
+    bulkActionValues.value.categoryValue = null
+    bulkActionValues.value.inviteValue = null
+    bulkActionValues.value.sideValue = null
+    bulkActionValues.value.statusValue = null
+  }
 }
 
-const handleCurrentChange = (page: number) => {
+const handleBulkDelete = async () => {
+  if (!selectedTableItems.value || selectedTableItems.value.length === 0) {
+    console.warn('No guests selected for bulk update')
+    return
+  }
+
+  const selectedIDs = selectedTableItems.value.map(item => item.id)
+
+  try{
+    deletingGuest.value = true
+
+    await guestStore.bulkDelete(selectedIDs)
+
+    ElMessage.success(`${selectedIDs.length} guest(s) removed successfully`)
+  }catch (err) {
+    throw err
+  }finally {
+    deletingGuest.value = false
+  }
+}
+
+const handleSizeChange = async (size: number) => {
+  guestStore.pageSize = size
+
+  if(appliedFiltersCount.value > 0) await applyFilters()
+  else guestStore.fetchGuests(guestStore.currentPage, size)
+}
+
+const handleCurrentChange = async (page: number) => {
   guestStore.currentPage = page
-  guestStore.fetchGuests(page, guestStore.pageSize)
+
+  if(appliedFiltersCount.value > 0) await applyFilters()
+  else guestStore.fetchGuests(page, guestStore.pageSize)
 }
 
 // Scroll the table wrapper to top after pagination or data changes
@@ -788,37 +868,81 @@ const handleCurrentChangeWithScroll = async (page: number) => {
   await scrollTableToTop()
 }
 
+const applyFilters = async () => {
+  // Build payload mapping to view columns
+  const payload: any = {}
+  if (selectedFilters.value.guest_category && selectedFilters.value.guest_category.length > 0) payload.guest_category = selectedFilters.value.guest_category
+  if (selectedFilters.value.rsvp_status && selectedFilters.value.rsvp_status.length > 0) payload.rsvp_status = selectedFilters.value.rsvp_status
+  if (selectedFilters.value.family_side && selectedFilters.value.family_side.length > 0) payload.family_side = selectedFilters.value.family_side
+  if (selectedFilters.value.invitation_type && selectedFilters.value.invitation_type.length > 0) payload.invitation_type = selectedFilters.value.invitation_type
+  if (selectedFilters.value.plus_one_eligibility && selectedFilters.value.plus_one_eligibility.length > 0) payload.plus_one_eligibility = selectedFilters.value.plus_one_eligibility
+  if (selectedFilters.value.invite_sent && selectedFilters.value.invite_sent.length > 0) payload.invite_sent = selectedFilters.value.invite_sent
+  if (selectedFilters.value.guest_type && selectedFilters.value.guest_type.length > 0) payload.guest_type = selectedFilters.value.guest_type
+  if (selectedFilters.value.spouse_rsvp_status && selectedFilters.value.spouse_rsvp_status.length > 0) payload.spouse_rsvp_status = selectedFilters.value.spouse_rsvp_status
+
+  await guestStore.fetchGuests(currentPage.value, pageSize.value, payload)
+}
+
+const handleApplyFromDrawer = async () => {
+  guestStore.currentPage = 1
+  showFilterDrawer.value = false
+  await applyFilters()
+}
+
 const resetFilters = async () => {
-  guestStore.filterAttendance = 'all'
-  guestStore.filterCategory = 'all'
   selectedFilters.value = {
     guest_category: [],
-    attendance_status: [],
+    rsvp_status: [],
     family_side: [],
     invitation_type: [],
     plus_one_eligibility: [],
-    invite_sent: 'all'
+    invite_sent: [],
+    guest_type: [],
+    spouse_rsvp_status: []
   }
   await guestStore.fetchGuests(currentPage.value, pageSize.value)
 }
 
-/* const handleSync = async () => {
+const handleManagePlusOnes = async (guestId: string, guestObj?: GuestTableRow) => {
   try {
-    await invitationLinks.syncInvitationLinks()
-    if (invitationLinks.syncResult.value) {
-      ElMessage.success('Invitation links synced successfully!')
-      console.log('Sync Result:', invitationLinks.syncResult.value)
-    }
-  } catch (error) {
-    console.error('Failed to sync invitation links:', error)
-    ElMessage.error('Failed to sync invitation links')
+    // set selected guest by finding in store if not passed
+    if (guestObj) selectedGuest.value = guestStore.guests.find(g => g.guest_id === guestId) || null
+    else selectedGuest.value = guestStore.guests.find(g => g.guest_id === guestId) || null
+
+    managePlusOne.value = true
+  } catch (e) {
+    console.error('Failed to open plus-one modal:', e)
   }
-} */
+}
 
-// Handle status update
+const handlePlusOneDataSave = async ({ guestId, plus_ones }: { guestId: string | number | null, plus_ones: any[] }) => {
+  if (!guestId) {
+    ElMessage.error('No guest selected')
+    return
+  }
 
+  try {
+    plusOneSaving.value = true
+    // createOrUpdatePlusOne expects an array of plus_one objects
+    await guestStore.createOrUpdatePlusOne(plus_ones as any)
+    ElMessage.success('Plus ones updated successfully')
+    managePlusOne.value = false
+    // refresh guest list
+    await guestStore.fetchGuests(currentPage.value, pageSize.value)
+  } catch (e) {
+    console.error('Failed to save plus ones:', e)
+    ElMessage.error('Failed to save plus ones')
+  } finally {
+    plusOneSaving.value = false
+  }
+}
 
-// Handle CSV import
+const handleAddNewGuest = () => {
+  console.log('➕ Opening form for new guest')
+  selectedGuest.value = null // Clear any previously selected guest
+  showGuestForm.value = true
+}
+
 const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
   try {
     importLoading.value = true
@@ -874,53 +998,24 @@ const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
   }
 }
 
-// Function to handle adding a new guest
-const handleAddNewGuest = () => {
-  console.log('➕ Opening form for new guest')
-  selectedGuest.value = null // Clear any previously selected guest
-  showGuestForm.value = true
-}
+/* const handleSync = async () => {
+  try {
+    await invitationLinks.syncInvitationLinks()
+    if (invitationLinks.syncResult.value) {
+      ElMessage.success('Invitation links synced successfully!')
+      console.log('Sync Result:', invitationLinks.syncResult.value)
+    }
+  } catch (error) {
+    console.error('Failed to sync invitation links:', error)
+    ElMessage.error('Failed to sync invitation links')
+  }
+} */
 
-// Fetch guests on mount
+
+/* ---------------------------------- Lifecycle Hooks -------------------------------- */
 onMounted(() => {
   guestStore.fetchGuests(currentPage.value, pageSize.value)
 })
-
-// Open the plus-one modal for a guest
-const handleManagePlusOnes = async (guestId: string, guestObj?: GuestTableRow) => {
-  try {
-    // set selected guest by finding in store if not passed
-    if (guestObj) selectedGuest.value = guestStore.guests.find(g => g.guest_id === guestId) || null
-    else selectedGuest.value = guestStore.guests.find(g => g.guest_id === guestId) || null
-
-    managePlusOne.value = true
-  } catch (e) {
-    console.error('Failed to open plus-one modal:', e)
-  }
-}
-
-// Save handler for plus-one modal - persists via guest store
-const handlePlusOneDataSave = async ({ guestId, plus_ones }: { guestId: string | number | null, plus_ones: any[] }) => {
-  if (!guestId) {
-    ElMessage.error('No guest selected')
-    return
-  }
-
-  try {
-    plusOneSaving.value = true
-    // createOrUpdatePlusOne expects an array of plus_one objects
-    await guestStore.createOrUpdatePlusOne(plus_ones as any)
-    ElMessage.success('Plus ones updated successfully')
-    managePlusOne.value = false
-    // refresh guest list
-    await guestStore.fetchGuests(currentPage.value, pageSize.value)
-  } catch (e) {
-    console.error('Failed to save plus ones:', e)
-    ElMessage.error('Failed to save plus ones')
-  } finally {
-    plusOneSaving.value = false
-  }
-}
 </script>
 
 <style scoped>
@@ -998,8 +1093,9 @@ const handlePlusOneDataSave = async ({ guestId, plus_ones }: { guestId: string |
   padding-right: 12px;
 }
 
-.el-table .action-buttons .el-button {
-  padding: 6px;
+.filter-section .section-header {
+  color: #5f5f5f;
+  font-size: 14px;
 }
 
 .pagination {
@@ -1007,5 +1103,16 @@ const handlePlusOneDataSave = async ({ guestId, plus_ones }: { guestId: string |
   justify-content: flex-end;
   padding: 16px 0;
   flex-shrink: 0;
+}
+
+.el-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.el-checkbox-group .el-checkbox {
+  margin: 0;
 }
 </style>

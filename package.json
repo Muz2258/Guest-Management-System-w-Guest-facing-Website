@@ -19,6 +19,7 @@
     "analyze:guest": "cd Guest-Website && npm run analyze"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.2"
+    "@supabase/supabase-js": "^2.57.2",
+    "element-plus": "^2.11.4"
   }
 }
