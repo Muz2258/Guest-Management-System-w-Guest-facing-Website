@@ -28,7 +28,7 @@ declare module 'vue' {
     GiftItemsList: typeof import('./src/components/Organisms/GiftItemsList.vue')['default']
     HeaderNavigation: typeof import('./src/components/Organisms/HeaderNavigation.vue')['default']
     Hero: typeof import('./src/components/Templates/Hero.vue')['default']
-    InitialLoader: typeof import('./src/components/Molecules/InitialLoader.vue')['default']
+    InitialLoader: typeof import('./src/components/Templates/InitialLoader.vue')['default']
     Input: typeof import('./src/components/Atoms/Input.vue')['default']
     Loader: typeof import('./src/components/Atoms/loader.vue')['default']
     LoaderItemsList: typeof import('./src/components/Atoms/LoaderItemsList.vue')['default']

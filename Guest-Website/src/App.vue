@@ -1,4 +1,20 @@
 <template>
+  <main v-if="!isMobile" class="h-dvh flex flex-col justify-center items-center p-32">
+    <div class="flex items-center space-x-16 mb-32">
+      <div><Icon name="no-landscape" :color="getColor('denotive.denote_red')" :size="24"/></div>
+      <div><Icon name="phone" :color="getColor('brand.accent')" :size="32"/></div>
+      <div><Icon name="no-laptops" :color="getColor('denotive.denote_red')" :size="24"/></div>
+    </div>
+    <h1 class="text-heading-lg text-neutrals-neu-0 text-center mb-16">Phones in portrait Only</h1>
+    <p class="text-s text-neutrals-neu-35 text-center max-w-[50%]">
+      Sorry! This site works best on mobile phones in portrait mode. Please open your invitation link on your phone.
+    </p>
+  </main>
+
+  <transition appear name="fade-loader">
+    <InitialLoader v-if="isLoading && isMobile" />
+  </transition>
+  
   <main v-if="isMobile">
     <transition appear name="slide-in">
       <HeaderNavigation v-if="showHeader" />
@@ -47,18 +63,6 @@
       :is-visible="showGiftBottomSheet" 
     />
   </main>
-  
-  <main v-else class="h-dvh flex flex-col justify-center items-center p-32">
-    <div class="flex items-center space-x-16 mb-32">
-      <div><Icon name="no-landscape" :color="getColor('denotive.denote_red')" :size="24"/></div>
-      <div><Icon name="phone" :color="getColor('brand.accent')" :size="32"/></div>
-      <div><Icon name="no-laptops" :color="getColor('denotive.denote_red')" :size="24"/></div>
-    </div>
-    <h1 class="text-heading-lg text-neutrals-neu-0 text-center mb-16">Phones in portrait Only</h1>
-    <p class="text-s text-neutrals-neu-35 text-center max-w-[50%]">
-      Sorry! This site works best on mobile phones in portrait mode. Please open your invitation link on your phone.
-    </p>
-  </main>
 </template>
 
 <script setup lang="ts">
@@ -101,6 +105,7 @@ const lazyStoreAccess = {
 /* ------------------ Variables and States ------------------ */
 const rsvpModalComponents = ref<RsvpModalComponents>({})
 const rsvpModalsLoaded = ref(false)
+const isLoading = ref(true)
 
 
 /* ------------------ Components ------------------ */
@@ -211,9 +216,7 @@ const openWelcomeModal = () => {
 
 const closeLoaderScreen = () => {
   console.log('🎯 Hero ready - closing loader screen')
-  const loaderScreen = document.getElementById('initial-loader')
-
-  loaderScreen?.classList.add('fade-out')
+  isLoading.value = false
 
   console.log('Loader screen closed.')
   preloadRSVPModals()
