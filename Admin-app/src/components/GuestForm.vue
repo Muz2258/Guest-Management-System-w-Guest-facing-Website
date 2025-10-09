@@ -34,6 +34,18 @@
         </el-form-item>
       </div>
 
+      <el-form-item label="Phone number" prop="phone_number">
+        <el-input v-model="number" placeholder="Enter phone number">
+          <template #prepend>
+            <el-select v-model="dialCode" style="width: 80px">
+              <el-option v-for="code in dialCodes" :key="code.country" :label="code.code" :value="code.code">
+                <span>{{ formatCodeLabel(code) }}</span>
+              </el-option>
+            </el-select>
+          </template>
+        </el-input>
+      </el-form-item>
+
       <el-form-item label="Family" prop="family_side">
         <el-select v-model="form.family_side" placeholder="Select family side">
           <el-option label="Bride" value="bride" />
@@ -103,6 +115,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, defineEmits, defineProps, computed, watch, onMounted } from 'vue'
+import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus'
 import type { Guest, GuestTableRow } from '@/types/guest'
 
@@ -120,6 +133,19 @@ const emit = defineEmits<{
 const isEdit = computed(() => !!props.initialData?.guest_id)
 const loading = ref(props.loading)
 const formRef = ref<FormInstance>()
+const dialCode = ref('+234')
+const number = ref('')
+
+const dialCodes = ref<Array<{
+  code: string
+  country: string
+}>>([
+  {code: '+234', country: 'Nigeria'},
+  {code: '+1', country: 'United States'},
+  {code: '+44', country: 'United Kingdom'},
+  {code: '+48', country: 'Poland'},
+  {code: '+49', country: 'Gernmany'}
+])
 
 const dialogVisible = computed({
   get: () => props.modelValue,
@@ -140,7 +166,8 @@ const form = reactive<Omit<Guest, 'guest_id' | 'auth_token' | 'created_at' | 'up
   invitation_type: 'rsvp_guest',
   invitation_method: 'digital',
   plus_one_limit: 0,
-  family_side: 'both'
+  family_side: 'both',
+  phone_number: ''
 })
 
 const rules: FormRules = {
@@ -151,12 +178,42 @@ const rules: FormRules = {
   invitation_method: [{ required: true, message: 'Please select invitation method', trigger: 'change' }]
 }
 
+const formatCodeLabel = (code: any) => {
+  return `${code.code} (${code.country})`
+}
+
+const parsePhoneNumber = (fullNumber: string | null): { code: string; number: string } => {
+  if (!fullNumber) {
+    console.log('No number or it is empty')
+    return { code: '+234', number: '' }
+  }
+  
+  const matchedDialCode = dialCodes.value.find(dc => fullNumber.startsWith(dc.code))
+
+  console.log(matchedDialCode)
+  
+  if (matchedDialCode) {
+    return {
+      code: matchedDialCode.code,
+      number: fullNumber.slice(matchedDialCode.code.length).trim()
+    }
+  }
+  
+  return { code: '+234', number: fullNumber }
+}
+
+const combinePhoneNumber = (): string => {
+  if (!number.value) return ''
+  return `${dialCode.value}${number.value.replace(/\s+/g, '')}`
+}
+
 const handleSubmit = async () => {
   if (!formRef.value) return
 
   await formRef.value.validate((valid, fields) => {
     if (valid) {
       loading.value = true
+      form.phone_number = combinePhoneNumber()
       console.log('📝 Form submission data:', form)
       emit('submit', { ...form })
     } else {
@@ -170,77 +227,67 @@ const handleClose = () => {
   emit('update:modelValue', false)
   loading.value = false
   formRef.value?.resetFields()
+
+  dialCode.value = '+234'
+  number.value = ''
 }
 
-// Watch for changes in initialData and update form
-onMounted(() => {
-  if (props.initialData) {
-      form.guest_type = props.initialData.guest_type
-      form.name = props.initialData.name
-      form.guest_category = props.initialData.guest_category
-      form.plus_one_eligibility = props.initialData.plus_one_eligibility
-      form.invitation_type = props.initialData.invitation_type
-      form.invitation_method = props.initialData.invitation_method
-      form.family_side = props.initialData.family_side
-      form.plus_one_limit = props.initialData.plus_one_limit ?? 0
+const populateForm = (data: GuestTableRow | null) => {
+  if (data) {
+      form.guest_type = data.guest_type
+      form.name = data.name
+      form.guest_category = data.guest_category
+      form.plus_one_eligibility = data.plus_one_eligibility
+      form.invitation_type = data.invitation_type
+      form.invitation_method = data.invitation_method
+      form.family_side = data.family_side
+      form.plus_one_limit = data.plus_one_limit ?? 0
+      form.phone_number = data.phone_number ?? null
+
+      const parsed = parsePhoneNumber(data.phone_number)
+      dialCode.value = parsed.code
+      number.value = parsed.number
+
       console.log('📝 Form updated with new data:', form)
   } else {
-      // Reset form to defaults
-      form.guest_type = 'single'
-      form.name = {
+    Object.assign(form, {
+      guest_type: 'single',
+      name: {
         titles: [],
         first_name: '',
         middle_name: '',
         last_name: '',
         suffixes: []
       },
-      form.guest_category = 'friend'
-      form.plus_one_eligibility = 'not_eligible'
-      form.invitation_type = 'rsvp_guest'
-      form.invitation_method = 'digital'
-      form.family_side = 'both'
-      form.plus_one_limit = 0
-      console.log('📝 Form reset to defaults')
-  }
-})
+      guest_category: 'friend',
+      plus_one_eligibility: 'not_eligible',
+      invitation_type: 'rsvp_guest',
+      invitation_method: 'digital',
+      family_side: 'both',
+      plus_one_limit: 0,
+      phone_number: '',
+    })
+    
 
-// Watch for dialog opening
+    dialCode.value = '+234'
+    number.value = ''
+
+    console.log('📝 Form reset to defaults')
+  }
+}
+
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     console.log('📝 Dialog opened with initial data:', props.initialData)
-    if (props.initialData) {
-      // Pre-populate form with guest data
-      Object.assign(form, {
-        guest_type: props.initialData.guest_type,
-        name: props.initialData.name,
-        guest_category: props.initialData.guest_category,
-        plus_one_eligibility: props.initialData.plus_one_eligibility,
-        invitation_type: props.initialData.invitation_type,
-        invitation_method: props.initialData.invitation_method,
-        family_side: props.initialData.family_side,
-        plus_one_limit: props.initialData.plus_one_limit ?? 0
-      })
-      console.log('📝 Form populated with guest data:', form)
-    } else {
-      // Reset form to defaults for new guest
-      Object.assign(form, {
-        guest_type: 'single',
-        name: {
-          titles: [],
-          first_name: '',
-          middle_name: '',
-          last_name: '',
-          suffixes: []
-        },
-        guest_category: 'friend',
-        plus_one_eligibility: 'not_eligible',
-        invitation_type: 'rsvp_guest',
-        invitation_method: 'digital',
-        family_side: 'both',
-        plus_one_limit: 0
-      })
-      console.log('📝 Form reset for new guest')
-    }
+    populateForm(props.initialData)
+  }
+})
+
+onMounted(() => {
+  if (props.initialData) {
+    populateForm(props.initialData)
+
+    console.log('📝 Form reset to defaults')
   }
 })
 </script>

@@ -279,8 +279,8 @@
       <div class="filter-section">
         <p class="section-header">Family Side</p>
         <el-checkbox-group v-model="selectedFilters.family_side">
-          <el-checkbox label="Bride's Family" value="bride" />
-          <el-checkbox label="Groom's Family" value="groom" />
+          <el-checkbox label="Bride" value="bride" />
+          <el-checkbox label="Groom" value="groom" />
           <el-checkbox label="Both" value="both" />
         </el-checkbox-group>
       </div>
@@ -321,7 +321,7 @@ import GuestForm from '@/components/GuestForm.vue'
 import PlusOneForm from '@/components/PlusOneForm.vue'
 import GuestImportDialog from '@/components/GuestImportDialog.vue'
 import { Link, Edit, Delete, Check, User, Message, Position, Plus, Refresh } from '@element-plus/icons-vue'
-import type { Guest, GuestCategory, AttendanceStatus, RSVP, GuestTableRow, GuestName } from '@/types/guest'
+import type { Guest, AttendanceStatus, RSVP, GuestTableRow, GuestName } from '@/types/guest'
 
 const authStore = useAuthStore()
 const guestStore = useGuestStore()
@@ -337,7 +337,8 @@ type TableItem = {
   plus_ones: string
   invitation_link: string
   invite_sent: boolean
-  can_add_plus_one: string
+  can_add_plus_one: boolean
+  phone_number: string
   actions: any
 
 }
@@ -403,6 +404,7 @@ const guestTableData = computed(() => {
       invitation_link: guest.invitation_link,
       invite_sent: guest.invite_sent,
       can_add_plus_one: checkPlusOneEligibility(guest),
+      phone_number: guest.phone_number,
       actions: {
         edit: () => handleEditGuest(guest.guest_id),
         delete: () => handleDeleteGuest(guest.guest_id),
@@ -516,6 +518,8 @@ const formatGuestClass = (guest: GuestTableRow) => {
 
   return mappedClass[guestClass]
 }
+
+// const formatPhoneNumber
 
 const checkPlusOneEligibility = (guest: GuestTableRow) => {
   return guest?.plus_one_eligibility === 'eligible'
@@ -766,9 +770,19 @@ const handleGuestSubmit = async (formData: Omit<Guest, 'guest_id' | 'auth_token'
     if (selectedGuest.value?.guest_id) {
       guestFormLoading.value = true
       await guestStore.updateGuest(selectedGuest.value.guest_id, formData)
+
+      if(appliedFiltersCount.value > 0) await applyFilters()
+      else await guestStore.fetchGuests(guestStore.currentPage, guestStore.pageSize)
+      ElMessage.success('Guest updated successfully')
     } else {
       guestFormLoading.value = true
       await guestStore.createGuest(formData)
+
+      console.log('🔄 Refreshing guest list')
+      if(appliedFiltersCount.value > 0) await applyFilters()
+      else await guestStore.fetchGuests(guestStore.currentPage, guestStore.pageSize)
+      console.log('✨ Guest creation completed successfully')
+      ElMessage.success('Guest added successfully')
     }
     showGuestForm.value = false
     selectedGuest.value = null
@@ -968,7 +982,8 @@ const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
         plus_one_limit: guestData.plus_one_limit ?? 0,
         invitation_type: 'rsvp_guest',
         invitation_method: 'digital',
-        family_side: guestData.family_side ?? 'both'
+        family_side: guestData.family_side ?? 'both',
+        phone_number: guestData.phone_number ?? null
       }
 
       try {

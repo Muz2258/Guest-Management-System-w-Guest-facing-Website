@@ -177,11 +177,6 @@ export const useGuestStore = defineStore('guest', () => {
       console.log('✅ Guest record created:', guestResData)
 
       await generateInvitationLink(guestResData)
-
-      console.log('🔄 Refreshing guest list')
-      await fetchGuests()
-      console.log('✨ Guest creation completed successfully')
-      ElMessage.success('Guest added successfully')
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to create guest'
       console.error('❌ Guest creation failed:', error.value)
@@ -208,9 +203,6 @@ export const useGuestStore = defineStore('guest', () => {
 
       if (err) throw err
       else console.log('Updated guest:', data)
-
-      await fetchGuests()
-      ElMessage.success('Guest updated successfully')
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to update guest'
       ElMessage.error(error.value)

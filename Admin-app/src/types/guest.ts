@@ -23,6 +23,7 @@ export interface GuestTableRow {
   name: GuestName
   guest_category: GuestCategory
   family_side: FamilySide
+  phone_number: string | null
   guest_type: GuestType
   plus_one_eligibility: PlusOneEligibility
   plus_one_limit: number
@@ -46,6 +47,7 @@ export interface Guest {
   plus_one_eligibility: PlusOneEligibility
   invitation_type: InvitationType
   invitation_method: InvitationMethod
+  phone_number: string | null
   created_by: string | null
   created_at: string | null
   updated_at: string | null
