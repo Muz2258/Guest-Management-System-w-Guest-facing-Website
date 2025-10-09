@@ -14,8 +14,8 @@
                     <li v-if="canRsvp && !hasRsvp">Update your RSVP <span class="text-brand-accent">(Required)</span></li>
                     <li v-if="canAddPlusOne">Add your plus one</li>
                     <li>Spoil us with gifts 😜</li>
-                    <li v-if="canRsvp">and get ready to party! 💃🏾🕺🏾</li>
-                    <li>Follow the event as it unfolds</li>
+                    <li v-if="canRsvp">Get ready to party! 💃🏾🕺🏾</li>
+                    <li>Or follow the event as it unfolds</li>
                 </ul>
             </div>
         </template>
