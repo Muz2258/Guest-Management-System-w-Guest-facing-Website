@@ -65,8 +65,8 @@ const guestDisplayName = computed(() => {
   const lastName = guest.value.name.last_name || ''
   const isCouple = guestPermissions.value?.is_couple
   
-  if (isCouple && lastName) {
-    return `${title ? title : 'Mr.'} & Mrs. ${lastName}`
+  if (isCouple) {
+    return `${title ? title : 'Mr.'} & Mrs. ${lastName ? lastName : firstName}`
   }else {
     return `${title ? title : ''} ${firstName}`
   }
