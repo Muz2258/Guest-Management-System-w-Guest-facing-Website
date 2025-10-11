@@ -85,9 +85,10 @@
       <el-table-column fixed label="Name" prop="name" width="300" />
       <el-table-column label="Status" min-width="180">
         <template #default="{ row }">
-          <el-tag :type="getStatusType(row.id)">
+          <el-tag v-if="row.status" :type="getStatusType(row.id)">
             {{ row.status }}
           </el-tag>
+          <span v-else>--</span>
         </template>
       </el-table-column>
       <el-table-column label="Category" prop="category" min-width="150" />
@@ -112,6 +113,7 @@
             </el-tooltip>
 
             <el-tooltip
+              v-if="row.class !== 'Information Only'"
               content="Update RSVP Status"
               placement="top"
               :show-after="500"
@@ -232,23 +234,6 @@
   >
     <template #default>
       <div class="filter-section">
-        <p class="section-header">Invite Sent</p>
-        <el-checkbox-group v-model="selectedFilters.invite_sent">
-          <el-checkbox label="Sent" value="true" />
-          <el-checkbox label="Not Sent" value="false" />
-        </el-checkbox-group>
-      </div>
-
-      <div class="filter-section">
-        <p class="section-header">Attendance Status</p>
-        <el-checkbox-group v-model="selectedFilters.rsvp_status">
-          <el-checkbox label="Attending" value="attending" />
-          <el-checkbox label="Not Attending" value="not_attending" />
-          <el-checkbox label="Pending" value="pending" />
-        </el-checkbox-group>
-      </div>
-
-      <div class="filter-section">
         <p class="section-header">Geust Category</p>
         <el-checkbox-group v-model="selectedFilters.guest_category">
           <el-checkbox label="Family" value="family" />
@@ -256,23 +241,6 @@
           <el-checkbox label="Asoebi" value="asoebi" />
           <el-checkbox label="Bestman" value="bestman" />
           <el-checkbox label="Chief Bridesmaid" value="chiefbridesmaid" />
-        </el-checkbox-group>
-      </div>
-
-      <div class="filter-section">
-        <p class="section-header">Guest Type</p>
-        <el-checkbox-group v-model="selectedFilters.guest_type">
-          <el-checkbox label="Single" value="single" />
-          <el-checkbox label="Couple" value="couple" />
-        </el-checkbox-group>
-      </div>
-
-      <div class="filter-section">
-        <p class="section-header">Spouse Attendance Status</p>
-        <el-checkbox-group v-model="selectedFilters.spouse_rsvp_status">
-          <el-checkbox label="Attending" value="true" />
-          <el-checkbox label="Not Attending" value="false" />
-          <el-checkbox label="Pending" value="null" />
         </el-checkbox-group>
       </div>
 
@@ -290,6 +258,40 @@
         <el-checkbox-group v-model="selectedFilters.invitation_type">
           <el-checkbox label="RSVP Guest" value="rsvp_guest" />
           <el-checkbox label="Information Only" value="information_only" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Attendance Status</p>
+        <el-checkbox-group v-model="selectedFilters.rsvp_status">
+          <el-checkbox label="Attending" value="attending" />
+          <el-checkbox label="Not Attending" value="not_attending" />
+          <el-checkbox label="Pending" value="pending" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Spouse Attendance Status</p>
+        <el-checkbox-group v-model="selectedFilters.spouse_rsvp_status">
+          <el-checkbox label="Attending with spouse" value="true" />
+          <el-checkbox label="Attending without spouse" value="false" />
+          <el-checkbox label="Pending" value="null" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Invite Sent</p>
+        <el-checkbox-group v-model="selectedFilters.invite_sent">
+          <el-checkbox label="Sent" value="true" />
+          <el-checkbox label="Not Sent" value="false" />
+        </el-checkbox-group>
+      </div>
+
+      <div class="filter-section">
+        <p class="section-header">Guest Type</p>
+        <el-checkbox-group v-model="selectedFilters.guest_type">
+          <el-checkbox label="Single" value="single" />
+          <el-checkbox label="Couple" value="couple" />
         </el-checkbox-group>
       </div>
 
@@ -459,7 +461,9 @@ const formatGuestName = (guest: GuestTableRow) => {
 }
 
 const formatGuestStatus = (guest: GuestTableRow) => {
-  const status = (guest?.rsvp_status ?? 'pending') as AttendanceStatus
+  const status = guest?.rsvp_status ?? '--' as AttendanceStatus
+
+  console.log('Status = ', status)
 
   if (status === 'attending' && guest?.guest_type === 'couple') {
     return guest.spouse_rsvp_status ? 'Attending With Spouse' : 'Attending Without Spouse'
@@ -1035,11 +1039,11 @@ onMounted(() => {
 
 <style scoped>
 .guests-view {
-  padding: 40px 40px 20px 40px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex: 1;
+  height: 100%;
+  overflow: hidden;
 }
 
 .header {

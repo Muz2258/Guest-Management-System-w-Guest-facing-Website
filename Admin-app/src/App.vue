@@ -1,24 +1,3 @@
-<script setup lang="ts">
-import { onMounted, computed, onBeforeMount } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
-import { ElContainer, ElAside, ElMain, ElHeader, ElButton } from 'element-plus'
-import { useAuthStore } from '@/stores/auth'
-import MainNav from './components/MainNav.vue'
-import '@/assets/style.css'
-
-const authStore = useAuthStore()
-const route = useRoute()
-
-// Check if current route requires layout
-const showLayout = computed(() => {
-  return route.meta.requiresAuth !== false
-})
-
-onBeforeMount(async () => {
-  await authStore.init()
-})
-</script>
-
 <template>
   <div v-if="showLayout" class="app-container">
     <el-header class="app-header">
@@ -39,6 +18,27 @@ onBeforeMount(async () => {
 
   <RouterView v-else />
 </template>
+
+<script setup lang="ts">
+import { onMounted, computed, onBeforeMount } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import { ElContainer, ElAside, ElMain, ElHeader, ElButton } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+import MainNav from './components/MainNav.vue'
+import '@/assets/style.css'
+
+const authStore = useAuthStore()
+const route = useRoute()
+
+// Check if current route requires layout
+const showLayout = computed(() => {
+  return route.meta.requiresAuth !== false
+})
+
+onBeforeMount(async () => {
+  await authStore.init()
+})
+</script>
 
 <style>
 .app-container {

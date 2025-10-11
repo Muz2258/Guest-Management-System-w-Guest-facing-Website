@@ -36,8 +36,9 @@ export const useGuestStore = defineStore('guest', () => {
       const buildQuery = (viewName: string) => supabase
         .from(viewName)
         .select('*', { count: 'exact' })
+        .order('created_at', {ascending: false})
+        .order('guest_id', {ascending: false})
         .range(from, to)
-        .order('created_at', { ascending: false })
 
       console.log('fetchGuests called with filters:', filters)
 

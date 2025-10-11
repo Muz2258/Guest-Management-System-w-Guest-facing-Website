@@ -67,7 +67,7 @@ export interface Guest {
 export interface RSVP {
   rsvp_id: string
   guest_id: string
-  attendance_status: AttendanceStatus
+  attendance_status: AttendanceStatus | null
   spouse_attending: boolean | null
   submitted_at: string | null
   updated_at: string | null

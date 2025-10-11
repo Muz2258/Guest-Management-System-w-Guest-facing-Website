@@ -241,7 +241,7 @@ const populateForm = (data: GuestTableRow | null) => {
       form.invitation_type = data.invitation_type
       form.invitation_method = data.invitation_method
       form.family_side = data.family_side
-      form.plus_one_limit = data.plus_one_limit ?? 0
+      form.plus_one_limit = data.plus_one_eligibility ? data.plus_one_limit : 0
       form.phone_number = data.phone_number ?? null
 
       const parsed = parsePhoneNumber(data.phone_number)

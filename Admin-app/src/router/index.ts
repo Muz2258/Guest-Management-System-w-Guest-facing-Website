@@ -6,6 +6,8 @@ import LoginView from '../views/LoginView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import GuestsView from '../views/GuestsView.vue'
+import Dashboard from '@/views/Dashboard.vue'
+import GoodWillMessages from '@/views/GoodWillMessages.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -29,7 +31,13 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Dashboard',
-    redirect: '/guests',
+    component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/goodwill-messages',
+    name: 'Goodwill Messages',
+    component: GoodWillMessages,
     meta: { requiresAuth: true }
   },
   {
