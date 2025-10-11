@@ -1,11 +1,14 @@
 /* Global styles */
-:root {
-  --el-color-primary: #409EFF;
+html {
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: var(--el-font-family);
 }
 
 /* Common utility classes */
@@ -15,6 +18,12 @@ body {
 
 .mt-4 {
   margin-top: 1rem;
+}
+.mt-16 {
+  margin-top: 16px;
+}
+.mt-24 {
+  margin-top: 24px;
 }
 
 .p-4 {

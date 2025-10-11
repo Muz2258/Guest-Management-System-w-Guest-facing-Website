@@ -85,7 +85,7 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="handleClose">Cancel</el-button>
-        <el-button
+        <!-- <el-button
           v-if="currentStep === 1"
           type="primary"
           :disabled="!selectedFile"
@@ -101,7 +101,7 @@
           @click="handleImport"
         >
           Import {{ validRows.length }} Guest{{ validRows.length !== 1 ? 's' : '' }}
-        </el-button>
+        </el-button> -->
       </span>
     </template>
   </el-dialog>
@@ -169,7 +169,7 @@ const validCategories = new Set<GuestCategory>(['family', 'friend', 'asoebi', 'b
 const validPlusOneStatus = new Set<PlusOneEligibility>(['eligible', 'not_eligible'])
 
 // Validation functions
-function validateRow(row: any, rowIndex: number): ParsedRow {
+/* function validateRow(row: any, rowIndex: number): ParsedRow {
   const errors: string[] = []
   const parsedRow: ParsedRow = {
     rowIndex: rowIndex + 1,
@@ -231,7 +231,7 @@ function validateRow(row: any, rowIndex: number): ParsedRow {
   parsedRow.isValid = errors.length === 0
 
   return parsedRow
-}
+} */
 
 // Event handlers
 const handleFileChange: UploadProps['onChange'] = (uploadFile) => {
@@ -239,7 +239,7 @@ const handleFileChange: UploadProps['onChange'] = (uploadFile) => {
   parseError.value = ''
 }
 
-const handlePreview = () => {
+/* const handlePreview = () => {
   if (!selectedFile.value) return
 
   loading.value = true
@@ -266,7 +266,7 @@ const handlePreview = () => {
       loading.value = false
     }
   })
-}
+} */
 
 const handleImport = async () => {
   if (!canImport.value) return

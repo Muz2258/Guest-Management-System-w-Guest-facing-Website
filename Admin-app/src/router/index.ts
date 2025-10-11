@@ -6,6 +6,8 @@ import LoginView from '../views/LoginView.vue'
 import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import GuestsView from '../views/GuestsView.vue'
+import Dashboard from '@/views/Dashboard.vue'
+import GoodWillMessages from '@/views/GoodWillMessages.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -29,7 +31,13 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Dashboard',
-    redirect: '/guests',
+    component: Dashboard,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/goodwill-messages',
+    name: 'Goodwill Messages',
+    component: GoodWillMessages,
     meta: { requiresAuth: true }
   },
   {
@@ -60,7 +68,7 @@ router.beforeEach(async (to) => {
     isAuthenticated: authStore.isAuthenticated,
     hasSession: !!authStore.session,
     hasUser: !!authStore.user,
-    isStaffMember: authStore.isStaffMember,
+    // isStaffMember: authStore.isStaffMember,
     requiresAuth
   })
 
@@ -102,11 +110,11 @@ router.beforeEach(async (to) => {
     }
 
     // Check staff access (only for authenticated routes)
-    if (!authStore.isStaffMember) {
+    /* if (!authStore.isStaffMember) {
       console.log('❌ Staff access required but user is not staff')
       ElMessage.error('Staff access required')
       return { name: 'Login' }
-    }
+    } */
   }
 
   console.log('✅ Navigation guard checks passed')

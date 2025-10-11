@@ -13,7 +13,7 @@ const activeIndex = computed(() => route.path)
     :router="true"
     :default-active="activeIndex"
   >
-    <el-menu-item index="/dashboard">
+    <el-menu-item index="/">
       <template #title>
         Dashboard
       </template>
@@ -21,6 +21,11 @@ const activeIndex = computed(() => route.path)
     <el-menu-item index="/guests">
       <template #title>
         Guests
+      </template>
+    </el-menu-item>
+    <el-menu-item index="/goodwill-messages">
+      <template #title>
+        Goodwill Messages
       </template>
     </el-menu-item>
   </el-menu>

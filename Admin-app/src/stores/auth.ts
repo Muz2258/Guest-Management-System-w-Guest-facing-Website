@@ -9,12 +9,12 @@ import { ElMessage } from 'element-plus'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const session = ref<Session | null>(null)
-  const staffProfile = ref<UserStaffProfile | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const router = useRouter()
   const initialized = ref(false)
   const isValidating = ref(false)
+  // const staffProfile = ref<UserStaffProfile | null>(null)
 
   // Enhanced authentication check
   const isAuthenticated = computed(() => {
@@ -22,33 +22,34 @@ export const useAuthStore = defineStore('auth', () => {
     console.log('🔑 Authentication check:', {
       hasSession: !!session.value,
       sessionExpiry: session.value?.expires_at,
+      isSuperAdmin: session.value?.user?.user_metadata?.role === 'super-admin',
       authenticated,
       isValidating: isValidating.value
     })
     return authenticated
   })
 
-  const featureAccess = computed<FeatureAccess>(() => ({
+  /* const featureAccess = computed<FeatureAccess>(() => ({
     canCreateGuests: hasFeatureAccess('create_guests'),
     canEditGuests: hasFeatureAccess('edit_guest_details'),
     canDeleteGuests: hasFeatureAccess('delete_guests'),
     canViewGuests: hasFeatureAccess('view_all_guests'),
     canManageRSVPs: hasFeatureAccess('edit_rsvp_responses') || hasFeatureAccess('manual_rsvp_entry'),
     canViewRSVPs: hasFeatureAccess('view_rsvp_responses')
-  }))
+  })) */
 
-  const isStaffMember = computed(() => !!staffProfile.value?.is_active)
+  // const isStaffMember = computed(() => !!staffProfile.value?.is_active)
 
-  function hasFeatureAccess(feature: FeaturePermission): boolean {
+  /* function hasFeatureAccess(feature: FeaturePermission): boolean {
     return !!(staffProfile.value?.is_active && staffProfile.value?.features?.includes(feature))
-  }
+  } */
 
   async function login(email: string, password: string) {
     try {
       console.log('🔑 Starting login process')
       loading.value = true
       error.value = null
-      staffProfile.value = null
+      // staffProfile.value = null
       
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -65,15 +66,15 @@ export const useAuthStore = defineStore('auth', () => {
       session.value = data.session
       
       // Fetch staff profile
-      await fetchStaffProfile(data.user.id)
+      // await fetchStaffProfile(data.user.id)
 
-      console.log('👤 Staff profile check:', isStaffMember.value ? 'is staff' : 'not staff')
+      /* console.log('👤 Staff profile check:', isStaffMember.value ? 'is staff' : 'not staff')
       // Only allow staff members to proceed
       if (!isStaffMember.value) {
         console.log('❌ Not a staff member, logging out')
         await logout()
         throw new Error('Staff access required')
-      }
+      } */
 
       console.log('✨ Login complete, redirecting to home')
       await router.push('/')
@@ -102,11 +103,10 @@ export const useAuthStore = defineStore('auth', () => {
       // Clear all auth state immediately
       session.value = null
       user.value = null
-      staffProfile.value = null
+      // staffProfile.value = null
 
       // Force route change before anything else
       console.log('✅ Logout complete, forcing navigation to login')
-      // Use replace instead of push to prevent going back
       await router.replace('/login')
       
       // Show success message
@@ -179,7 +179,7 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('✅ Found active session')
         session.value = currentSession
         user.value = currentSession.user
-        await fetchStaffProfile(currentSession.user.id)
+        // await fetchStaffProfile(currentSession.user.id)
       }
 
       // Set up session listener
@@ -190,7 +190,7 @@ export const useAuthStore = defineStore('auth', () => {
           console.log('👋 User signed out')
           session.value = null
           user.value = null
-          staffProfile.value = null
+          // staffProfile.value = null
           return
         }
 
@@ -198,7 +198,7 @@ export const useAuthStore = defineStore('auth', () => {
           console.log('🔐 Session updated')
           session.value = newSession
           user.value = newSession.user
-          await fetchStaffProfile(newSession.user.id)
+          // await fetchStaffProfile(newSession.user.id)
         }
       })
 
@@ -217,7 +217,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function fetchStaffProfile(userId: string) {
+  /* async function fetchStaffProfile(userId: string) {
     try {
       console.log('👤 Fetching staff profile for user:', userId)
       // First, get the staff profile with their role
@@ -279,7 +279,7 @@ export const useAuthStore = defineStore('auth', () => {
       staffProfile.value = null
       throw e
     }
-  }
+  } */
 
   // Check if the session is expired
   const isSessionExpired = computed(() => {
@@ -300,9 +300,9 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   // Helper to check permissions outside auth store
-  function checkPermission(permission: FeaturePermission): boolean {
+  /* function checkPermission(permission: FeaturePermission): boolean {
     return hasFeatureAccess(permission)
-  }
+  } */
 
   // Refresh session
   async function refreshSession() {
@@ -322,12 +322,12 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = newSession.user
         
         // Re-fetch profile to ensure we have latest permissions
-        await fetchStaffProfile(newSession.user.id)
+        // await fetchStaffProfile(newSession.user.id)
       } else {
         console.log('❌ No session after refresh')
         session.value = null
         user.value = null
-        staffProfile.value = null
+        // staffProfile.value = null
         await router.push('/login')
       }
     } catch (e) {
@@ -343,15 +343,15 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     session,
-    staffProfile,
+    // staffProfile,
     loading,
     error,
     initialized,
     isAuthenticated,
-    isStaffMember,
+    // isStaffMember,
     isSessionExpired,
-    featureAccess,
-    hasFeatureAccess,
+    // featureAccess,
+    // hasFeatureAccess,
     login,
     logout,
     resetPassword,
