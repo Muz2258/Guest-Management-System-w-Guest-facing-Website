@@ -33,6 +33,9 @@
     <!-- Main Content -->
     <div v-if="!isBulkEditing" class="filters">
       <div>
+        <!-- <el-select v-model="searchValue" multiple filterable remote reserve-keyword placeholder="Search guests" :remote-method="handleSearch" :loading="searching">
+          <el-options v-for="result in results" :key="result.value" />
+        </el-select> -->
         <el-button @click="showFilterDrawer = true" :type="appliedFiltersCount ? 'primary' : 'default'" plain>Advanced Filters {{ appliedFiltersCount ? `(${appliedFiltersCount})` : '' }}</el-button>
         <el-button v-if="appliedFiltersCount" @click="resetFilters" plain>Clear All</el-button>
       </div>
@@ -358,6 +361,10 @@ const plusOneSaving = ref<boolean>(false)
 const showFilterDrawer = ref<boolean>(false)
 const deletingGuest = ref<boolean>(false)
 
+const searchValue = ref<string[]>([])
+const searching = ref<boolean>(false)
+const results = ref([])
+
 const bulkActionValues = ref<{
   inviteValue: string | null
   statusValue: string | null
@@ -456,8 +463,9 @@ const formatGuestName = (guest: GuestTableRow) => {
       .join(' ')
   })()
   const firstName = guest?.name?.first_name
+  const middleName = guest?.name?.middle_name
   const lastName = guest?.name?.last_name
-  return guestType === 'couple' ? `${title ? title : 'Mr.'} & Mrs. ${firstName} ${lastName ? lastName : ''} ${suffix ? suffix : ''}` : `${title} ${firstName} ${lastName ? lastName : ''} ${suffix ? suffix : ''}`
+  return guestType === 'couple' ? `${title ? title : 'Mr.'} & Mrs. ${firstName} ${lastName ? lastName : ''} ${suffix ? suffix : ''}` : `${title} ${firstName} ${middleName ? middleName : ''} ${lastName ? lastName : ''} ${suffix ? suffix : ''}`
 }
 
 const formatGuestStatus = (guest: GuestTableRow) => {

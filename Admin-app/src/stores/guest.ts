@@ -114,6 +114,8 @@ export const useGuestStore = defineStore('guest', () => {
     }
   }
 
+  const searchGuests = async (query: string) => {}
+
   const fetchGuestData = async (guestID: string) => {
     console.log('Initiating guest data fetching sequence for:', guestID)
 
