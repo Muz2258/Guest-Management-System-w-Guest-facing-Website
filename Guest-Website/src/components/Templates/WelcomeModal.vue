@@ -60,7 +60,7 @@ const guestDisplayName = computed(() => {
     return 'Honored Guest'
   }
   
-  const title = guest.value.name.titles.join(' ') || ''
+  const title = guest.value?.name?.titles?.join(' ') || ''
   const firstName = guest.value.name.first_name || ''
   const lastName = guest.value.name.last_name || ''
   const isCouple = guestPermissions.value?.is_couple

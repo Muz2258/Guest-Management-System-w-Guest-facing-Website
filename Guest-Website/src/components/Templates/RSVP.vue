@@ -345,7 +345,7 @@ const activeCondition = computed(() => {
 const guestName = computed(() => {
     const firstName = guestInfo.value?.name.first_name || '';
     const lastName = guestInfo.value?.name.last_name || '';
-    const title = guestInfo.value?.name.titles.join(' ') || '';
+    const title = guestInfo.value?.name?.titles?.join(' ') || '';
 
     if(isCouple.value && lastName) {
         return `${title ? title : ''} & Mrs. ${lastName ? lastName : firstName}`;
