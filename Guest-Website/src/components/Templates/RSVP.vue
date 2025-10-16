@@ -338,15 +338,14 @@ const notAttending = computed(() => {
 
 const activeCondition = computed(() => {
     if(pending.value) return 'pending'
-    if(attending.value) return 'attending'
     if(notAttending.value) return 'not_attending'
-    return 'noRsvp'
+    return 'attending'
 })
 
 const guestName = computed(() => {
     const firstName = guestInfo.value?.name.first_name || '';
     const lastName = guestInfo.value?.name.last_name || '';
-    const title = guestInfo.value?.name.titles.join(' ') || null;
+    const title = guestInfo.value?.name.titles.join(' ') || '';
 
     if(isCouple.value && lastName) {
         return `${title ? title : ''} & Mrs. ${lastName ? lastName : firstName}`;
