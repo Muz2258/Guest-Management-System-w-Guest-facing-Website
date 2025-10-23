@@ -32,10 +32,15 @@
 
     <!-- Main Content -->
     <div v-if="!isBulkEditing" class="filters">
+<<<<<<< HEAD
       <div>
         <!-- <el-select v-model="searchValue" multiple filterable remote reserve-keyword placeholder="Search guests" :remote-method="handleSearch" :loading="searching">
           <el-options v-for="result in results" :key="result.value" />
         </el-select> -->
+=======
+      <div class="search-filter">
+        <el-input v-model="searchInput" :prefix-icon="Search" clearable placeholder="Search guests" @input="handleSearch" />
+>>>>>>> admin-app
         <el-button @click="showFilterDrawer = true" :type="appliedFiltersCount ? 'primary' : 'default'" plain>Advanced Filters {{ appliedFiltersCount ? `(${appliedFiltersCount})` : '' }}</el-button>
         <el-button v-if="appliedFiltersCount" @click="resetFilters" plain>Clear All</el-button>
       </div>
@@ -81,7 +86,7 @@
     </div>
 
     <!-- Empty State -->
-    <el-empty v-if="!guestStore.hasGuests" description="Start building your guest list" />
+    <el-empty v-if="!guestStore.hasGuests && !guestStore.loading" description="Start building your guest list" />
 
     <el-table v-else ref="guestTable" :data="guestTableData" v-loading="guestStore.loading" row-key="id" @selection-change="handleSelection">
       <el-table-column type="selection" width="48" />
@@ -301,7 +306,7 @@
       <div class="filter-section">
         <p class="section-header">Plus One Eligibility</p>
         <el-checkbox-group v-model="selectedFilters.plus_one_eligibility">
-          <el-checkbox label="Eligibility" value="eligibility" />
+          <el-checkbox label="Eligible" value="eligible" />
           <el-checkbox label="Not Eligible" value="not_eligibility" />
         </el-checkbox-group>
       </div>
@@ -317,7 +322,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useGuestStore } from '@/stores/guest'
 import { useAuthStore } from '@/stores/auth'
@@ -325,7 +330,7 @@ import { useAuthStore } from '@/stores/auth'
 import GuestForm from '@/components/GuestForm.vue'
 import PlusOneForm from '@/components/PlusOneForm.vue'
 import GuestImportDialog from '@/components/GuestImportDialog.vue'
-import { Link, Edit, Delete, Check, User, Message, Position, Plus, Refresh } from '@element-plus/icons-vue'
+import { Link, Edit, Delete, Check, User, Message, Position, Plus, Refresh, Search } from '@element-plus/icons-vue'
 import type { Guest, AttendanceStatus, RSVP, GuestTableRow, GuestName } from '@/types/guest'
 
 const authStore = useAuthStore()
@@ -348,6 +353,12 @@ type TableItem = {
 
 }
 
+type SearchItem = {
+  name: string
+  class: string
+  status: string
+}
+
 const showGuestForm = ref(false)
 const showImportDialog = ref(false)
 const selectedGuest = ref<GuestTableRow | null>(null)
@@ -360,6 +371,8 @@ const guestFormLoading = ref<boolean>(false)
 const plusOneSaving = ref<boolean>(false)
 const showFilterDrawer = ref<boolean>(false)
 const deletingGuest = ref<boolean>(false)
+const searchInput = ref<string | null>(null)
+const isSearching = ref<boolean>(false)
 
 const searchValue = ref<string[]>([])
 const searching = ref<boolean>(false)
@@ -397,35 +410,68 @@ const selectedFilters = ref<{
   spouse_rsvp_status: []
 })
 
+let searchTimeout: ReturnType<typeof setTimeout>
 
 /* ----------------------------------- Computed Properties ---------------------------------- */
 const guestTableData = computed(() => {
-  const guests = [...guestStore.guests];
-  const remappedGuests = guests.map(guest => {
-    return {
-      id: guest.guest_id,
-      name: formatGuestName(guest),
-      category: formatGuestCategory(guest),
-      family: formatGuestFamilySide(guest),
-      status: formatGuestStatus(guest),
-      class: formatGuestClass(guest),
-      plus_ones: formatGuestPlusOneEligibility(guest),
-      invitation_link: guest.invitation_link,
-      invite_sent: guest.invite_sent,
-      can_add_plus_one: checkPlusOneEligibility(guest),
-      phone_number: guest.phone_number,
-      actions: {
-        edit: () => handleEditGuest(guest.guest_id),
-        delete: () => handleDeleteGuest(guest.guest_id),
-        updateStatus: () => handleUpdateStatus(guest.guest_id),
-        generateLink: () => handleGenerateInviteLink(guest.guest_id),
-        markAsSent: () => markAsSent(guest.guest_id),
-        copyLink: () => handleCopyInviteLink(guest.guest_id),
-        managePlusOnes: () => handleManagePlusOnes(guest.guest_id, guest)
-      }
-    }
-  })
+  const guests = guestStore.guests
+  const searchResult = guestStore.guestsSearchResult
+  let remappedGuests
 
+  if(!isSearching.value) {
+    console.log('🚫 Not Searching')
+    remappedGuests = guests.map(guest => {
+      return {
+        id: guest.guest_id,
+        name: formatGuestName(guest),
+        category: formatGuestCategory(guest),
+        family: formatGuestFamilySide(guest),
+        status: formatGuestStatus(guest),
+        class: formatGuestClass(guest),
+        plus_ones: formatGuestPlusOneEligibility(guest),
+        invitation_link: guest.invitation_link,
+        invite_sent: guest.invite_sent,
+        can_add_plus_one: checkPlusOneEligibility(guest),
+        phone_number: guest.phone_number,
+        actions: {
+          edit: () => handleEditGuest(guest.guest_id),
+          delete: () => handleDeleteGuest(guest.guest_id),
+          updateStatus: () => handleUpdateStatus(guest.guest_id),
+          generateLink: () => handleGenerateInviteLink(guest.guest_id),
+          markAsSent: () => markAsSent(guest.guest_id),
+          copyLink: () => handleCopyInviteLink(guest.guest_id),
+          managePlusOnes: () => handleManagePlusOnes(guest.guest_id, guest)
+        }
+      }
+    })
+  }else {
+    console.log('🔎 Searching')
+    remappedGuests = searchResult.map(guest => {
+      return {
+        id: guest.guest_id,
+        name: formatGuestName(guest),
+        category: formatGuestCategory(guest),
+        family: formatGuestFamilySide(guest),
+        status: formatGuestStatus(guest),
+        class: formatGuestClass(guest),
+        plus_ones: formatGuestPlusOneEligibility(guest),
+        invitation_link: guest.invitation_link,
+        invite_sent: guest.invite_sent,
+        can_add_plus_one: checkPlusOneEligibility(guest),
+        phone_number: guest.phone_number,
+        actions: {
+          edit: () => handleEditGuest(guest.guest_id),
+          delete: () => handleDeleteGuest(guest.guest_id),
+          updateStatus: () => handleUpdateStatus(guest.guest_id),
+          generateLink: () => handleGenerateInviteLink(guest.guest_id),
+          markAsSent: () => markAsSent(guest.guest_id),
+          copyLink: () => handleCopyInviteLink(guest.guest_id),
+          managePlusOnes: () => handleManagePlusOnes(guest.guest_id, guest)
+        }
+      }
+    })
+  }
+  
   return remappedGuests
 })
 
@@ -470,8 +516,6 @@ const formatGuestName = (guest: GuestTableRow) => {
 
 const formatGuestStatus = (guest: GuestTableRow) => {
   const status = guest?.rsvp_status ?? '--' as AttendanceStatus
-
-  console.log('Status = ', status)
 
   if (status === 'attending' && guest?.guest_type === 'couple') {
     return guest.spouse_rsvp_status ? 'Attending With Spouse' : 'Attending Without Spouse'
@@ -692,14 +736,15 @@ const handleUpdateStatus = async (guestID: string) => {
         updates.spouse_attending = spouseAttending
       }
 
-      await guestStore.updateRSVP(guest.guest_id, updates)
-
       if (guest.guest_id && guest.rsvp_status) {
         await guestStore.updateRSVP(guest.guest_id, updates)
       } else {
         await guestStore.createOrUpdateRSVP(guest.guest_id, newStatus, spouseAttending)
       }
       console.log('✅ RSVP status update completed')
+
+      if(appliedFiltersCount.value > 0) await applyFilters()
+      else await guestStore.fetchGuests(guestStore.currentPage, guestStore.pageSize)
     } else {
       console.log('ℹ️ Status unchanged, skipping update')
     }
@@ -1025,6 +1070,28 @@ const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
   }
 }
 
+const handleSearch = async (value: string) => {
+  const query = value
+  clearTimeout(searchTimeout)
+
+  if(query) {
+    const parsedQuery = query.toString().toLowerCase().trim()
+
+    searchTimeout = setTimeout(async () => {
+      isSearching.value = true
+      await guestStore.searchGuests(parsedQuery)
+    }, 500)
+  }else {
+    if(appliedFiltersCount.value > 0) {
+      isSearching.value = false
+      await applyFilters()
+    }else {
+      isSearching.value = false
+      await guestStore.fetchGuests(guestStore.currentPage, guestStore.pageSize)
+    }
+  }
+}
+
 /* const handleSync = async () => {
   try {
     await invitationLinks.syncInvitationLinks()
@@ -1037,6 +1104,21 @@ const handleGuestImport = async (guestsToImport: Partial<Guest>[]) => {
     ElMessage.error('Failed to sync invitation links')
   }
 } */
+
+
+/* ---------------------------------- Watchers ----------------------------------*/
+/* watch(() => searchInput, async (newVal, oldVal) => {
+  if(newVal && newVal !== oldVal) {
+    const query = newVal.toString().toLowerCase().trim()
+
+    setTimeout(async () => {
+      await guestStore.searchGuests(query)
+    }, 500)
+  }else {
+    if(appliedFiltersCount.value > 0) await applyFilters()
+    else await guestStore.fetchGuests(guestStore.currentPage, guestStore.pageSize)
+  }
+}) */
 
 
 /* ---------------------------------- Lifecycle Hooks -------------------------------- */
@@ -1091,6 +1173,11 @@ onMounted(() => {
   margin-bottom: 20px;
   gap: 16px;
   flex-shrink: 0;
+}
+
+.search-filter {
+  display: flex;
+  gap: 16px;
 }
 
 .bulk-action-buttons {
