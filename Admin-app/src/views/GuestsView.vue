@@ -32,15 +32,8 @@
 
     <!-- Main Content -->
     <div v-if="!isBulkEditing" class="filters">
-<<<<<<< HEAD
-      <div>
-        <!-- <el-select v-model="searchValue" multiple filterable remote reserve-keyword placeholder="Search guests" :remote-method="handleSearch" :loading="searching">
-          <el-options v-for="result in results" :key="result.value" />
-        </el-select> -->
-=======
       <div class="search-filter">
         <el-input v-model="searchInput" :prefix-icon="Search" clearable placeholder="Search guests" @input="handleSearch" />
->>>>>>> admin-app
         <el-button @click="showFilterDrawer = true" :type="appliedFiltersCount ? 'primary' : 'default'" plain>Advanced Filters {{ appliedFiltersCount ? `(${appliedFiltersCount})` : '' }}</el-button>
         <el-button v-if="appliedFiltersCount" @click="resetFilters" plain>Clear All</el-button>
       </div>
