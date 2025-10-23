@@ -53,14 +53,14 @@ const guestPermissions = computed(() => guestStore.guestData?.permissions)
 const canAddPlusOne = computed(() => guestPermissions.value?.can_add_plus_one)
 const canRsvp = computed(() => guestPermissions.value?.can_rsvp)
 const isVisible = computed(() => props.isVisible)
-const hasRsvp = computed(() => rsvpStore.rsvpData?.rsvp.attendance_status !== 'pending' && rsvpStore.rsvpData?.rsvp.attendance_status !== 'not_attending')
+const hasRsvp = computed(() => rsvpStore.rsvpData?.rsvp.attendance_status !== 'pending')
 
 const guestDisplayName = computed(() => {
   if (!guest.value) {
     return 'Honored Guest'
   }
   
-  const title = guest.value.name.titles.join(' ') || null
+  const title = guest.value?.name?.titles?.join(' ') || ''
   const firstName = guest.value.name.first_name || ''
   const lastName = guest.value.name.last_name || ''
   const isCouple = guestPermissions.value?.is_couple
