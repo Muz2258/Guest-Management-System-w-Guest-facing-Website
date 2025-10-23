@@ -14,6 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
   const initialized = ref(false)
   const isValidating = ref(false)
+  const activeRole = ref<string | null>(null)
   // const staffProfile = ref<UserStaffProfile | null>(null)
 
   // Enhanced authentication check
@@ -22,34 +23,19 @@ export const useAuthStore = defineStore('auth', () => {
     console.log('🔑 Authentication check:', {
       hasSession: !!session.value,
       sessionExpiry: session.value?.expires_at,
-      isSuperAdmin: session.value?.user?.user_metadata?.role === 'super-admin',
+      userRole: activeRole.value,
       authenticated,
       isValidating: isValidating.value
     })
     return authenticated
   })
 
-  /* const featureAccess = computed<FeatureAccess>(() => ({
-    canCreateGuests: hasFeatureAccess('create_guests'),
-    canEditGuests: hasFeatureAccess('edit_guest_details'),
-    canDeleteGuests: hasFeatureAccess('delete_guests'),
-    canViewGuests: hasFeatureAccess('view_all_guests'),
-    canManageRSVPs: hasFeatureAccess('edit_rsvp_responses') || hasFeatureAccess('manual_rsvp_entry'),
-    canViewRSVPs: hasFeatureAccess('view_rsvp_responses')
-  })) */
-
-  // const isStaffMember = computed(() => !!staffProfile.value?.is_active)
-
-  /* function hasFeatureAccess(feature: FeaturePermission): boolean {
-    return !!(staffProfile.value?.is_active && staffProfile.value?.features?.includes(feature))
-  } */
-
   async function login(email: string, password: string) {
     try {
       console.log('🔑 Starting login process')
       loading.value = true
       error.value = null
-      // staffProfile.value = null
+      activeRole.value = null
       
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -64,20 +50,16 @@ export const useAuthStore = defineStore('auth', () => {
       console.log('✅ Login successful, fetching staff profile')
       user.value = data.user
       session.value = data.session
-      
-      // Fetch staff profile
-      // await fetchStaffProfile(data.user.id)
-
-      /* console.log('👤 Staff profile check:', isStaffMember.value ? 'is staff' : 'not staff')
-      // Only allow staff members to proceed
-      if (!isStaffMember.value) {
-        console.log('❌ Not a staff member, logging out')
-        await logout()
-        throw new Error('Staff access required')
-      } */
 
       console.log('✨ Login complete, redirecting to home')
-      await router.push('/')
+      
+      if(user.value.user_metadata.role === 'super-admin') {
+        activeRole.value = 'super-admin'
+        await router.push('/')
+      }else if(user.value.user_metadata.role === 'check-in-staff') {
+        activeRole.value = 'check-in-staff'
+        await router.replace('/check-in')
+      }
     } catch (e) {
       console.error('❌ Login error:', e)
       error.value = e instanceof Error ? e.message : 'An error occurred during login'
@@ -103,7 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
       // Clear all auth state immediately
       session.value = null
       user.value = null
-      // staffProfile.value = null
+      activeRole.value = null
 
       // Force route change before anything else
       console.log('✅ Logout complete, forcing navigation to login')
@@ -179,7 +161,7 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('✅ Found active session')
         session.value = currentSession
         user.value = currentSession.user
-        // await fetchStaffProfile(currentSession.user.id)
+        activeRole.value = user.value.user_metadata.role
       }
 
       // Set up session listener
@@ -190,7 +172,7 @@ export const useAuthStore = defineStore('auth', () => {
           console.log('👋 User signed out')
           session.value = null
           user.value = null
-          // staffProfile.value = null
+          activeRole.value = null
           return
         }
 
@@ -198,7 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
           console.log('🔐 Session updated')
           session.value = newSession
           user.value = newSession.user
-          // await fetchStaffProfile(newSession.user.id)
+          activeRole.value = user.value.user_metadata.role
         }
       })
 
@@ -216,70 +198,6 @@ export const useAuthStore = defineStore('auth', () => {
       isValidating.value = false
     }
   }
-
-  /* async function fetchStaffProfile(userId: string) {
-    try {
-      console.log('👤 Fetching staff profile for user:', userId)
-      // First, get the staff profile with their role
-      const { data: profile, error: profileError } = await supabase
-        .from('staff_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
-
-      if (profileError) throw profileError
-      if (!profile) throw new Error('Staff profile not found')
-      
-      console.log('📋 Found staff profile:', profile)
-
-      // Then, get the features for their role from role_features and features tables
-      const { data: roleFeatures, error: featuresError } = await supabase
-        .from('role_features')
-        .select('feature_id')
-        .eq('role', profile.role)
-
-      if (featuresError) throw featuresError
-
-      console.log('🔑 Role features:', roleFeatures)
-      
-      // Get the actual features from the features table
-      const featureIds = roleFeatures?.map(rf => rf.feature_id) || []
-      console.log('🏷️ Feature IDs:', featureIds)
-      
-      if (featureIds.length === 0) {
-        console.log('⚠️ No feature IDs found for role, setting empty features array')
-        staffProfile.value = {
-          ...profile,
-          features: []
-        }
-        return
-      }
-      
-      const { data: features, error: featureNamesError } = await supabase
-        .from('features')
-        .select('feature_name')
-        .in('feature_id', featureIds)
-
-      if (featureNamesError) throw featureNamesError
-
-      console.log('✨ Features:', features)
-
-      // Extract feature names and cast them to FeaturePermission
-      const featureNames = features?.map(f => f.feature_name as FeaturePermission) || []
-
-      const newProfile = {
-        ...profile,
-        features: featureNames
-      }
-
-      console.log('🔄 Updating staff profile with new data')
-      staffProfile.value = newProfile
-    } catch (e) {
-      console.error('❌ Error fetching staff profile:', e)
-      staffProfile.value = null
-      throw e
-    }
-  } */
 
   // Check if the session is expired
   const isSessionExpired = computed(() => {
@@ -299,11 +217,6 @@ export const useAuthStore = defineStore('auth', () => {
     return isExpired
   })
 
-  // Helper to check permissions outside auth store
-  /* function checkPermission(permission: FeaturePermission): boolean {
-    return hasFeatureAccess(permission)
-  } */
-
   // Refresh session
   async function refreshSession() {
     try {
@@ -320,14 +233,12 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('✅ Session refresh successful')
         session.value = newSession
         user.value = newSession.user
-        
-        // Re-fetch profile to ensure we have latest permissions
-        // await fetchStaffProfile(newSession.user.id)
+        activeRole.value = user.value.user_metadata.role
       } else {
         console.log('❌ No session after refresh')
         session.value = null
         user.value = null
-        // staffProfile.value = null
+        activeRole.value = null
         await router.push('/login')
       }
     } catch (e) {
@@ -343,15 +254,12 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     session,
-    // staffProfile,
+    activeRole,
     loading,
     error,
     initialized,
     isAuthenticated,
-    // isStaffMember,
     isSessionExpired,
-    // featureAccess,
-    // hasFeatureAccess,
     login,
     logout,
     resetPassword,

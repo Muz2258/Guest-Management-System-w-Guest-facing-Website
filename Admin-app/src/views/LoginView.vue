@@ -30,72 +30,62 @@ const handleForgotPassword = () => {
 </script>
 
 <template>
-  <el-container v-loading="loading" class="login-container">
-    <el-form
-      ref="formRef"
-      label-position="top"
-      class="login-form"
-    >
-      <h2 class="form-title">Back-office Login</h2>
+  <el-form
+    ref="formRef"
+    label-position="top"
+    class="login-form"
+  >
+    <h2 class="form-title">Back-office Login</h2>
 
-      <el-alert
-        v-if="authStore.error"
-        :title="authStore.error"
-        type="error"
-        show-icon
-        class="mb-4"
+    <el-alert
+      v-if="authStore.error"
+      :title="authStore.error"
+      type="error"
+      show-icon
+      class="mb-4"
+    />
+
+    <el-form-item label="Email" prop="email">
+      <el-input
+        v-model="loginForm.email"
+        type="email"
+        placeholder="Enter your email"
+        :disabled="authStore.loading"
       />
+    </el-form-item>
 
-      <el-form-item label="Email" prop="email">
-        <el-input
-          v-model="loginForm.email"
-          type="email"
-          placeholder="Enter your email"
-          :disabled="authStore.loading"
-        />
-      </el-form-item>
+    <el-form-item label="Password" prop="password">
+      <el-input
+        v-model="loginForm.password"
+        type="password"
+        placeholder="Enter your password"
+        :disabled="authStore.loading"
+        @keyup.enter="handleLogin(formRef)"
+      />
+    </el-form-item>
 
-      <el-form-item label="Password" prop="password">
-        <el-input
-          v-model="loginForm.password"
-          type="password"
-          placeholder="Enter your password"
-          :disabled="authStore.loading"
-          @keyup.enter="handleLogin(formRef)"
-        />
-      </el-form-item>
+    <div class="form-actions">
+      <el-button
+        type="primary"
+        :loading="authStore.loading"
+        @click="handleLogin(formRef)"
+        :disabled="loginForm.email === '' || loginForm.password === ''"
+      >
+        Login
+      </el-button>
 
-      <div class="form-actions">
-        <el-button
-          type="primary"
-          :loading="authStore.loading"
-          @click="handleLogin(formRef)"
-          :disabled="loginForm.email === '' || loginForm.password === ''"
-        >
-          Login
-        </el-button>
-
-        <el-button
-          type="text"
-          :disabled="authStore.loading"
-          @click="handleForgotPassword"
-        >
-          Forgot Password?
-        </el-button>
-      </div>
-    </el-form>
-  </el-container>
+      <el-button
+        type="text"
+        :disabled="authStore.loading"
+        @click="handleForgotPassword"
+      >
+        Forgot Password?
+      </el-button>
+    </div>
+  </el-form>
 </template>
 
 <style scoped>
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--el-fill-color-light);
-}
-
 .login-form {
   width: 100%;
   max-width: 400px;

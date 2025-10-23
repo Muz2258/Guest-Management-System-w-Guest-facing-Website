@@ -1,5 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import LoginView from '../views/LoginView.vue'
@@ -8,6 +7,7 @@ import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import GuestsView from '../views/GuestsView.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import GoodWillMessages from '@/views/GoodWillMessages.vue'
+import CheckInView from '@/views/CheckInView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -32,20 +32,26 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     name: 'Dashboard',
     component: Dashboard,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, role: 'super-admin' }
   },
   {
     path: '/goodwill-messages',
     name: 'Goodwill Messages',
     component: GoodWillMessages,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, role: 'super-admin' }
   },
   {
     path: '/guests',
     name: 'Guests',
     component: GuestsView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, role: 'super-admin' }
   },
+  {
+    path: '/check-in',
+    name: 'Check In',
+    component: CheckInView,
+    meta: {requiresAuth: true, role: 'check-in-staff'}
+  }
 ]
 
 const router = createRouter({
@@ -61,6 +67,7 @@ router.beforeEach(async (to) => {
   console.log('🚦 Router Guard - Navigation to:', to.fullPath)
   const authStore = useAuthStore()
   const requiresAuth = to.meta.requiresAuth ?? true
+  const requiredRole = to.meta.role
   
   console.log('🔐 Auth State:', {
     initialized: authInitialized,
@@ -68,7 +75,7 @@ router.beforeEach(async (to) => {
     isAuthenticated: authStore.isAuthenticated,
     hasSession: !!authStore.session,
     hasUser: !!authStore.user,
-    // isStaffMember: authStore.isStaffMember,
+    userRole: authStore.activeRole,
     requiresAuth
   })
 
@@ -90,11 +97,6 @@ router.beforeEach(async (to) => {
     return { name: 'Login', query: { redirect: to.fullPath } }
   }
 
-  if (!requiresAuth && authStore.isAuthenticated) {
-    console.log('ℹ️ Already authenticated, redirecting to Dashboard')
-    return { name: 'Dashboard' }
-  }
-
   // Second step: For authenticated routes, check session and staff access
   if (requiresAuth && authStore.isAuthenticated) {
     // Check session expiration
@@ -109,12 +111,10 @@ router.beforeEach(async (to) => {
       }
     }
 
-    // Check staff access (only for authenticated routes)
-    /* if (!authStore.isStaffMember) {
-      console.log('❌ Staff access required but user is not staff')
-      ElMessage.error('Staff access required')
-      return { name: 'Login' }
-    } */
+    if(requiredRole !== authStore.activeRole) {
+      ElMessage.error('You are not authorized to access this page')
+      return { name: 'Login', query: { redirect: to.fullPath }}
+    }
   }
 
   console.log('✅ Navigation guard checks passed')

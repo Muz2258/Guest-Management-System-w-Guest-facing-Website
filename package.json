@@ -4,13 +4,16 @@
   "private": true,
   "workspaces": [
     "Admin-app",
-    "Guest-Website"
+    "Guest-Website",
+    "Check-in-app"
   ],
   "scripts": {
     "dev:admin": "cd Admin-app && npm run dev",
     "dev:guest": "cd Guest-Website && npm run dev",
+    "dev:check-in": "cd Check-in-app && npm run dev",
     "build:admin": "cd Admin-app && npm run build",
     "build:guest": "cd Guest-Website && npm run build",
+    "build:check-in": "cd Check-in-app && npm run build",
     "preview:admin": "cd Admin-app && npm run preview",
     "preview:guest": "cd Guest-Website && npm run preview",
     "type-check:admin": "cd Admin-app && npm run type-check",
