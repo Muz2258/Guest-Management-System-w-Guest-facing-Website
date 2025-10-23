@@ -12,6 +12,7 @@ export const useGuestStore = defineStore('guest', () => {
   
   const guest = ref<CompleteGuestData | null>(null)
   const guests = ref<GuestTableRow[]>([])
+  const guestsSearchResult = ref<GuestTableRow[]>([])
   const loading = ref(false)
   const guestLoading = ref(false)
   const error = ref<string | null>(null)
@@ -110,6 +111,32 @@ export const useGuestStore = defineStore('guest', () => {
         await router.push('/login')
       }
     } finally {
+      loading.value = false
+    }
+  }
+
+  const searchGuests = async (query: string) => {
+    try {
+      loading.value = true
+      error.value = null
+
+      const {data: searchRes, error: errRes} = await supabase.rpc(
+        'admin_search_guests_by_name', 
+        {
+          value: query
+        }
+      )
+
+      if(errRes) {
+        throw errRes
+      }
+
+      guestsSearchResult.value = searchRes
+    }catch (err) {
+      console.log(err)
+      error.value = err instanceof Error ? err.message : 'Failed to fetch guests'
+      ElMessage.error(error.value)
+    }finally {
       loading.value = false
     }
   }
@@ -308,7 +335,7 @@ export const useGuestStore = defineStore('guest', () => {
       }
 
       console.log('✅ updateRSVP: Update successful:', data)
-      await fetchGuests()
+      // await fetchGuests()
       ElMessage.success('RSVP updated successfully')
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to update RSVP'
@@ -504,6 +531,7 @@ export const useGuestStore = defineStore('guest', () => {
   return {
     // States
     guest,
+    guestsSearchResult,
     guests,
     loading,
     error,
@@ -514,6 +542,7 @@ export const useGuestStore = defineStore('guest', () => {
 
     // Actions
     fetchGuestData,
+    searchGuests,
     fetchGuests,
     createGuest,
     updateGuest,
