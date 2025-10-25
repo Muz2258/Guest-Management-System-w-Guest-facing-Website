@@ -1,53 +1,3 @@
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-import { ElForm, ElFormItem, ElInput, ElButton, ElAlert} from 'element-plus'
-import { useAuthStore } from '@/stores/auth'
-import type { FormInstance, FormRules } from 'element-plus'
-
-const authStore = useAuthStore()
-const email = ref('')
-const successMessage = ref('')
-
-const formRef = ref<FormInstance>()
-
-const validateEmail = (rule: any, value: string, callback: Function) => {
-  if (!value) {
-    callback(new Error('Please enter your email'))
-  } else {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailPattern.test(value)) {
-      callback(new Error('Please enter a valid email address'))
-    } else {
-      callback()
-    }
-  }
-}
-
-const resetPassRuleModel = ref({
-  email: ''
-})
-
-const resetPassFormRules: FormRules = {
-  email: [
-    { validator: validateEmail, trigger: 'blur' }
-  ]
-}
-
-const handleResetPassword = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
-  
-  await formEl.validate(async (valid: boolean) => {
-    if (valid) {
-      const success = await authStore.resetPassword(email.value)
-      if (success) {
-        successMessage.value = 'Password reset instructions have been sent to your email'
-        email.value = ''
-      }
-    }
-  })
-}
-</script>
-
 <template>
   <div class="forgot-password-container">
     <el-form
@@ -109,18 +59,61 @@ const handleResetPassword = async (formEl: FormInstance | undefined) => {
   </div>
 </template>
 
-<style scoped>
-.forgot-password-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--el-fill-color-light);
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { ElForm, ElFormItem, ElInput, ElButton, ElAlert} from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+import type { FormInstance, FormRules } from 'element-plus'
+
+const authStore = useAuthStore()
+const email = ref('')
+const successMessage = ref('')
+
+const formRef = ref<FormInstance>()
+
+const validateEmail = (rule: any, value: string, callback: Function) => {
+  if (!value) {
+    callback(new Error('Please enter your email'))
+  } else {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailPattern.test(value)) {
+      callback(new Error('Please enter a valid email address'))
+    } else {
+      callback()
+    }
+  }
 }
 
+const resetPassRuleModel = ref({
+  email: ''
+})
+
+const resetPassFormRules: FormRules = {
+  email: [
+    { validator: validateEmail, trigger: 'blur' }
+  ]
+}
+
+const handleResetPassword = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  
+  await formEl.validate(async (valid: boolean) => {
+    if (valid) {
+      const success = await authStore.resetPassword(email.value)
+      if (success) {
+        successMessage.value = 'Password reset instructions have been sent to your email'
+        email.value = ''
+      }
+    }
+  })
+}
+</script>
+
+<style scoped>
 .forgot-password-form {
-  width: 100%;
-  max-width: 400px;
+  min-width: 250px;
+  max-width: 475px;
+  width: 90vw;
   padding: 2rem;
   background-color: white;
   border-radius: 8px;

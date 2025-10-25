@@ -52,12 +52,6 @@ export interface Guest {
   created_at: string | null
   updated_at: string | null
   auth_token: string
-  // auth_token_hash: string | null
-  // token_created_at: string | null
-  // token_expires_at: string | null
-  // token_last_used_at: string | null
-  // token_use_count: number | null
-  // is_token_active: boolean | null
   name: GuestName
   plus_one_limit: number | null
   family_side: FamilySide

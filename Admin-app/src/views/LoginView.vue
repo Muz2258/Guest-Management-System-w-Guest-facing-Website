@@ -1,41 +1,10 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import { ElForm, ElFormItem, ElInput, ElButton, ElAlert, ElContainer } from 'element-plus'
-import type { FormInstance } from 'element-plus'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-
-const authStore = useAuthStore()
-const router = useRouter()
-
-const { loading } = storeToRefs(authStore)
-
-const loginForm = ref({
-  email: '',
-  password: ''
-})
-
-const formRef = ref<FormInstance>()
-
-const handleLogin = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
-  
-  await authStore.login(loginForm.value.email, loginForm.value.password)
-}
-
-const handleForgotPassword = () => {
-  router.push('/forgot-password')
-}
-</script>
-
 <template>
   <el-form
     ref="formRef"
     label-position="top"
     class="login-form"
   >
-    <h2 class="form-title">Back-office Login</h2>
+    <h2 class="form-title">Staff Login</h2>
 
     <el-alert
       v-if="authStore.error"
@@ -85,10 +54,42 @@ const handleForgotPassword = () => {
   </el-form>
 </template>
 
+<script setup lang="ts">
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { ElForm, ElFormItem, ElInput, ElButton, ElAlert, ElContainer } from 'element-plus'
+import type { FormInstance } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+const { loading } = storeToRefs(authStore)
+
+const loginForm = ref({
+  email: '',
+  password: ''
+})
+
+const formRef = ref<FormInstance>()
+
+const handleLogin = async (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  
+  await authStore.login(loginForm.value.email, loginForm.value.password)
+}
+
+const handleForgotPassword = () => {
+  router.push('/forgot-password')
+}
+</script>
+
 <style scoped>
 .login-form {
-  width: 100%;
-  max-width: 400px;
+  min-width: 250px;
+  max-width: 475px;
+  width: 90vw;
   padding: 2rem;
   background-color: white;
   border-radius: 8px;

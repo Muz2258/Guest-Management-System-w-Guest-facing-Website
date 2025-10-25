@@ -10,7 +10,7 @@ import { ElContainer } from 'element-plus';
 
 <style scoped>
 .auth-layout {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;

@@ -1,53 +1,3 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import { ElForm, ElFormItem, ElInput, ElButton, ElAlert } from 'element-plus'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-
-const authStore = useAuthStore()
-const router = useRouter()
-
-const form = ref({
-  newPassword: '',
-  confirmPassword: ''
-})
-
-const formRef = ref()
-const rules = {
-  newPassword: [
-    { required: true, message: 'Please enter your new password', trigger: 'blur' },
-    { min: 6, message: 'Password must be at least 6 characters', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { 
-      required: true, 
-      message: 'Please confirm your password', 
-      trigger: 'blur',
-      validator: (rule: any, value: string, callback: Function) => {
-        if (value !== form.value.newPassword) {
-          callback(new Error('Passwords do not match'))
-        } else {
-          callback()
-        }
-      }
-    }
-  ]
-}
-
-const handleResetPassword = async (formEl: any) => {
-  if (!formEl) return
-  
-  await formEl.validate(async (valid: boolean) => {
-    if (valid) {
-      const success = await authStore.updatePassword(form.value.newPassword)
-      if (success) {
-        await router.push('/login')
-      }
-    }
-  })
-}
-</script>
-
 <template>
   <div class="reset-password-container">
     <el-form
@@ -107,18 +57,61 @@ const handleResetPassword = async (formEl: any) => {
   </div>
 </template>
 
-<style scoped>
-.reset-password-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: var(--el-fill-color-light);
+<script setup lang="ts">
+import { ref } from 'vue'
+import { ElForm, ElFormItem, ElInput, ElButton, ElAlert } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+
+const authStore = useAuthStore()
+const router = useRouter()
+
+const form = ref({
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const formRef = ref()
+const rules = {
+  newPassword: [
+    { required: true, message: 'Please enter your new password', trigger: 'blur' },
+    { min: 6, message: 'Password must be at least 6 characters', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { 
+      required: true, 
+      message: 'Please confirm your password', 
+      trigger: 'blur',
+      validator: (rule: any, value: string, callback: Function) => {
+        if (value !== form.value.newPassword) {
+          callback(new Error('Passwords do not match'))
+        } else {
+          callback()
+        }
+      }
+    }
+  ]
 }
 
+const handleResetPassword = async (formEl: any) => {
+  if (!formEl) return
+  
+  await formEl.validate(async (valid: boolean) => {
+    if (valid) {
+      const success = await authStore.updatePassword(form.value.newPassword)
+      if (success) {
+        await router.push('/login')
+      }
+    }
+  })
+}
+</script>
+
+<style scoped>
 .reset-password-form {
-  width: 100%;
-  max-width: 400px;
+  min-width: 250px;
+  max-width: 475px;
+  width: 90vw;
   padding: 2rem;
   background-color: white;
   border-radius: 8px;

@@ -14,5 +14,6 @@ import { ElContainer } from 'element-plus';
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  background-color: #efecf1;
 }
 </style>
