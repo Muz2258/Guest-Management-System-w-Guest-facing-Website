@@ -1,4 +1,5 @@
 import type { GuestName } from "@/types/guest"
+import type { TimerOptions } from "timers"
 
 const formatGuestName = (name: GuestName, couple: boolean = false, spouseAttending: boolean = false): string => {
   const titles = (): string => {
@@ -33,5 +34,5 @@ const formatGuestName = (name: GuestName, couple: boolean = false, spouseAttendi
 }
 
 export {
-  formatGuestName,
+  formatGuestName
 }

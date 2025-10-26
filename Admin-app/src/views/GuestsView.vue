@@ -343,7 +343,6 @@ type TableItem = {
   can_add_plus_one: boolean
   phone_number: string
   actions: any
-
 }
 
 type SearchItem = {
@@ -433,7 +432,7 @@ const guestTableData = computed(() => {
           generateLink: () => handleGenerateInviteLink(guest.guest_id),
           markAsSent: () => markAsSent(guest.guest_id),
           copyLink: () => handleCopyInviteLink(guest.guest_id),
-          managePlusOnes: () => handleManagePlusOnes(guest.guest_id, guest)
+          managePlusOnes: () => handleManagePlusOnes(guest.guest_id)
         }
       }
     })
@@ -459,7 +458,7 @@ const guestTableData = computed(() => {
           generateLink: () => handleGenerateInviteLink(guest.guest_id),
           markAsSent: () => markAsSent(guest.guest_id),
           copyLink: () => handleCopyInviteLink(guest.guest_id),
-          managePlusOnes: () => handleManagePlusOnes(guest.guest_id, guest)
+          managePlusOnes: () => handleManagePlusOnes(guest.guest_id)
         }
       }
     })
@@ -596,7 +595,10 @@ const handleSelection = (data: any) => {
 }
 
 const handleEditGuest = (guestID: string) => {
-  const guest = guestStore.guests.find(g => g.guest_id === guestID)
+  let guest
+  
+  if(isSearching.value) guest = guestStore.guestsSearchResult.find(g => g.guest_id === guestID)
+  else guest = guestStore.guests.find(g => g.guest_id === guestID)
 
   if(!guest) return
   
@@ -605,7 +607,10 @@ const handleEditGuest = (guestID: string) => {
 }
 
 const handleDeleteGuest = async (guestID: string) => {
-  const guest = guestStore.guests.find(g => g.guest_id === guestID)
+  let guest
+  
+  if(isSearching.value) guest = guestStore.guestsSearchResult.find(g => g.guest_id === guestID)
+  else guest = guestStore.guests.find(g => g.guest_id === guestID)
 
   if(!guest) return
 
@@ -626,7 +631,10 @@ const handleDeleteGuest = async (guestID: string) => {
 }
 
 const handleUpdateStatus = async (guestID: string) => {
-  const guest = guestStore.guests.find(g => g.guest_id === guestID)
+  let guest
+  
+  if(isSearching.value) guest = guestStore.guestsSearchResult.find(g => g.guest_id === guestID)
+  else guest = guestStore.guests.find(g => g.guest_id === guestID)
 
   if(!guest) return
 
@@ -750,7 +758,10 @@ const handleUpdateStatus = async (guestID: string) => {
 }
 
 const handleGenerateInviteLink = async (guestID: string) => {
-  const guest = guestStore.guests.find(g => g.guest_id === guestID)
+  let guest
+  
+  if(isSearching.value) guest = guestStore.guestsSearchResult.find(g => g.guest_id === guestID)
+  else guest = guestStore.guests.find(g => g.guest_id === guestID)
 
   if(!guest) return
 
@@ -765,7 +776,10 @@ const handleGenerateInviteLink = async (guestID: string) => {
 }
 
 const markAsSent = async (guestID: string) => {
-  const guest = guestStore.guests.find(g => g.guest_id === guestID)
+  let guest
+  
+  if(isSearching.value) guest = guestStore.guestsSearchResult.find(g => g.guest_id === guestID)
+  else guest = guestStore.guests.find(g => g.guest_id === guestID)
 
   if(!guest) return
 
@@ -776,10 +790,6 @@ const markAsSent = async (guestID: string) => {
 
   try {
     await guestStore.markInviteAsSent(newInviteStatus, guestID)
-
-    const guest = guestStore.guests.find(g => g.guest_id === guestID)
-
-    if(guest) guest.invite_sent = newInviteStatus
 
     if(newInviteStatus) {
       ElMessage.success('Marked as invite sent!')
@@ -795,7 +805,10 @@ const markAsSent = async (guestID: string) => {
 }
 
 const handleCopyInviteLink = async (guestID: string) => {
-  const guest = guestStore.guests.find(g => g.guest_id === guestID)
+  let guest
+  
+  if(isSearching.value) guest = guestStore.guestsSearchResult.find(g => g.guest_id === guestID)
+  else guest = guestStore.guests.find(g => g.guest_id === guestID)
 
   if(!guest) return
 
@@ -967,11 +980,13 @@ const resetFilters = async () => {
   await guestStore.fetchGuests(currentPage.value, pageSize.value)
 }
 
-const handleManagePlusOnes = async (guestId: string, guestObj?: GuestTableRow) => {
+const handleManagePlusOnes = async (guestId: string) => {
+  console.log('Searching for:', guestId, 'with type', typeof guestId)
+
   try {
-    // set selected guest by finding in store if not passed
-    if (guestObj) selectedGuest.value = guestStore.guests.find(g => g.guest_id === guestId) || null
+    if(isSearching.value) selectedGuest.value = guestStore.guestsSearchResult.find(g => g.guest_id === guestId) || null
     else selectedGuest.value = guestStore.guests.find(g => g.guest_id === guestId) || null
+    console.log(selectedGuest)
 
     managePlusOne.value = true
   } catch (e) {

@@ -98,10 +98,8 @@ export const useGuestStore = defineStore('guest', () => {
         }
       }
 
-      console.log('Fetched guests:', { data, count })
-      guests.value = (data || []).map((guest: any) => ({
-        ...guest
-      }))
+      guests.value = data
+      console.log('Fetched guests:', guests.value)
 
       totalGuests.value = count || 0
     } catch (e) {

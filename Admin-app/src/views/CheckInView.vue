@@ -7,7 +7,7 @@
           Logout
         </el-button>
       </div>
-      <el-input v-model="searchInput" :prefix-icon="Search" clearable placeholder="Search guests" @keyup="handleSearch" />
+      <el-input :model-value="searchInput" :prefix-icon="Search" clearable placeholder="Search guests" @input="handleInput" @keyup="handleInput" />
     </div>
 
     <table class="table__check-in">
@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useCheckinStore } from '@/stores/checkin';
 import { ElButton, ElMessage, ElTag, ElHeader } from 'element-plus';
@@ -86,8 +86,7 @@ const isUpdating = ref<boolean>(false)
 const selectedGuest = ref<string | null>(null)
 const searchInput = ref<string | null>(null)
 const isSearching = ref<boolean>(false)
-
-let searchTimeout: ReturnType<typeof setTimeout>
+const searchTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const guestList = computed(() => {
   const guests = checkinStore.guestList
@@ -140,7 +139,10 @@ const markGuestAsTagged = async (id: string) => {
   isUpdating.value = true
 
   try {
-    const guest = checkinStore.guestList.find(guest => guest.guest_id === selectedGuest.value)
+    let guest 
+    
+    if(!isSearching.value) guest = checkinStore.guestList.find(guest => guest.guest_id === selectedGuest.value)
+    else guest = checkinStore.searchResultList.find(guest => guest.guest_id === selectedGuest.value)
 
     if(!guest) {
       console.error('Guest with id:', id, 'not found')
@@ -165,7 +167,10 @@ const markSpouseAsTagged = async (id: string) => {
   isUpdating.value = true
 
   try {
-    const guest = checkinStore.guestList.find(guest => guest.guest_id === selectedGuest.value)
+    let guest 
+    
+    if(!isSearching.value) guest = checkinStore.guestList.find(guest => guest.guest_id === selectedGuest.value)
+    else guest = checkinStore.searchResultList.find(guest => guest.guest_id === selectedGuest.value)
 
     if(!guest) {
       console.error('Guest with id:', id, 'not found')
@@ -195,7 +200,10 @@ const markPlusOneAsTagged = async (plusOneId: string, guestId: string) => {
   isUpdating.value = true
 
   try {
-    const guest = checkinStore.guestList.find(guest => guest.guest_id === guestId)
+    let guest
+    
+    if(!isSearching.value) guest = checkinStore.guestList.find(guest => guest.guest_id === guestId)
+    else guest = checkinStore.searchResultList.find(guest => guest.guest_id === guestId)
 
     if(!guest) {
       console.error('Guest with id:', guestId, 'not found')
@@ -222,14 +230,14 @@ const markPlusOneAsTagged = async (plusOneId: string, guestId: string) => {
   }
 }
 
-const handleSearch = async (e: any) => {
-  const query = e.target.value
-  clearTimeout(searchTimeout)
+const handleInput = async (value: any) => {
+  searchInput.value = typeof value === 'string' ? value : value.target.value
+  if(searchTimeout.value) clearTimeout(searchTimeout.value)
 
-  if(query) {
-    const parsedQuery = query.toString().toLowerCase().trim()
+  const parsedQuery = searchInput.value?.toString().toLowerCase().trim() || null
 
-    searchTimeout = setTimeout(async () => {
+  if(parsedQuery) {
+    searchTimeout.value = setTimeout(async () => {
       isSearching.value = true
       await checkinStore.searchAttendingGuestByName(parsedQuery)
     }, 500)
@@ -240,6 +248,23 @@ const handleSearch = async (e: any) => {
     }
   }
 }
+
+/* watch(() => searchInput.value, async (newVal) => {
+  clearTimeout(searchTimeout)
+  const parsedQuery = newVal?.toString().toLowerCase().trim()
+
+  if(parsedQuery) {
+    searchTimeout = setTimeout(async () => {
+      isSearching.value = true
+      await checkinStore.searchAttendingGuestByName(parsedQuery)
+    }, 500)
+  }else {
+    isSearching.value = false
+    if(!checkinStore.guestList) {
+      await checkinStore.fetchGuestList()
+    }
+  }
+}) */
 
 onMounted(() => {
   checkinStore.fetchGuestList()
