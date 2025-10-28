@@ -49,7 +49,9 @@
       <el-form-item label="Family" prop="family_side">
         <el-select v-model="form.family_side" placeholder="Select family side">
           <el-option label="Bride" value="bride" />
+          <el-option label="Bride's Parents" value="bride-parents" />
           <el-option label="Groom" value="groom" />
+          <el-option label="Groom's Parents" value="groom-parents" />
           <el-option label="Both" value="both" />
         </el-select>
       </el-form-item>

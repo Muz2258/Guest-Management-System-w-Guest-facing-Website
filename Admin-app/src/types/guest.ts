@@ -7,7 +7,7 @@ export type PlusOneEligibility = 'eligible' | 'not_eligible'
 export type PlusOneType = 'spouse' | 'others'
 export type GiftStatus = 'pending' | 'success' | 'abandoned'
 export type GiftTypes = 'monetary' | 'full_purchase' | 'contribution'
-export type FamilySide = 'bride' | 'groom' | 'both'
+export type FamilySide = 'bride' | 'groom' | 'both' | 'groom-parents' | 'bride-parents'
 
 export interface GuestName {
   titles: []

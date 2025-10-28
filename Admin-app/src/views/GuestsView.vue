@@ -70,7 +70,9 @@
 
       <el-select v-model="bulkActionValues.sideValue" :empty-values="[null, undefined]" placeholder="Set Side to:" style="width: 200px" @change="handleBulkChange('side')">
         <el-option value="bride" label="Bride" />
+        <el-option value="bride-parents" label="Bride's Parents" />
         <el-option value="groom" label="Groom" />
+        <el-option value="groom-parents" label="Groom's Parents" />
         <el-option value="both" label="both" />
       </el-select>
 
@@ -249,7 +251,9 @@
         <p class="section-header">Family Side</p>
         <el-checkbox-group v-model="selectedFilters.family_side">
           <el-checkbox label="Bride" value="bride" />
+          <el-checkbox label="Bride's Parents" value="bride-parents" />
           <el-checkbox label="Groom" value="groom" />
+          <el-checkbox label="Groom's Parents" value="groom-parents" />
           <el-checkbox label="Both" value="both" />
         </el-checkbox-group>
       </div>
@@ -529,6 +533,8 @@ const formatGuestFamilySide = (guest: GuestTableRow) => {
     bride: 'Bride',
     groom: 'Groom',
     both: 'Both',
+    "groom-parents": `Groom's Parents`,
+    "bride-parents": `Bride's Parents`,
     unknown: 'Unknown'
   }
 
