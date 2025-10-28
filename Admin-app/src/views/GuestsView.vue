@@ -580,7 +580,11 @@ const checkPlusOneEligibility = (guest: GuestTableRow) => {
 }
 
 const getStatusType = (guestID: string): 'success' | 'danger' | 'info' => {
-  const guest = guestStore.guests.find(guest => guest.guest_id === guestID)
+  let guest
+
+  if(!isSearching.value) guest = guestStore.guests.find(guest => guest.guest_id === guestID)
+  else guest = guestStore.guestsSearchResult.find(guest => guest.guest_id === guestID)
+
   const status = (guest?.rsvp_status ?? 'pending') as AttendanceStatus
   const types: Record<'attending' | 'not_attending' | 'pending', 'success' | 'danger' | 'info'> = {
     attending: 'success',
