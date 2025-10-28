@@ -791,13 +791,8 @@ const markAsSent = async (guestID: string) => {
   try {
     await guestStore.markInviteAsSent(newInviteStatus, guestID)
 
-    if(newInviteStatus) {
-      ElMessage.success('Marked as invite sent!')
-    } else {
-      ElMessage.success('Marked as invite not sent!')
-    }
-
-    // await guestStore.fetchGuests(currentPage.value, pageSize.value)
+    guest.invite_sent = newInviteStatus
+    ElMessage.success('Marked as invite sent!')
   } catch (error) {
     console.error('Failed to mark as sent:', error)
     ElMessage.error('Failed to mark as sent')
