@@ -28,6 +28,11 @@ const activeIndex = computed(() => route.path)
         Goodwill Messages
       </template>
     </el-menu-item>
+    <el-menu-item index="/seating">
+      <template #title>
+        Seating
+      </template>
+    </el-menu-item>
   </el-menu>
 </template>
 

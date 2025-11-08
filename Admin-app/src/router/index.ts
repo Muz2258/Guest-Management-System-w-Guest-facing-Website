@@ -8,6 +8,7 @@ import GuestsView from '../views/GuestsView.vue'
 import Dashboard from '@/views/Dashboard.vue'
 import GoodWillMessages from '@/views/GoodWillMessages.vue'
 import CheckInView from '@/views/CheckInView.vue'
+import SeatingView from '@/views/SeatingView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -44,6 +45,12 @@ const routes: RouteRecordRaw[] = [
     path: '/guests',
     name: 'Guests',
     component: GuestsView,
+    meta: { requiresAuth: true, role: 'super-admin' }
+  },
+  {
+    path: '/seating',
+    name: 'Seating',
+    component: SeatingView,
     meta: { requiresAuth: true, role: 'super-admin' }
   },
   {
