@@ -19,23 +19,23 @@
       </thead>
       <tbody>
         <template v-for="guest in guestList" :key="guest.id">
+          <!-- Primary Guest -->
           <tr class="table-row table-row__body">
             <td>
-              {{ guest.name }} 
-              <el-tag v-if="guest.is_tagged" type="success">Tagged</el-tag>
-              <el-tag v-if="guest.is_spouse_tagged" type="success" plain>Spouse Tagged</el-tag>
+              <div class="guest-info">
+                <div class="guest-name-tags">
+                  {{ guest.primaryName }} 
+                  <el-tag v-if="guest.is_tagged" type="success">Tagged</el-tag>
+                </div>
+                <div class="guest-tables">
+                  <span v-if="guest.table_number" class="table-info">
+                    <el-icon><LocationFilled /></el-icon>
+                    {{ formatTableInfo(guest.table_number, guest.table_name) }}
+                  </span>
+                </div>
+              </div>
             </td>
             <td>
-              <el-button 
-                v-if="guest.type === 'couple' && guest.spouse_attending && !guest.is_spouse_tagged"
-                type="primary"
-                :loading="isUpdating && guest.spouse_attending && selectedGuest === guest.id"
-                @click="markSpouseAsTagged(guest.id)"
-                size="small"
-                plain
-              >
-                Tag Spouse
-              </el-button>
               <el-button 
                 v-if="!guest.is_tagged"
                 type="primary"
@@ -47,10 +47,52 @@
               </el-button>
             </td>
           </tr>
+          
+          <!-- Spouse (if couple and spouse attending) -->
+          <tr v-if="guest.type === 'couple' && guest.spouse_attending" class="table-row table-row__body table-row__body--spouse">
+            <td>
+              <div class="guest-info">
+                <div class="guest-name-tags">
+                  {{ guest.spouseName }}
+                  <el-tag v-if="guest.is_spouse_tagged" type="success">Tagged</el-tag>
+                </div>
+                <div class="guest-tables">
+                  <span v-if="guest.spouse_table_number" class="table-info">
+                    <el-icon><LocationFilled /></el-icon>
+                    {{ formatTableInfo(guest.spouse_table_number, guest.spouse_table_name) }}
+                  </span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <el-button 
+                v-if="!guest.is_spouse_tagged"
+                type="primary"
+                :loading="isUpdating && guest.spouse_attending && selectedGuest === guest.id"
+                @click="markSpouseAsTagged(guest.id)"
+                size="small"
+                plain
+              >
+                Tag Spouse
+              </el-button>
+            </td>
+          </tr>
+
+          <!-- Plus Ones -->
           <tr v-for="plusOne in guest.plus_ones" :key="plusOne.id" class="table-row table-row__body table-row__body--plus-one">
             <td>
-              {{ plusOne.name }}
-              <el-tag v-if="plusOne.is_tagged" type="success">Tagged</el-tag>
+              <div class="guest-info">
+                <div class="guest-name-tags">
+                  {{ plusOne.name }}
+                  <el-tag v-if="plusOne.is_tagged" type="success">Tagged</el-tag>
+                </div>
+                <div class="guest-tables">
+                  <span v-if="plusOne.table_number" class="table-info">
+                    <el-icon><LocationFilled /></el-icon>
+                    {{ formatTableInfo(plusOne.table_number, plusOne.table_name) }}
+                  </span>
+                </div>
+              </div>
             </td>
             <td>
               <el-button 
@@ -75,8 +117,8 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useCheckinStore } from '@/stores/checkin';
-import { ElButton, ElMessage, ElTag, ElHeader } from 'element-plus';
-import { Search } from '@element-plus/icons-vue'
+import { ElButton, ElMessage, ElTag, ElHeader, ElIcon } from 'element-plus';
+import { Search, LocationFilled } from '@element-plus/icons-vue'
 import { formatGuestName } from '@/utils/helper';
 
 const authStore = useAuthStore()
@@ -95,36 +137,66 @@ const guestList = computed(() => {
   
   if(!isSearching.value) {
     list = guests.map(guest => {
+      const isCouple = guest.guest_type === 'couple'
+      const primaryName = formatGuestName(guest.name, false, false)
+      
+      // For spouse, use Mrs. + (Last Name if available, otherwise First Name)
+      const spouseTitle = 'Mrs.'
+      const spouseNamePart = guest.name?.last_name || guest.name?.first_name || ''
+      const spouseName = `${spouseTitle} ${spouseNamePart}`.trim()
+
       return {
         id: guest.guest_id,
-        name: formatGuestName(guest.name, guest.guest_type === 'couple', guest.spouse_attending),
+        primaryName: primaryName,
+        spouseName: spouseName,
         type: guest.guest_type,
         is_tagged: guest.is_tagged,
         is_spouse_tagged: guest.is_spouse_tagged,
         spouse_attending: guest.spouse_attending,
+        table_number: guest.table_number,
+        table_name: guest.table_name,
+        spouse_table_number: guest.spouse_table_number,
+        spouse_table_name: guest.spouse_table_name,
         plus_ones: guest.plus_ones.map(plusOne => {
           return {
             id: plusOne.plus_one_id,
             name: formatGuestName(plusOne.name),
-            is_tagged: plusOne.is_tagged
+            is_tagged: plusOne.is_tagged,
+            table_number: plusOne.table_number,
+            table_name: plusOne.table_name
           }
         })
       }
     })
   }else {
     list = searchResult.map(result => {
+      const isCouple = result.guest_type === 'couple'
+      const primaryName = formatGuestName(result.name, false, false)
+      
+      // For spouse, use Mrs. + (Last Name if available, otherwise First Name)
+      const spouseTitle = 'Mrs.'
+      const spouseNamePart = result.name?.last_name || result.name?.first_name || ''
+      const spouseName = `${spouseTitle} ${spouseNamePart}`.trim()
+
       return {
         id: result.guest_id,
-        name: formatGuestName(result.name, result.guest_type === 'couple', result.spouse_attending),
+        primaryName: primaryName,
+        spouseName: spouseName,
         type: result.guest_type,
         is_tagged: result.is_tagged,
         is_spouse_tagged: result.is_spouse_tagged,
         spouse_attending: result.spouse_attending,
+        table_number: result.table_number,
+        table_name: result.table_name,
+        spouse_table_number: result.spouse_table_number,
+        spouse_table_name: result.spouse_table_name,
         plus_ones: result.plus_ones.map(plusOne => {
           return {
             id: plusOne.plus_one_id,
             name: formatGuestName(plusOne.name),
-            is_tagged: plusOne.is_tagged
+            is_tagged: plusOne.is_tagged,
+            table_number: plusOne.table_number,
+            table_name: plusOne.table_name
           }
         })
       }
@@ -133,6 +205,11 @@ const guestList = computed(() => {
 
   return list
 })
+
+const formatTableInfo = (tableNumber?: string, tableName?: string) => {
+  if (!tableNumber) return ''
+  return tableName ? `Table ${tableNumber} - ${tableName}` : `Table ${tableNumber}`
+}
 
 const markGuestAsTagged = async (id: string) => {
   selectedGuest.value = id
@@ -353,7 +430,7 @@ onMounted(() => {
 }
 .table-row.table-row__body td:first-child {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
 }
 .table-row.table-row__body td:last-child {
@@ -361,6 +438,56 @@ onMounted(() => {
   justify-content: flex-end;
   align-items: center;
   gap: 12px;
+}
+
+.guest-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.guest-name-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.guest-tables {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.table-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--el-text-color-secondary);
+}
+
+.table-info .el-icon {
+  font-size: 14px;
+}
+
+.spouse-table {
+  padding-left: 18px;
+}
+
+.table-row.table-row__body--spouse {
+  margin-left: 20px;
+  margin-top: -4px;
+  position: relative;
+}
+.table-row.table-row__body--spouse::before {
+  content: "\21B3";
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: -12px;
+  transform: translateY(-50%);
 }
 
 .table-row.table-row__body--plus-one {

@@ -1,3 +1,4 @@
+
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { supabase } from "@/utils/supabase";
@@ -8,6 +9,8 @@ type PlusOne = {
   plus_one_id: string
   name: GuestName
   is_tagged: boolean
+  table_number?: string
+  table_name?: string
 }
 
 type Guest = {
@@ -18,6 +21,10 @@ type Guest = {
   is_tagged: boolean
   is_spouse_tagged?: boolean
   plus_ones: PlusOne[]
+  table_number?: string
+  table_name?: string
+  spouse_table_number?: string
+  spouse_table_name?: string
 }
 
 export const useCheckinStore = defineStore('checkin', () => {
@@ -31,26 +38,16 @@ export const useCheckinStore = defineStore('checkin', () => {
     isLoading.value = true
 
     try {
-      const {data, error } = await supabase
-        .from('guests')
-        .select('guest_id, guest_type, name, is_tagged, is_spouse_tagged, rsvps(spouse_attending), plus_ones(plus_one_id, name, is_tagged)')
-        .order('name')
+      const { data, error: rpcError } = await supabase.rpc('check_in_get_guests_with_seating')
 
-      if(error) {
-        throw error
-      }
+      if (rpcError) throw rpcError
 
-      guestList.value = data.map(guest => {
-        return {
-          ...guest,
-          spouse_attending: guest.rsvps[0]?.spouse_attending
-        }
-      })
-    }catch (err) {
+      guestList.value = data || []
+    } catch (err) {
       error.value = err instanceof Error ? err.message : 'Failed to fetch guest list'
       console.error(error.value)
       ElMessage.error(error.value)
-    }finally {
+    } finally {
       isLoading.value = false
     }
   }
