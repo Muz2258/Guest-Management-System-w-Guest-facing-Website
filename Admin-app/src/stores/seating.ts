@@ -116,6 +116,15 @@ export const useSeatingStore = defineStore('seating', () => {
     error.value = null
 
     try{
+      // Validation: Check if table has available capacity before attempting assignment
+      const table = seatingArrangement.value.find(t => t.table_id === tableId)
+      if (table) {
+        const requiredSeats = assignSpouse ? 2 : 1
+        if (table.available_count < requiredSeats) {
+          throw new Error(`Table ${table.table_number} does not have enough available seats (needs ${requiredSeats}, has ${table.available_count})`)
+        }
+      }
+
       const {data, error} = await supabase
         .rpc('admin_assign_guest_to_table', {
           p_guest_id: guestId,
@@ -130,6 +139,7 @@ export const useSeatingStore = defineStore('seating', () => {
       error.value = err instanceof Error ? err.message : 'Failed to assign guest'
       console.error(error.value)
       ElMessage.error(error.value)
+      throw err // Re-throw to allow caller to handle
     }finally {
       isLoading.value = false
     }
@@ -140,6 +150,12 @@ export const useSeatingStore = defineStore('seating', () => {
     error.value = null
 
     try{
+      // Validation: Check if table has available capacity
+      const table = seatingArrangement.value.find(t => t.table_id === tableId)
+      if (table && table.available_count < 1) {
+        throw new Error(`Table ${table.table_number} is at full capacity`)
+      }
+
       const {data, error} = await supabase
         .rpc('admin_assign_plus_one_to_table', {
           p_plus_one_id: plusOneId,
@@ -153,6 +169,7 @@ export const useSeatingStore = defineStore('seating', () => {
       error.value = err instanceof Error ? err.message : 'Failed to assign plus one'
       console.error(error.value)
       ElMessage.error(error.value)
+      throw err // Re-throw to allow caller to handle
     }finally {
       isLoading.value = false
     }
@@ -260,6 +277,129 @@ export const useSeatingStore = defineStore('seating', () => {
     }
   }
 
+  const swapGuestsBetweenTables = async (
+    sourceAssignmentId: string,
+    targetAssignmentId: string
+  ) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      // Validation: Ensure both assignments exist in current seating arrangement
+      let sourceFound = false
+      let targetFound = false
+      
+      seatingArrangement.value.forEach(table => {
+        table.assignments.forEach(assignment => {
+          if (assignment.assignment_id === sourceAssignmentId) sourceFound = true
+          if (assignment.assignment_id === targetAssignmentId) targetFound = true
+        })
+      })
+      
+      if (!sourceFound || !targetFound) {
+        throw new Error('One or both assignments not found in current seating arrangement')
+      }
+
+      // fetch current table ids for both assignments
+      const { data: sourceData, error: srcErr } = await supabase
+        .from('seat_assignments')
+        .select('table_id')
+        .eq('seat_assignment_id', sourceAssignmentId)
+        .single()
+
+      if (srcErr) throw srcErr
+
+      const { data: targetData, error: tgtErr } = await supabase
+        .from('seat_assignments')
+        .select('table_id')
+        .eq('seat_assignment_id', targetAssignmentId)
+        .single()
+
+      if (tgtErr) throw tgtErr
+
+      const sourceTableId = sourceData?.table_id
+      const targetTableId = targetData?.table_id
+
+      if (!sourceTableId || !targetTableId) {
+        throw new Error('Could not determine table ids for assignments')
+      }
+
+      // Additional validation: Ensure we're not swapping within the same table
+      if (sourceTableId === targetTableId) {
+        throw new Error('Cannot swap guests within the same table')
+      }
+
+      // Use a workaround: Remove both assignments and recreate them with swapped table_ids
+      // This avoids capacity constraint violations during the swap
+      
+      // Step 1: Get full assignment details before deletion
+      const { data: sourceFullData, error: srcFullErr } = await supabase
+        .from('seat_assignments')
+        .select('*')
+        .eq('seat_assignment_id', sourceAssignmentId)
+        .single()
+
+      if (srcFullErr) throw srcFullErr
+
+      const { data: targetFullData, error: tgtFullErr } = await supabase
+        .from('seat_assignments')
+        .select('*')
+        .eq('seat_assignment_id', targetAssignmentId)
+        .single()
+
+      if (tgtFullErr) throw tgtFullErr
+
+      // Step 2: Delete both assignments
+      const { error: delErr1 } = await supabase
+        .from('seat_assignments')
+        .delete()
+        .eq('seat_assignment_id', sourceAssignmentId)
+
+      if (delErr1) throw delErr1
+
+      const { error: delErr2 } = await supabase
+        .from('seat_assignments')
+        .delete()
+        .eq('seat_assignment_id', targetAssignmentId)
+
+      if (delErr2) throw delErr2
+
+      // Step 3: Recreate with swapped table_ids
+      const { error: insertErr1 } = await supabase
+        .from('seat_assignments')
+        .insert({
+          ...sourceFullData,
+          seat_assignment_id: sourceAssignmentId,
+          table_id: targetTableId,
+          assigned_at: new Date().toISOString()
+        })
+
+      if (insertErr1) throw insertErr1
+
+      const { error: insertErr2 } = await supabase
+        .from('seat_assignments')
+        .insert({
+          ...targetFullData,
+          seat_assignment_id: targetAssignmentId,
+          table_id: sourceTableId,
+          assigned_at: new Date().toISOString()
+        })
+
+      if (insertErr2) throw insertErr2
+
+      // Refresh seating chart
+      await fetchSeatingChart()
+      return { success: true }
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to swap guests'
+      console.error(error.value)
+      ElMessage.error(error.value)
+      return { success: false, message: error.value }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const fetchUnassignedGuests = async () => {
     isLoading.value = true
     error.value = null
@@ -296,6 +436,7 @@ export const useSeatingStore = defineStore('seating', () => {
     assignPlusOneToTable,
     removeAssignment,
     moveGuestToTable,
-    movePlusOneToTable
+    movePlusOneToTable,
+    swapGuestsBetweenTables
   }
 })
