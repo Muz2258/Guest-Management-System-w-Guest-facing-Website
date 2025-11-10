@@ -47,3 +47,10 @@ coverage/
 # JSON
 package-lock.json
 
+# Local debug/diagnostic artifacts (keep out of repo)
+# Admin-app debugging scripts, SQL checks and debug guides
+Admin-app/SPOUSE-DEBUG-GUIDE.md
+Admin-app/check-*.js
+Admin-app/*.sql
+Admin-app/src/utils/check*.ts
+
