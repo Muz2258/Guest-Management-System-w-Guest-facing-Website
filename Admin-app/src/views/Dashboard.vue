@@ -316,6 +316,10 @@ import { onMounted } from 'vue'
 import { useDashboardStore } from '../stores/dashboard'
 import { ElMessage, ElCol, ElRow, ElStatistic } from 'element-plus'
 import { Refresh, User, Checked, Clock, Message, Warning } from '@element-plus/icons-vue'
+// DEBUG: Commented out for production
+// import { checkDashboardMath } from '@/utils/checkDashboardMath'
+// import { checkSpouseCounts } from '@/utils/checkSpouseCounts'
+// import { checkMissingSpouse } from '@/utils/checkMissingSpouse'
 
 const dashboardStore = useDashboardStore()
 
@@ -336,6 +340,18 @@ const handleRefresh = async () => {
 
 onMounted(async () => {
   await dashboardStore.fetchStats()
+  
+  // DEBUG: Commented out for production
+  // Make debugging functions available in browser console
+  // if (typeof window !== 'undefined') {
+  //   ;(window as any).checkDashboardMath = checkDashboardMath
+  //   ;(window as any).checkSpouseCounts = checkSpouseCounts
+  //   ;(window as any).checkMissingSpouse = checkMissingSpouse
+  //   console.log('💡 Debug commands available:')
+  //   console.log('   - checkDashboardMath() - verify overall statistics')
+  //   console.log('   - checkSpouseCounts() - detailed spouse count analysis')
+  //   console.log('   - checkMissingSpouse() - find missing spouse in UI views')
+  // }
 })
 </script>
 
