@@ -1200,12 +1200,12 @@ const getTablePosition = (table: SeatingTable) => {
     '4': { column: 39, row: 21 },     // Right of dance floor, lower
     '14': { column: 47, row: 28 },    // Right side, middle
     '6': { column: 35, row: 31 },     // Right side, lower
-    '16': { column: 45, row: 39 },    // Right side, bottom
+    '16': { column: 45, row: 38 },    // Right side, bottom
     '8': { column: 35, row: 42 },     // Right side, bottom area
-    '18': { column: 43, row: 50 },    // Bottom-right
+    '18': { column: 50, row: 48 },    // Bottom-right
     
     // Additional tables if needed
-    '19': { column: 42, row: 51 },
+    '19': { column: 40, row: 51 },
     '20': { column: 47, row: 8 },
     '22': { column: 44, row: 22 },
   }
